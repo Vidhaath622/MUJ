@@ -33,10 +33,16 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ token, health, onOpe
         const out: Latest = {};
         await Promise.all(
           PACKS.map(async (p) => {
-            const run = runs.filter((r) => r.pack_id === p.id).sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
-            if (!run) return;
-            const detail = await getRun(run.batch_id, token);
-            if ('aggregates' in detail || 'results' in detail) out[p.id] = detail as RunSummary;
+            // Newest baseline run of the pack. Version-compare runs of another profile (v2: top-2
+            // retrieval) are skipped, like Diagnose and the Seal do: the story and the pack cards
+            // describe the bot as configured, not the experiment.
+            const candidates = runs.filter((r) => r.pack_id === p.id).sort((a, b) => b.created_at.localeCompare(a.created_at));
+            for (const run of candidates) {
+              const detail = (await getRun(run.batch_id, token)) as RunSummary & { profile?: string };
+              if (detail.profile && detail.profile !== 'v1') continue;
+              if ('aggregates' in detail || 'results' in detail) out[p.id] = detail as RunSummary;
+              return;
+            }
           })
         );
         if (!cancelled) setLatest(out);

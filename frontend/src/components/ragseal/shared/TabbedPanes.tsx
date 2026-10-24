@@ -1,8 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 // Tabs that split a dense page into one idea at a time. Click a tab, use ←/→ while the
-// pointer is over the panel, or keep scrolling down past the end of a tab's content:
-// a few deliberate wheel ticks at the bottom advance to the next tab (never mid-content).
+// pointer is over the panel, or scroll on past the end of a tab's content to reach the next.
+//
+// Wheel events are grouped into gestures, because a trackpad sends a continuous stream of them
+// (momentum keeps going after the fingers lift). A gesture moves at most one tab, only if it
+// began at the end of the content (reaching the end mid-flick never flips), and only after it
+// has travelled SWITCH_PX further. A short cooldown follows every switch.
+const GESTURE_GAP_MS = 220;
+const SWITCH_PX = 380;
+const COOLDOWN_MS = 700;
 
 export interface Pane {
   id: string;
@@ -33,13 +40,12 @@ export const TabbedPanes: React.FC<{ panes: Pane[]; initial?: number; fill?: boo
   const [index, setIndex] = useState(initial);
   const rootRef = useRef<HTMLDivElement>(null);
   const hover = useRef(false);
-  const push = useRef({ dir: 0, count: 0, at: 0 });
+  const gesture = useRef({ last: 0, dir: 0, startedAtEdge: false, travelled: 0, used: false, lockUntil: 0 });
 
   const go = useCallback(
     (i: number) => {
       const next = Math.max(0, Math.min(panes.length - 1, i));
       setIndex(next);
-      push.current = { dir: 0, count: 0, at: 0 };
     },
     [panes.length]
   );
@@ -48,37 +54,45 @@ export const TabbedPanes: React.FC<{ panes: Pane[]; initial?: number; fill?: boo
     const root = rootRef.current;
     if (!root) return;
     const onWheel = (e: WheelEvent) => {
-      const sp = scrollParent(root);
-      const dir = e.deltaY > 0 ? 1 : e.deltaY < 0 ? -1 : 0;
+      // Lines and pages to pixels, so a mouse wheel and a trackpad travel alike.
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1);
+      const dir = dy > 0 ? 1 : dy < 0 ? -1 : 0;
       if (!dir) return;
+      const sp = scrollParent(root);
       // An inner scroll box (a passage list, say) that can still scroll owns the wheel.
+      let innerCanScroll = false;
       for (let n = e.target as HTMLElement | null; n && n !== root; n = n.parentElement) {
         const oy = getComputedStyle(n).overflowY;
-        if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 2) {
-          if (dir > 0 ? !atBottom(n) : !atTop(n)) {
-            push.current = { dir: 0, count: 0, at: 0 };
-            return;
-          }
+        if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 2 && (dir > 0 ? !atBottom(n) : !atTop(n))) {
+          innerCanScroll = true;
+          break;
         }
       }
-      const edge = dir > 0 ? atBottom(sp) : atTop(sp);
-      if (!edge) {
-        push.current = { dir: 0, count: 0, at: 0 };
+      const atEdge = !innerCanScroll && (dir > 0 ? atBottom(sp) : atTop(sp));
+
+      const now = performance.now();
+      const g = gesture.current;
+      if (now - g.last > GESTURE_GAP_MS || dir !== g.dir) {
+        g.dir = dir;
+        g.travelled = 0;
+        g.used = false;
+        g.startedAtEdge = atEdge;
+      }
+      g.last = now;
+      if (g.used || now < g.lockUntil || !g.startedAtEdge || !atEdge) return;
+      g.travelled += Math.abs(dy);
+      if (g.travelled < SWITCH_PX) return;
+
+      if (dir > 0 && index < panes.length - 1) {
+        go(index + 1);
+        (sp ?? document.scrollingElement)?.scrollTo({ top: 0 });
+      } else if (dir < 0 && index > 0) {
+        go(index - 1);
+      } else {
         return;
       }
-      const now = Date.now();
-      const p = push.current;
-      if (p.dir !== dir || now - p.at > 700) push.current = { dir, count: 1, at: now };
-      else push.current = { dir, count: p.count + 1, at: now };
-      // Several ticks at the edge means the user wants more: move to the next or previous tab.
-      if (push.current.count >= 4) {
-        if (dir > 0 && index < panes.length - 1) {
-          go(index + 1);
-          (sp ?? document.scrollingElement)?.scrollTo({ top: 0 });
-        } else if (dir < 0 && index > 0) {
-          go(index - 1);
-        }
-      }
+      g.used = true;
+      g.lockUntil = now + COOLDOWN_MS;
     };
     const onKey = (e: KeyboardEvent) => {
       if (!hover.current) return;
@@ -138,7 +152,7 @@ export const TabbedPanes: React.FC<{ panes: Pane[]; initial?: number; fill?: boo
           onClick={() => go(index + 1)}
           className="self-center text-[12px] text-[var(--ink-2)] transition-opacity hover:opacity-70"
         >
-          Next: {panes[index + 1].label} → <span className="opacity-70">(or keep scrolling)</span>
+          Next: {panes[index + 1].label} → <span className="opacity-70">(or scroll on past the end)</span>
         </button>
       )}
     </div>
