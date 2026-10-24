@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { RAGSealNavbar } from './components/ragseal/RAGSealNavbar';
 import { DocumentVaultModal } from './components/ragseal/DocumentVaultModal';
 import { SyntheticGeneratorModal } from './components/ragseal/SyntheticGeneratorModal';
 import { AuthModal } from './components/ragseal/AuthModal';
 import { HowItWorksStory } from './components/ragseal/HowItWorksStory';
-import { ComponentLibraryTab } from './components/showcase/ComponentLibraryTab';
 import { LabScreen } from './components/ragseal/lab/LabScreen';
+import { AppShell, TopBarControls, useHashRoute } from './components/ragseal/shell/AppShell';
+import { PackSwitcher } from './components/ragseal/shared/ui';
+import { OverviewPage } from './components/ragseal/pages/OverviewPage';
+import { RunsPage } from './components/ragseal/pages/RunsPage';
+import { LabelStudioPage } from './components/ragseal/pages/LabelStudioPage';
+import { TrustPage } from './components/ragseal/pages/TrustPage';
+import { ComparePage } from './components/ragseal/pages/ComparePage';
+import { BotsPage } from './components/ragseal/pages/BotsPage';
+import { TestSetsPage } from './components/ragseal/pages/TestSetsPage';
 
 import { INDUSTRY_PACKS } from './data/mockPacksDataset';
 import { MOCK_SYNTHETIC_QUESTIONS } from './data/mockAtsDataset';
@@ -18,7 +25,7 @@ import {
 } from './lib/api';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'lab' | 'story' | 'components'>('lab');
+  const { route, params, go } = useHashRoute();
   const [activePackId, setActivePackId] = useState<PackId>('recruitment');
   const [isLiveBackend, setIsLiveBackend] = useState<boolean>(true);
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
@@ -82,7 +89,14 @@ export const App: React.FC = () => {
 
   // Handler for selecting synthetic test question
   const handleSelectSyntheticQuestion = (_q: SyntheticTestCase) => {
-    setActiveTab('lab');
+    go('diagnose');
+  };
+
+  // Diagnose can open a specific run (from Runs) instead of the pack's latest one.
+  const openBatch = params.get('batch');
+  const openRun = (batchId: string, packId?: string) => {
+    if (packId) setActivePackId(packId as PackId);
+    go('diagnose', { batch: batchId });
   };
 
   const handleRefreshHealth = async () => {
@@ -92,62 +106,70 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className={`${activeTab === 'lab' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-[#07090e] text-slate-100 flex flex-col font-sans selection:bg-teal-500 selection:text-white`}>
-      {/* RAGSeal Brand Navigation Header */}
-      <RAGSealNavbar
-        isLiveBackend={isLiveBackend}
-        onToggleLiveBackend={() => setIsLiveBackend(!isLiveBackend)}
-        onOpenDocVault={() => setIsDocVaultOpen(true)}
-        onOpenSyntheticGenerator={() => setIsSyntheticOpen(true)}
+    <>
+      <AppShell
+        route={route}
+        onNavigate={(r) => go(r)}
+        health={backendHealth}
+        live={isLiveBackend}
+        user={currentUser}
         onOpenAuth={() => setIsAuthOpen(true)}
-        currentUser={currentUser}
-        activePack={activePackId}
-        onSelectPack={handleSelectPack}
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        backendHealth={backendHealth}
-      />
+        fitScreen={route === 'diagnose' || route === 'label' || route === 'bots' || route === 'testsets'}
+      >
+        {route === 'bots' && <BotsPage token={authToken} initialPack={activePackId} />}
 
-      {/* Main Body */}
-      <main className={activeTab === 'lab' ? 'flex-1 min-h-0 w-full max-w-[1600px] mx-auto px-6 py-4' : 'flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6'}>
-        {/* TAB 1: "Lab" (The working RAG app + Automated QA layer) */}
-        {activeTab === 'lab' && <LabScreen packId={activePackId} token={authToken} />}
+        {route === 'testsets' && <TestSetsPage token={authToken} />}
 
-        {/* TAB 2: "How It Works" (Scroll storytelling pipeline walkthrough & diagram) */}
-        {activeTab === 'story' && (
-          <div className="animate-in fade-in duration-200">
-            <HowItWorksStory
-              backendHealth={backendHealth}
-              onRefreshHealth={handleRefreshHealth}
-            />
+        {route === 'overview' && (
+          <OverviewPage
+            token={authToken}
+            health={backendHealth}
+            onOpenPack={(p) => {
+              setActivePackId(p);
+              go('diagnose');
+            }}
+            onNavigate={(r) => go(r)}
+            onOpenDocuments={() => setIsDocVaultOpen(true)}
+            onOpenGenerator={() => setIsSyntheticOpen(true)}
+          />
+        )}
+
+        {route === 'diagnose' && (
+          <div className="h-full px-6 py-5">
+            <TopBarControls>
+              {openBatch && (
+                <button onClick={() => go('diagnose')} className="text-xs text-[#8A9099] hover:text-white">
+                  Viewing run <span className="font-mono text-[#C9CDD3]">{openBatch}</span> · show latest
+                </button>
+              )}
+              <PackSwitcher
+                value={activePackId}
+                onChange={(p) => {
+                  handleSelectPack(p);
+                  if (openBatch) go('diagnose');
+                }}
+              />
+            </TopBarControls>
+            <LabScreen packId={activePackId} token={authToken} batchId={openBatch} />
           </div>
         )}
 
-        {/* TAB 3: Component Library & Design System Showcase */}
-        {activeTab === 'components' && (
-          <div className="animate-in fade-in duration-200">
-            <ComponentLibraryTab />
+        {route === 'runs' && (
+          <RunsPage token={authToken} packId={activePackId} onPackChange={handleSelectPack} onOpenRun={openRun} />
+        )}
+
+        {route === 'label' && <LabelStudioPage token={authToken} packId={activePackId} onPackChange={handleSelectPack} />}
+
+        {route === 'trust' && <TrustPage token={authToken} health={backendHealth} />}
+
+        {route === 'compare' && <ComparePage token={authToken} />}
+
+        {route === 'learn' && (
+          <div className="mx-auto max-w-7xl p-4 md:p-8">
+            <HowItWorksStory backendHealth={backendHealth} onRefreshHealth={handleRefreshHealth} />
           </div>
         )}
-      </main>
-
-      {/* Footer */}
-      {activeTab !== 'lab' && <footer className="border-t border-neutral-900 bg-[#06080d] py-5 px-4 text-xs font-mono text-neutral-400">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-neutral-200">RAGSeal v2.0</span>
-            <span className="text-neutral-500">•</span>
-            <span>Problem Statement AI-04: RAG Evaluation Pipeline</span>
-            <span className="text-neutral-500">•</span>
-            <span className="text-neutral-400">Backend: http://localhost:8000</span>
-          </div>
-          <div className="flex items-center gap-3 text-neutral-400">
-            <span>Honesty Rule: All numbers state-grounded</span>
-            <span className="text-neutral-500">•</span>
-            <span>Causal Replay Isolation Active</span>
-          </div>
-        </div>
-      </footer>}
+      </AppShell>
 
       {/* Modal 1: Document Vault & Chunk Inspector */}
       <DocumentVaultModal
@@ -186,6 +208,6 @@ export const App: React.FC = () => {
           setAuthToken(null);
         }}
       />
-    </div>
+    </>
   );
 };

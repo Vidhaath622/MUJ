@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  API_BASE_URL,
   ApiError,
   evaluateBatchByPack,
-  evaluateLiveQuery,
   fetchRunDetail,
   fetchRunHistory,
   loadPackBackend,
+  RunHistoryItem,
 } from '../../../lib/api';
 import { PackId } from '../../../types/ragseal';
 
@@ -125,13 +126,48 @@ export interface LabCase {
   result?: LabResult;
 }
 
+// TODO(Vidhaath): move into lib/api.ts. evaluateLiveQuery only sends one
+// document_id, and a pack question must search every pack document or the
+// stale-version traps cannot happen.
+export async function evaluateAcrossDocs(
+  query: string,
+  documentIds: string[],
+  token: string,
+  groundTruth?: string,
+  extra?: { gold_chunk_ids?: string[]; stale_chunk_ids?: string[]; type?: string }
+): Promise<LabResult> {
+  const res = await fetch(`${API_BASE_URL}/evaluate/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      query,
+      document_ids: documentIds,
+      optional_ground_truth: groundTruth || null,
+      ...(extra?.gold_chunk_ids?.length ? { gold_chunk_ids: extra.gold_chunk_ids } : {}),
+      ...(extra?.stale_chunk_ids?.length ? { stale_chunk_ids: extra.stale_chunk_ids } : {}),
+      ...(extra?.type ? { type: extra.type } : {}),
+    }),
+  });
+  if (!res.ok) {
+    let detail = `${res.status} ${res.statusText}`;
+    try {
+      const data = await res.json();
+      if (typeof data?.detail === 'string') detail = data.detail;
+    } catch {
+      // keep status text
+    }
+    throw new ApiError(res.status, detail);
+  }
+  return res.json();
+}
+
 function errorText(err: unknown): string {
   if (err instanceof ApiError) return err.detail;
   if (err instanceof Error) return err.message;
   return 'Something went wrong talking to the backend.';
 }
 
-export function useLabData(packId: PackId, token: string | null) {
+export function useLabData(packId: PackId, token: string | null, batchId?: string | null) {
   const [pack, setPack] = useState<LabPack | null>(null);
   const [run, setRun] = useState<LabRun | null>(null);
   const [loading, setLoading] = useState(false);
@@ -155,13 +191,19 @@ export function useLabData(packId: PackId, token: string | null) {
         const loaded: LabPack = await loadPackBackend(packId, token);
         if (cancelled) return;
         setPack(loaded);
-        const history = await fetchRunHistory(token);
-        const latest = history
-          .filter((r) => r.pack_id === packId)
-          .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
-        if (latest) {
-          const detail = (await fetchRunDetail(latest.batch_id, token)) as unknown as LabRun;
-          if (!cancelled) setRun(detail);
+        // A specific run (opened from Runs) wins; otherwise the latest finished run for the pack.
+        let runId = batchId ?? null;
+        if (!runId) {
+          const history = (await fetchRunHistory(token)) as (RunHistoryItem & { status?: string })[];
+          runId =
+            history
+              .filter((r) => r.pack_id === packId && (r.status ?? 'done') === 'done')
+              .sort((a, b) => b.created_at.localeCompare(a.created_at))[0]?.batch_id ?? null;
+        }
+        if (runId) {
+          const detail = (await fetchRunDetail(runId, token)) as unknown as LabRun;
+          // A run still in progress answers with a progress body and no results.
+          if (!cancelled && Array.isArray(detail?.results)) setRun(detail);
         }
       } catch (err) {
         if (!cancelled) setError(errorText(err));
@@ -173,7 +215,7 @@ export function useLabData(packId: PackId, token: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [packId, token]);
+  }, [packId, token, batchId]);
 
   const runPack = useCallback(async () => {
     if (!token || packId === 'custom') return;
@@ -197,13 +239,7 @@ export function useLabData(packId: PackId, token: string | null) {
       setAsking(true);
       setError(null);
       try {
-        const res = await evaluateLiveQuery({
-          query,
-          documentIds: pack.document_ids,
-          groundTruth,
-          token,
-        });
-        setAdHoc(res as unknown as LabResult);
+        setAdHoc(await evaluateAcrossDocs(query, pack.document_ids, token, groundTruth));
       } catch (err) {
         setError(errorText(err));
       } finally {
