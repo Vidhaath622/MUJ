@@ -36,6 +36,20 @@ CREATE TABLE IF NOT EXISTS evaluations (
     json TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS evaluations_user_created ON evaluations(user_id, created_at);
+CREATE TABLE IF NOT EXISTS labels (
+    batch_id TEXT NOT NULL,
+    test_id TEXT NOT NULL,
+    labeler TEXT NOT NULL,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    pack_id TEXT,
+    correct INTEGER NOT NULL,
+    failure_type TEXT,
+    note TEXT,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (batch_id, test_id, labeler)
+);
 """
 
 
@@ -183,3 +197,48 @@ class Database:
     def count_evaluations(self, user_id: str) -> int:
         with self._connect() as conn:
             return conn.execute("SELECT COUNT(*) FROM evaluations WHERE user_id = ?", (user_id,)).fetchone()[0]
+
+    # ------------------------------------------------------------- labels
+
+    def latest_done_run(self, user_id: str, pack_id: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT json FROM runs WHERE user_id = ? AND pack_id = ? AND status = 'done' ORDER BY created_at DESC, rowid DESC LIMIT 1",
+                (user_id, pack_id),
+            ).fetchone()
+        return json.loads(row["json"]) if row else None
+
+    def run_by_id(self, batch_id: str) -> dict | None:
+        """Any user's finished run: labels and agreement are shared across the labelling team."""
+        with self._connect() as conn:
+            row = conn.execute("SELECT json FROM runs WHERE batch_id = ? AND status = 'done'", (batch_id,)).fetchone()
+        return json.loads(row["json"]) if row else None
+
+    def labelling_batch(self, pack_id: str) -> str | None:
+        """The run that already holds the most labels for this pack, so every labeller sees the same answers."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT batch_id, COUNT(*) AS n FROM labels WHERE pack_id = ? GROUP BY batch_id ORDER BY n DESC, MAX(created_at) DESC LIMIT 1",
+                (pack_id,),
+            ).fetchone()
+        return row["batch_id"] if row else None
+
+    def save_label(self, user_id: str, label: dict) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO labels (batch_id, test_id, labeler, user_id, pack_id, correct, failure_type, note, question, answer, created_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    label["batch_id"], label["test_id"], label["labeler"], user_id, label.get("pack_id"),
+                    int(bool(label["correct"])), label.get("failure_type"), label.get("note"),
+                    label["question"], label["answer"], utc_now(),
+                ),
+            )
+
+    def labels(self, pack_id: str | None = None) -> list[dict]:
+        with self._connect() as conn:
+            if pack_id:
+                rows = conn.execute("SELECT * FROM labels WHERE pack_id = ? ORDER BY created_at", (pack_id,)).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM labels ORDER BY created_at").fetchall()
+        return [dict(r) | {"correct": bool(r["correct"])} for r in rows]
