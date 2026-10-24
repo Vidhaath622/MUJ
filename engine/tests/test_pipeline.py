@@ -64,6 +64,7 @@ def test_retrieval_failure_proven_by_replay(make_engine):
     assert result["root_cause"]["category"] == "RETRIEVAL_FAILURE"
     assert result["replay"]["answer"] == "Primary caregivers get 16 weeks."
     assert result["replay"]["answer_accuracy"] == 1.0
+    assert result["stale_chunk_ids"] == []
     assert "retriever is at fault" in result["replay"]["verdict_effect"]
     roles = {e["role"] for e in result["root_cause"]["evidence"]}
     assert {"gold_missing", "retrieved_instead"} <= roles
