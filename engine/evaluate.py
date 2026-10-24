@@ -40,6 +40,8 @@ class TestCase:
     # Fault injection: use exactly these chunks as the retrieved context instead of searching.
     forced_chunk_ids: list[str] | None = None
     true_failure_type: str | None = None  # the injected fault, for the confusion matrix
+    # Re-judging a finished result: reuse its retrieval, answer and replay answer; only the judge runs.
+    stored: dict | None = None
 
     @property
     def unanswerable(self) -> bool:
@@ -75,7 +77,11 @@ class Evaluator:
     # -------------------------------------------------------------- replay
 
     def replay(self, case: TestCase, gold_chunks: list[Chunk], counter: dict | None = None) -> dict:
-        answer, citations, latency = self.rag.generate(case.question, gold_chunks)
+        stored = (case.stored or {}).get("replay")
+        if stored and stored.get("context_chunk_ids") == [c.chunk_id for c in gold_chunks]:
+            answer, citations, latency = stored["answer"], stored.get("citations", []), stored.get("latency_ms", 0)
+        else:
+            answer, citations, latency = self.rag.generate(case.question, gold_chunks)
         scores = score_case(self.judge, case.question, answer, gold_chunks, case.ground_truth, case.unanswerable, with_relevance=False)
         faith, acc = scores.faithfulness, scores.accuracy
         if counter is not None:
@@ -98,7 +104,12 @@ class Evaluator:
         started = time.perf_counter()
         self.judge.start_tracking()
         counter = {"judge_calls": 0, "rule_shortcuts": 0}
-        if case.forced_chunk_ids is not None:
+        if case.stored is not None:
+            similarity = {c["chunk_id"]: c.get("similarity", 0.0) for c in case.stored.get("retrieved_chunks", [])}
+            chunk_ids = case.stored["retrieved_chunk_ids"]
+            retrieved = [ScoredChunk(c, similarity.get(c.chunk_id, 0.0)) for c in self.store.get_chunks(owner_id, chunk_ids)]
+            answer, citations, gen_ms = case.stored["generated_answer"], case.stored.get("citations", []), case.stored.get("generation_ms", 0)
+        elif case.forced_chunk_ids is not None:
             retrieved = [ScoredChunk(c, 0.0) for c in self.store.get_chunks(owner_id, case.forced_chunk_ids)]
             if case.manual_answer:
                 answer, citations, gen_ms = case.manual_answer, [], 0

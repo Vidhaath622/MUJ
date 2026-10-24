@@ -390,6 +390,77 @@ class Engine:
             "test_cases": cases,
         }
 
+    # -------------------------------------------------------------- rejudge
+
+    def rejudge(self, owner_id: str, batch: dict, progress: Callable[[int, int, int], None] | None = None) -> dict:
+        """Re-score a finished batch with the primary judge only (all its API keys, no overflow).
+
+        Retrieval, answers and replay answers are reused, so only the judging changes and
+        the batch keeps its id. Judgements the primary already made come from the cache.
+        """
+        primary_only = (
+            Judge(
+                self.judge.chat_model,
+                self.settings.data_dir / "judge_cache.sqlite",
+                replicas=tuple(self.judge.primary[1:]),
+                max_wait_s=600,
+            )
+            if isinstance(self.judge, Judge)
+            else self.judge  # test doubles
+        )
+        evaluator = Evaluator(self.store, self.rag, primary_only)
+        distractors = self.load_pack(owner_id, batch["pack_id"])["distractor_document_ids"] if batch.get("pack_id") else []
+        cases = [
+            TestCase(
+                question=r["query"],
+                ground_truth=r.get("ground_truth"),
+                test_id=r["test_id"],
+                gold_chunk_ids=r.get("gold_chunk_ids") or [],
+                stale_chunk_ids=r.get("stale_chunk_ids") or [],
+                type=r.get("case_type") or "factoid",
+                distractor_document_ids=distractors,
+                true_failure_type=r.get("true_failure_type"),
+                stored=r,
+            )
+            for r in batch["results"]
+            if not r.get("error")
+        ]
+        lock = threading.Lock()
+        counts = {"done": 0}
+
+        def run(case: TestCase) -> dict:
+            try:
+                result = evaluator.evaluate(owner_id, case, batch.get("document_ids") or [])
+            except (ModelUnavailable, JudgeError) as exc:
+                result = failed_result(case, exc, primary_only, self.generator.model)
+            with lock:
+                counts["done"] += 1
+                done = counts["done"]
+            if progress:
+                progress(done, len(cases), 0)
+            return result
+
+        started = time.perf_counter()
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            evaluations = list(pool.map(run, cases))
+        results = []
+        for ev in evaluations:
+            item = dict(ev, category=ev["root_cause"]["category"])
+            for metric in ("context_relevance", "faithfulness", "answer_accuracy"):
+                item[metric] = ev["metrics"][metric]["score"]
+            results.append(item)
+        return {
+            **batch,
+            **summarize_batch(evaluations),
+            "judge_model": primary_only.model,
+            "judge_models_used": sorted({m for ev in evaluations for m in ev.get("judge_models_used", [])}),
+            "judge_fallback_cases": sum(bool(ev.get("judge_fallback_used")) for ev in evaluations),
+            "judge_fallback_models": {},
+            "rejudged": {"at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "judge": f"{primary_only.provider}:{primary_only.model}",
+                          "wall_ms": int((time.perf_counter() - started) * 1000)},
+            "results": results,
+        }
+
     # ------------------------------------------------------ fault injection
 
     def injection_run(
