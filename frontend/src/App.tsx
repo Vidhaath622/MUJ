@@ -26,7 +26,21 @@ import {
 
 export const App: React.FC = () => {
   const { route, params, go } = useHashRoute();
-  const [activePackId, setActivePackId] = useState<PackId>('recruitment');
+  // Remembered across refreshes so a labeller stays on the pack they were working through.
+  const [activePackId, setActivePackId] = useState<PackId>(() => {
+    try {
+      return (localStorage.getItem('ragseal.pack') as PackId | null) ?? 'recruitment';
+    } catch {
+      return 'recruitment';
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('ragseal.pack', activePackId);
+    } catch {
+      // storage unavailable: the pack just resets on refresh
+    }
+  }, [activePackId]);
   const [isLiveBackend, setIsLiveBackend] = useState<boolean>(true);
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
