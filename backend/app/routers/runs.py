@@ -52,7 +52,7 @@ def get_run(
         return _progress(batch_id, user, db, jobs)
     if row["status"] == "failed":
         return {"batch_id": batch_id, "status": "failed", "error": row["error"]}
-    return db.get_run(user.id, batch_id)
+    return {**db.get_run(user.id, batch_id), "status": "done"}
 
 
 @router.post("/{batch_id}/rejudge", status_code=status.HTTP_202_ACCEPTED)

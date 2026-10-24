@@ -124,7 +124,7 @@ def test_batch_saves_run_and_lists_it(client, alice, bob):
     assert runs[0]["pass_rate"] == 1.0
 
     full = client.get(f"/api/runs/{first['batch_id']}", headers=alice).json()
-    assert full == first
+    assert full == {**first, "status": "done"}
 
     assert client.get("/api/runs", headers=bob).json() == []
     assert client.get(f"/api/runs/{first['batch_id']}", headers=bob).status_code == 404
