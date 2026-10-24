@@ -261,3 +261,95 @@ export interface BatchSummary {
   }[];
 }
 ```
+
+---
+
+## 4. v2 Additions (Lead, Oct 24) - additive, nothing above is removed
+
+> Base URL `http://localhost:8000`. Every endpoint except `/api/health` and `/api/auth/*` needs `Authorization: Bearer <token>`. See `docs/product_brief.md` for why each addition exists.
+
+### 4.1 Auth
+* **`POST /api/auth/register`** and **`POST /api/auth/login`**, body `{ "email": "...", "password": "..." }`
+* **Response**: `{ "access_token": "jwt...", "token_type": "bearer", "user": { "id": "usr_1", "email": "demo@ragseal.dev" } }`
+* **`GET /api/auth/me`** returns the `user` object. A seeded demo account exists: `demo@ragseal.dev` / `demo1234`.
+
+### 4.2 Documents (per user)
+* **`GET /api/documents`** returns `[{ document_id, filename, chunk_count, pack_id | null, uploaded_at }]`
+* **`DELETE /api/documents/{document_id}`**
+* `POST /api/documents/upload` unchanged, now saved to the logged-in user.
+
+### 4.3 Industry packs
+* **`GET /api/packs`** returns `[{ pack_id: "recruitment" | "banking" | "healthcare", name, description, document_count, test_case_count }]`
+* **`POST /api/packs/{pack_id}/load`** loads the pack's documents and test cases for this user and returns `{ pack_id, document_ids: [...], test_cases: [TestCase] }`
+
+### 4.4 Plain RAG (the "Lab" ask box)
+* **`POST /api/rag/ask`**, body `{ "query": "...", "document_ids": ["doc_1"] }`
+* **Response**: `{ "answer": "...", "retrieved_chunks": [RetrievedChunk], "citations": ["chk_001"], "latency_ms": 840, "model": "llama3.2:3b" }`
+
+### 4.5 Changes to evaluation responses (`/api/evaluate/query` and each batch result)
+New fields:
+```json
+{
+  "gold_chunk_ids": ["chk_004"],
+  "retrieved_chunk_ids": ["chk_001", "chk_007"],
+  "gold_retrieved": false,
+  "replay": {
+    "answer": "Unused leave expires on December 31st.",
+    "answer_accuracy": 0.95,
+    "faithfulness": 1.0,
+    "verdict_effect": "Replay with the gold chunk fixed the answer, so the retriever is at fault."
+  },
+  "root_cause": {
+    "category": "RETRIEVAL_FAILURE",
+    "summary": "...",
+    "recommended_action": "...",
+    "evidence": [ { "chunk_id": "chk_004", "text": "...", "role": "gold_missing" } ]
+  },
+  "evaluation_mode": "local",
+  "judge_model": "qwen3:8b"
+}
+```
+* `replay` is `null` when not run (for example CLEAN_PASS).
+* `evaluation_mode`: `"local"` (Ollama) or `"hosted"` (Groq judge).
+* Each `MetricDetail` gains `"judged_by": "model" | "rule"`.
+* `MetricStatus` gains `"REVIEW"` (amber).
+* `RootCauseCategory` gains `"NEEDS_REVIEW"` and `"UNRESOLVED"`.
+
+### 4.6 Changes to batch responses
+New fields:
+```json
+{
+  "pack_id": "banking",
+  "judge_agreement": { "agreement": 0.86, "n": 30, "false_pass": 2, "false_fail": 2 },
+  "root_cause_breakdown": { "CLEAN_PASS": 0, "RETRIEVAL_FAILURE": 0, "GENERATION_HALLUCINATION": 0, "COMPOUND_FAILURE": 0, "NEEDS_REVIEW": 0, "UNRESOLVED": 0 },
+  "duration_ms": 41200
+}
+```
+* `judge_agreement` is `null` when there are no human labels for the cases.
+
+### 4.7 Run history
+* **`GET /api/runs`** returns `[{ batch_id, pack_id, created_at, total_evaluated, pass_rate }]` for this user.
+* **`GET /api/runs/{batch_id}`** returns the full batch response.
+
+### 4.8 TypeScript additions
+```typescript
+export type MetricStatus = 'PASS' | 'FAIL' | 'REVIEW';
+export type RootCauseCategory =
+  | 'CLEAN_PASS' | 'RETRIEVAL_FAILURE' | 'GENERATION_HALLUCINATION'
+  | 'COMPOUND_FAILURE' | 'NEEDS_REVIEW' | 'UNRESOLVED';
+export type PackId = 'recruitment' | 'banking' | 'healthcare';
+
+export interface Replay {
+  answer: string;
+  answer_accuracy: number;
+  faithfulness: number;
+  verdict_effect: string;
+}
+export interface EvidenceItem { chunk_id: string; text: string; role: string; }
+export interface JudgeAgreement { agreement: number; n: number; false_pass: number; false_fail: number; }
+// EvaluationResult gains: gold_chunk_ids, retrieved_chunk_ids, gold_retrieved,
+// replay: Replay | null, root_cause.evidence: EvidenceItem[],
+// evaluation_mode: 'local' | 'hosted', judge_model: string
+// MetricDetail gains: judged_by: 'model' | 'rule'
+// BatchSummary gains: pack_id, judge_agreement: JudgeAgreement | null, duration_ms
+```

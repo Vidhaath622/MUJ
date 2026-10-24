@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { 
@@ -13,10 +13,10 @@ import {
 } from 'recharts';
 import { 
   ShieldAlert, 
-  BarChart2,
-  ListFilter
+  BarChart2
 } from 'lucide-react';
-import { BatchSummary, RootCauseCategory } from '../../types/ragseal';
+import { BatchSummary } from '../../types/ragseal';
+import { EvaluationTable, EvaluationItem } from '../domain/evaluation-table';
 
 interface BatchSummarySectionProps {
   batch: BatchSummary;
@@ -30,8 +30,6 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
   selectedCaseId,
   onSelectCase,
 }) => {
-  const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
-
   // Chart data from batch root_cause_breakdown
   const chartData = [
     {
@@ -60,24 +58,20 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
     },
   ];
 
-  const filteredResults = batch.results.filter((res) => {
-    if (selectedFilter === 'ALL') return true;
-    if (selectedFilter === 'PASS') return res.status === 'PASS';
-    if (selectedFilter === 'FAIL') return res.status === 'FAIL';
-    return res.category === selectedFilter;
-  });
+  // Map batch.results into EvaluationItem format expected by EvaluationTable
+  const tableItems: EvaluationItem[] = batch.results.map((r) => ({
+    id: r.test_id,
+    query: r.query,
+    retrieverScore: r.context_relevance,
+    faithfulnessScore: r.faithfulness,
+    accuracyScore: r.answer_accuracy,
+    diagnosis: r.category,
+    status: r.status,
+    summaryNote: r.summary_note,
+  }));
 
-  const getCategoryBadge = (category: RootCauseCategory) => {
-    switch (category) {
-      case 'CLEAN_PASS':
-        return <Badge variant="success" size="sm">CLEAN_PASS</Badge>;
-      case 'RETRIEVAL_FAILURE':
-        return <Badge variant="warning" size="sm">RETRIEVAL_FAILURE</Badge>;
-      case 'GENERATION_HALLUCINATION':
-        return <Badge variant="danger" size="sm">HALLUCINATION</Badge>;
-      case 'COMPOUND_FAILURE':
-        return <Badge variant="danger" size="sm">COMPOUND_FAIL</Badge>;
-    }
+  const handleSelectTableRow = (item: EvaluationItem) => {
+    onSelectCase(item.id);
   };
 
   return (
@@ -276,113 +270,12 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
         </Card>
       </div>
 
-      {/* Batch Test Case Table */}
-      <Card variant="glass" className="p-5 border-neutral-800 bg-[#0c1017]/90 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <ListFilter className="w-4 h-4 text-teal-400" />
-              <h4 className="text-xs font-mono uppercase tracking-wider text-neutral-300 font-bold">
-                Batch Test Suite Cases ({batch.results.length} runs)
-              </h4>
-            </div>
-            <p className="text-[11px] text-neutral-400 font-mono mt-0.5">
-              Click any row to inspect its side-by-side trace, retrieved chunks, and root-cause scorecard.
-            </p>
-          </div>
-
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
-            {['ALL', 'PASS', 'FAIL', 'CLEAN_PASS', 'RETRIEVAL_FAILURE', 'GENERATION_HALLUCINATION', 'COMPOUND_FAILURE'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setSelectedFilter(f)}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono transition border ${
-                  selectedFilter === f
-                    ? 'bg-sky-500/20 text-sky-300 border-sky-500/60 font-semibold'
-                    : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-neutral-800">
-          <table className="w-full text-left text-xs font-sans">
-            <thead className="bg-neutral-950 text-neutral-400 font-mono uppercase text-[10px] border-b border-neutral-800">
-              <tr>
-                <th className="py-2.5 px-3">Test ID</th>
-                <th className="py-2.5 px-3">Query Probe</th>
-                <th className="py-2.5 px-3">Root Cause Diagnosis</th>
-                <th className="py-2.5 px-3 text-right">Context Rel.</th>
-                <th className="py-2.5 px-3 text-right">Faithfulness</th>
-                <th className="py-2.5 px-3 text-right">Accuracy</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
-                <th className="py-2.5 px-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-800/80 bg-black/40">
-              {filteredResults.map((tc) => {
-                const isSelected = selectedCaseId === tc.test_id;
-                return (
-                  <tr
-                    key={tc.test_id}
-                    onClick={() => onSelectCase(tc.test_id)}
-                    className={`cursor-pointer transition hover:bg-neutral-900/60 ${
-                      isSelected ? 'bg-sky-950/30 border-l-2 border-l-sky-500' : ''
-                    }`}
-                  >
-                    <td className="py-3 px-3 font-mono font-bold text-sky-300">
-                      {tc.test_id}
-                    </td>
-                    <td className="py-3 px-3 max-w-[280px]">
-                      <div className="font-medium text-neutral-200 truncate" title={tc.query}>
-                        {tc.query}
-                      </div>
-                      {tc.summary_note && (
-                        <div className="text-[11px] text-neutral-400 truncate">
-                          {tc.summary_note}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3 px-3">
-                      {getCategoryBadge(tc.category)}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono text-neutral-300">
-                      <span className={tc.context_relevance >= 0.70 ? 'text-emerald-400' : 'text-rose-400'}>
-                        {(tc.context_relevance * 100).toFixed(0)}%
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono text-neutral-300">
-                      <span className={tc.faithfulness >= 0.75 ? 'text-emerald-400' : 'text-rose-400'}>
-                        {(tc.faithfulness * 100).toFixed(0)}%
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono text-neutral-300">
-                      <span className={tc.answer_accuracy >= 0.70 ? 'text-emerald-400' : 'text-rose-400'}>
-                        {(tc.answer_accuracy * 100).toFixed(0)}%
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <Badge variant={tc.status === 'PASS' ? 'success' : 'danger'} size="sm">
-                        {tc.status}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="text-[11px] font-mono text-sky-400 hover:underline">
-                        Inspect &rarr;
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      {/* Component Library: EvaluationTable */}
+      <EvaluationTable
+        items={tableItems}
+        selectedId={selectedCaseId}
+        onSelectRow={handleSelectTableRow}
+      />
     </div>
   );
 };

@@ -1,9 +1,8 @@
 import React from 'react';
 import { Card } from '../ui/card';
+import { Badge } from '../ui/badge';
+import { DiagnosticBadge } from '../domain/diagnostic-badge';
 import { 
-  CheckCircle2, 
-  AlertTriangle, 
-  AlertOctagon, 
   Wrench, 
   ShieldCheck, 
   ShieldAlert, 
@@ -26,47 +25,6 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
   evaluationId,
   latencyMs,
 }) => {
-  const getCategoryConfig = (category: RootCauseCategory) => {
-    switch (category) {
-      case 'CLEAN_PASS':
-        return {
-          label: 'CLEAN PASS',
-          subtitle: 'Retriever & Generator Both Succeeded',
-          icon: CheckCircle2,
-          border: 'border-emerald-700/60',
-          bg: 'from-emerald-950/40 via-neutral-900/40 to-neutral-950',
-          pillColor: 'text-emerald-400 bg-emerald-950/80 border-emerald-800',
-        };
-      case 'RETRIEVAL_FAILURE':
-        return {
-          label: 'RETRIEVAL FAILURE',
-          subtitle: 'Retriever Missed Necessary Context (Generator Omission)',
-          icon: AlertTriangle,
-          border: 'border-amber-700/60',
-          bg: 'from-amber-950/40 via-neutral-900/40 to-neutral-950',
-          pillColor: 'text-amber-400 bg-amber-950/80 border-amber-800',
-        };
-      case 'GENERATION_HALLUCINATION':
-        return {
-          label: 'GENERATION HALLUCINATION',
-          subtitle: 'Retriever Succeeded, Generator Fabricated Unsupported Claims',
-          icon: AlertOctagon,
-          border: 'border-rose-700/60',
-          bg: 'from-rose-950/40 via-neutral-900/40 to-neutral-950',
-          pillColor: 'text-rose-400 bg-rose-950/80 border-rose-800',
-        };
-      case 'COMPOUND_FAILURE':
-        return {
-          label: 'COMPOUND FAILURE',
-          subtitle: 'Both Retrieval & Generation Failed Concurrently',
-          icon: AlertOctagon,
-          border: 'border-red-600',
-          bg: 'from-red-950/50 via-neutral-900/50 to-neutral-950',
-          pillColor: 'text-red-400 bg-red-950 border-red-800',
-        };
-    }
-  };
-
   const getReleaseConfig = (decision: ReleaseDecision) => {
     switch (decision) {
       case 'SHIP':
@@ -93,32 +51,28 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
     }
   };
 
-  const config = getCategoryConfig(diagnosis.category);
   const releaseConfig = release ? getReleaseConfig(release.decision) : null;
-  const CategoryIcon = config.icon;
 
   return (
     <Card
       variant="default"
-      className={`relative overflow-hidden border bg-gradient-to-r ${config.bg} ${config.border} p-5 md:p-6 shadow-xl`}
+      className="relative overflow-hidden border border-neutral-800 bg-[#0c1017]/95 p-5 md:p-6 shadow-xl"
     >
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         {/* Left: Category & Explanation */}
         <div className="space-y-3 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 font-semibold">
               Root Cause Diagnosis:
             </span>
-            <div className={`px-2.5 py-0.5 rounded-full border text-xs font-mono font-bold flex items-center gap-1.5 ${config.pillColor}`}>
-              <CategoryIcon className="w-3.5 h-3.5" />
-              <span>{config.label}</span>
-            </div>
-            <span className="text-xs text-neutral-400 font-medium hidden sm:inline">
-              — {config.subtitle}
-            </span>
+            <DiagnosticBadge
+              category={diagnosis.category as RootCauseCategory}
+              size="md"
+              pulse
+            />
           </div>
 
-          <div className="text-sm md:text-base text-neutral-200 font-medium leading-relaxed bg-black/30 p-3.5 rounded-xl border border-neutral-800/80">
+          <div className="text-sm md:text-base text-neutral-200 font-medium leading-relaxed bg-black/40 p-3.5 rounded-xl border border-neutral-800/80">
             {diagnosis.summary}
           </div>
 
@@ -168,7 +122,9 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
           <div className="text-left md:text-right space-y-1 text-[11px] font-mono text-neutral-400 mt-auto">
             <div>
               <span className="text-neutral-500">Eval Mode: </span>
-              <span className="text-teal-400 font-semibold uppercase">{evaluationMode}</span>
+              <Badge variant="outline" size="sm" className="font-mono text-teal-400 border-teal-800 bg-teal-950/40">
+                {evaluationMode.toUpperCase()}
+              </Badge>
             </div>
             {latencyMs && (
               <div>
