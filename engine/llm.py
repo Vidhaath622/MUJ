@@ -331,10 +331,13 @@ class Judge:
         overflow: tuple[ChatModel, ...] = (),
         max_inflight: int = 3,
         max_wait_s: float = 12.0,
+        replicas: tuple[ChatModel, ...] = (),
     ):
+        """`replicas` are the primary model under extra API keys: the same judge, more rate limit."""
         self.chat_model = chat_model
         self.fallback = fallback
-        self.members = [chat_model, *overflow, *([fallback] if fallback is not None else [])]
+        self.primary = [chat_model, *replicas]
+        self.members = [*self.primary, *overflow, *([fallback] if fallback is not None else [])]
         self.cache = JudgeCache(cache_path)
         self.max_wait_s = max_wait_s
         self._lock = threading.Lock()
@@ -366,13 +369,18 @@ class Judge:
 
     def used(self) -> dict:
         """Who judged since start_tracking() on this thread."""
-        models = list(dict.fromkeys(getattr(self._local, "used", []))) or [self.chat_model]
+        members = getattr(self._local, "used", []) or [self.chat_model]
+        # One entry per (provider, model): extra API keys for the same model are the same judge.
+        models = list({(m.provider, m.model): m for m in members}.values())
         return {
             "judge_model": " + ".join(m.model for m in models),
             "evaluation_mode": "hosted" if any(m.hosted for m in models) else "local",
             "judge_models_used": [f"{m.provider}:{m.model}" for m in models],
-            "judge_fallback_used": any(m is not self.chat_model for m in models),
+            "judge_fallback_used": any(not self._is_primary(m) for m in members),
         }
+
+    def _is_primary(self, member: ChatModel) -> bool:
+        return any(member is p for p in self.primary)
 
     def _record(self, member: ChatModel) -> None:
         if not hasattr(self._local, "used"):
@@ -386,7 +394,7 @@ class Judge:
         return JudgeCache.key(member.provider, member.model, system, user, json.dumps(schema, sort_keys=True))
 
     def _member_ready(self, member: ChatModel) -> bool:
-        if member is self.chat_model:
+        if self._is_primary(member):
             return True
         now = time.time()
         cached = self._ready.get(id(member))
@@ -418,7 +426,8 @@ class Judge:
 
     def ask(self, system: str, user: str, schema: dict) -> dict:
         # A cached verdict from the primary first; overflow members' cache only if the primary never judged it.
-        for member in self.members:
+        # The cache key has no API key in it, so every replica of the primary shares one entry.
+        for member in [self.chat_model, *self.members[len(self.primary):]]:
             cached = self.cache.get(self._key(member, system, user, schema))
             if cached is not None:
                 with self._lock:
@@ -434,20 +443,25 @@ class Judge:
             usable = [m for m in self.members if id(m) not in broken and self._member_ready(m)]
             if not usable:
                 raise last_error or ModelUnavailable("no judge model is available")
-            primary_wait = self._cooldown.get(id(self.chat_model), 0) - now
-            candidates = [self.chat_model] if self.chat_model in usable and primary_wait <= self.max_wait_s else []
-            candidates += [m for m in usable if m is not self.chat_model and self._cooldown.get(id(m), 0) <= now]
-            if not candidates:
-                # Everyone usable is rate-limited: wait for the first window to reopen.
-                reopen = min(self._cooldown.get(id(m), now) for m in usable)
-                time.sleep(min(2.0, max(0.2, reopen - now)))
+            primaries = [m for m in usable if self._is_primary(m)]
+            open_primaries = [m for m in primaries if self._cooldown.get(id(m), 0) <= now]
+            primary_wait = min((self._cooldown.get(id(m), 0) - now for m in primaries), default=float("inf"))
+            if open_primaries:
+                candidates = open_primaries
+            elif primary_wait <= self.max_wait_s:
+                time.sleep(max(0.05, primary_wait))  # a short wait beats switching judges
                 continue
-            member = candidates[0]
-            if member is self.chat_model and primary_wait > 0:
-                time.sleep(primary_wait)
+            else:
+                candidates = [m for m in usable if not self._is_primary(m) and self._cooldown.get(id(m), 0) <= now]
+                if not candidates:
+                    reopen = min(self._cooldown.get(id(m), now) for m in usable)
+                    time.sleep(min(2.0, max(0.1, reopen - now)))
+                    continue
+            member = next((m for m in candidates if self._slots[id(m)].acquire(blocking=False)), None)
+            if member is None:
+                time.sleep(0.1)  # every open member already has its maximum calls in flight
+                continue
             slot = self._slots[id(member)]
-            if not slot.acquire(timeout=1.0):
-                continue
             try:
                 result = self._call(member, system, user, schema)
             except RateLimited as exc:
@@ -463,7 +477,7 @@ class Judge:
             finally:
                 slot.release()
             self.cache.put(self._key(member, system, user, schema), result)
-            if member is not self.chat_model:
+            if not self._is_primary(member):
                 with self._lock:
                     self.fallback_calls += 1
             self._record(member)
@@ -514,6 +528,7 @@ class Models:
     embedder: EmbedModel
     judge_fallback: ChatModel | None = None
     judge_overflow: tuple[ChatModel, ...] = ()
+    judge_replicas: tuple[ChatModel, ...] = ()
 
 
 def build_models(settings: Settings) -> Models:
@@ -525,6 +540,9 @@ def build_models(settings: Settings) -> Models:
             clients[provider] = _client(provider, settings, ollama)
         return clients[provider]
 
+    extra_groq = [
+        OpenAICompatClient("groq", "https://api.groq.com/openai/v1", key, settings, json_mode=True) for key in settings.groq_extra_keys
+    ]
     gen_provider = settings.provider_for("generator")
     judge_provider = settings.provider_for("judge")
     embed_provider = settings.provider_for("embeddings")
@@ -536,5 +554,10 @@ def build_models(settings: Settings) -> Models:
         judge_fallback=(
             ChatModel(client(fallback_provider), settings.model_for("judge", fallback_provider)) if fallback_provider else None
         ),
-        judge_overflow=tuple(ChatModel(client(provider), model) for provider, model in settings.judge_overflow(judge_provider)),
+        judge_overflow=tuple(
+            ChatModel(c, model)
+            for provider, model in settings.judge_overflow(judge_provider)
+            for c in [client(provider), *(extra_groq if provider == "groq" else [])]
+        ),
+        judge_replicas=tuple(ChatModel(c, settings.model_for("judge", "groq")) for c in extra_groq) if judge_provider == "groq" else (),
     )

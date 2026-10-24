@@ -63,6 +63,8 @@ class Engine:
                 self.settings.data_dir / "judge_cache.sqlite",
                 fallback=models.judge_fallback,
                 overflow=models.judge_overflow,
+                replicas=models.judge_replicas,
+                max_wait_s=self.settings.judge_overflow_wait_s,
             )
         self.generator = generator
         self.embedder = embedder
@@ -79,6 +81,13 @@ class Engine:
         for role, model in (("generator", self.generator), ("embeddings", self.embedder), ("judge", self.judge.chat_model)):
             ready, reason = model.ready()
             roles[role] = {"name": model.model, "provider": model.provider, "ready": ready, "error": reason}
+        members = getattr(self.judge, "members", None)
+        if members:
+            primary = getattr(self.judge, "primary", [self.judge.chat_model])
+            roles_pool = [
+                {"name": m.model, "provider": m.provider, "role": "primary" if any(m is p for p in primary) else "overflow"}
+                for m in members
+            ]
         fallback = getattr(self.judge, "fallback", None)
         if fallback is not None:
             ready, reason = fallback.ready()
@@ -91,6 +100,8 @@ class Engine:
             "evaluation_mode": self.judge.mode if judge_ready else "unavailable",
             "judge_model": self.judge.model,
             "judge_provider": self.judge.provider,
+            "judge_pool": roles_pool if members else None,
+            "judge_api_keys": sum(1 for m in (members or []) if any(m is p for p in getattr(self.judge, "primary", []))) or None,
             "generator_model": self.generator.model,
             "generator_provider": self.generator.provider,
             "embed_model": self.embedder.model,

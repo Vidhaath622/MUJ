@@ -134,3 +134,40 @@ def test_overflow_setting(monkeypatch):
     assert s.judge_overflow("groq") == [("groq", "qwen/qwen3.8-27b")]
     monkeypatch.setenv("RAGSEAL_JUDGE_OVERFLOW", "nvidia:minimaxai/minimax-m3.1-flash,groq:openai/gpt-oss-120b")
     assert s.judge_overflow("groq") == []  # no NVIDIA key, and the primary itself is dropped
+
+
+def test_extra_groq_keys_are_replicas_of_the_same_judge(monkeypatch, tmp_path):
+    monkeypatch.setenv("GROQ_API_KEY_2", "second")
+    monkeypatch.setenv("RAGSEAL_JUDGE_OVERFLOW", "none")
+    settings = Settings(groq_api_key="first", nvidia_api_key="", data_dir=tmp_path)
+    models = build_models(settings)
+    assert len(models.judge_replicas) == 1 and models.judge_replicas[0].model == models.judge.model
+
+
+def test_replica_takes_over_when_first_key_is_limited(tmp_path):
+    from engine.llm import Generation, Judge, RateLimited
+
+    class Limited(_Model):
+        def chat(self, messages, schema=None, num_predict=512, patient=True):
+            raise RateLimited("429", wait=50)
+
+    primary = Limited("gpt-oss-120b", True)
+    replica = _Model("gpt-oss-120b", True, '{"score": 1}')
+    judge = Judge(primary, tmp_path / "c.sqlite", replicas=(replica,), overflow=(_Model("other", True, '{"score": 0}'),))
+    judge.start_tracking()
+    assert judge.ask("s", "u", {"type": "object"}) == {"score": 1}
+    used = judge.used()
+    assert used["judge_model"] == "gpt-oss-120b" and used["judge_fallback_used"] is False
+
+
+def test_zero_wait_overflows_immediately(tmp_path):
+    from engine.llm import Judge, RateLimited
+
+    class Limited(_Model):
+        def chat(self, messages, schema=None, num_predict=512, patient=True):
+            raise RateLimited("429", wait=5)
+
+    judge = Judge(Limited("p", True), tmp_path / "c.sqlite", overflow=(_Model("o", True, '{"score": 0}'),), max_wait_s=0)
+    judge.start_tracking()
+    assert judge.ask("s", "u", {"type": "object"}) == {"score": 0}
+    assert judge.used()["judge_fallback_used"] is True

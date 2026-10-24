@@ -66,6 +66,13 @@ class Settings:
     seed: int = 42
     request_timeout_s: float = field(default_factory=lambda: float(_env("RAGSEAL_TIMEOUT_S", "180")))
     batch_concurrency: int = field(default_factory=lambda: int(_env("RAGSEAL_BATCH_CONCURRENCY", "6")))
+    # Extra Groq keys (GROQ_API_KEY_2, _3, _4) from other accounts: each has its own rate limit.
+    groq_extra_keys: tuple[str, ...] = field(
+        default_factory=lambda: tuple(k for k in (_env(f"GROQ_API_KEY_{i}", "") for i in range(2, 5)) if k)
+    )
+    # How long the primary judge may be waited for before a call overflows to another model.
+    # 0 means overflow as soon as the primary is rate-limited.
+    judge_overflow_wait_s: float = field(default_factory=lambda: float(_env("RAGSEAL_JUDGE_OVERFLOW_WAIT_S", "12")))
 
     def _has_key(self, provider: str) -> bool:
         return {"nvidia": bool(self.nvidia_api_key), "groq": bool(self.groq_api_key), "ollama": True}[provider]
