@@ -57,6 +57,11 @@ class Database:
         self.path = path
         with self._connect() as conn:
             conn.executescript(SCHEMA)
+            columns = {row["name"] for row in conn.execute("PRAGMA table_info(runs)")}
+            if "status" not in columns:
+                conn.execute("ALTER TABLE runs ADD COLUMN status TEXT NOT NULL DEFAULT 'done'")
+            if "error" not in columns:
+                conn.execute("ALTER TABLE runs ADD COLUMN error TEXT")
 
     @contextmanager
     def _connect(self):
@@ -92,11 +97,41 @@ class Database:
 
     # --------------------------------------------------------------- runs
 
+    def start_run(self, user_id: str, batch_id: str, pack_id: str | None, total: int) -> str:
+        """Placeholder row for an async batch, so it shows up in History while it runs."""
+        created_at = utc_now()
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO runs (batch_id, user_id, pack_id, created_at, total_evaluated, pass_rate, json, status)"
+                " VALUES (?, ?, ?, ?, ?, NULL, '{}', 'running')",
+                (batch_id, user_id, pack_id, created_at, total),
+            )
+        return created_at
+
+    def fail_run(self, batch_id: str, error: str) -> None:
+        with self._connect() as conn:
+            conn.execute("UPDATE runs SET status = 'failed', error = ? WHERE batch_id = ?", (error, batch_id))
+
+    def fail_interrupted_runs(self) -> int:
+        """Runs still 'running' at startup were cut off by a restart."""
+        with self._connect() as conn:
+            return conn.execute(
+                "UPDATE runs SET status = 'failed', error = 'interrupted by a server restart' WHERE status = 'running'"
+            ).rowcount
+
+    def run_status(self, user_id: str, batch_id: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT batch_id, pack_id, created_at, total_evaluated, status, error FROM runs WHERE user_id = ? AND batch_id = ?",
+                (user_id, batch_id),
+            ).fetchone()
+        return dict(row) if row else None
+
     def save_run(self, user_id: str, batch: dict) -> None:
         with self._connect() as conn:
             conn.execute(
-                "INSERT INTO runs (batch_id, user_id, pack_id, created_at, total_evaluated, pass_rate, json)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT OR REPLACE INTO runs (batch_id, user_id, pack_id, created_at, total_evaluated, pass_rate, json, status, error)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, 'done', NULL)",
                 (
                     batch["batch_id"],
                     user_id,
@@ -111,7 +146,7 @@ class Database:
     def list_runs(self, user_id: str) -> list[dict]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate FROM runs"
+                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate, status FROM runs"
                 " WHERE user_id = ? ORDER BY created_at DESC, rowid DESC",
                 (user_id,),
             ).fetchall()

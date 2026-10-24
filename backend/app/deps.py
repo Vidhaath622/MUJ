@@ -10,6 +10,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .db import Database, User
 from .engine_bridge import Engine
+from .jobs import BatchJobs
 from .security import decode_token
 from .settings import AppSettings
 
@@ -23,6 +24,10 @@ def get_settings(request: Request) -> AppSettings:
 
 def get_db(request: Request) -> Database:
     return request.app.state.db
+
+
+def get_jobs(request: Request) -> BatchJobs:
+    return request.app.state.jobs
 
 
 def get_engine(request: Request) -> Engine:

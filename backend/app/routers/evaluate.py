@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from ..db import Database, User
-from ..deps import get_current_user, get_db, get_engine
+from ..deps import get_current_user, get_db, get_engine, get_jobs
 from ..engine_bridge import Engine
+from ..jobs import BatchJobs
 from ..schemas import EvaluateBatchRequest, EvaluateQueryRequest
 from .common import require_document_ids
 
@@ -32,9 +35,11 @@ def evaluate_query(
 @router.post("/batch")
 def evaluate_batch(
     body: EvaluateBatchRequest,
+    response: Response,
     user: User = Depends(get_current_user),
     engine: Engine = Depends(get_engine),
     db: Database = Depends(get_db),
+    jobs: BatchJobs = Depends(get_jobs),
 ) -> dict:
     document_ids = body.ids()
     test_cases = [case.model_dump(exclude_none=True) for case in body.test_cases]
@@ -53,6 +58,23 @@ def evaluate_batch(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "document_id, document_ids or pack_id is required")
     if not test_cases:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "test_cases is empty")
-    result = engine.evaluate_batch(user.id, document_ids, test_cases, pack_id=body.pack_id)
-    db.save_run(user.id, result)
-    return result
+
+    if not body.run_async:
+        result = engine.evaluate_batch(user.id, document_ids, test_cases, pack_id=body.pack_id, concurrency=body.concurrency)
+        db.save_run(user.id, result)
+        return result
+
+    batch_id = "batch_" + uuid.uuid4().hex[:10]
+    created_at = db.start_run(user.id, batch_id, body.pack_id, len(test_cases))
+    jobs.submit(
+        batch_id,
+        user.id,
+        len(test_cases),
+        work=lambda report: engine.evaluate_batch(
+            user.id, document_ids, test_cases, pack_id=body.pack_id, progress=report, batch_id=batch_id, concurrency=body.concurrency
+        ),
+        on_done=lambda result: db.save_run(user.id, {**result, "created_at": created_at}),
+        on_error=lambda error: db.fail_run(batch_id, error),
+    )
+    response.status_code = status.HTTP_202_ACCEPTED
+    return {"batch_id": batch_id, "status": "running", "total": len(test_cases), "pack_id": body.pack_id, "created_at": created_at}

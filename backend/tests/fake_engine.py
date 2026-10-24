@@ -9,6 +9,7 @@ from app.engine_bridge import ModelUnavailable, NotFound
 
 class FakeEngine:
     def __init__(self):
+        self.batch_error = None
         self.docs: dict[tuple[str, str], dict] = {}
         self.uploads: list[tuple[str, str, bytes]] = []
         self.calls: list[tuple] = []
@@ -88,7 +89,9 @@ class FakeEngine:
         self._check(owner_id, document_ids)
         return self._evaluation(query, ground_truth)
 
-    def evaluate_batch(self, owner_id, document_ids, test_cases, pack_id=None, progress=None):
+    def evaluate_batch(self, owner_id, document_ids, test_cases, pack_id=None, progress=None, batch_id=None, concurrency=None):
+        if self.batch_error is not None:
+            raise self.batch_error
         self.calls.append(("evaluate_batch", owner_id, tuple(document_ids), len(test_cases), pack_id))
         self.last_batch_cases = test_cases
         self._check(owner_id, document_ids)
@@ -98,8 +101,10 @@ class FakeEngine:
             item.update(test_id=case.get("test_id") or f"tc_{i:02d}", category="CLEAN_PASS",
                         context_relevance=0.9, faithfulness=1.0, answer_accuracy=None)
             results.append(item)
+            if progress:
+                progress(i, len(test_cases), 0)
         return {
-            "batch_id": "batch_" + uuid.uuid4().hex[:8],
+            "batch_id": batch_id or "batch_" + uuid.uuid4().hex[:8],
             "pack_id": pack_id,
             "document_ids": document_ids,
             "created_at": "2026-10-24T12:00:00Z",

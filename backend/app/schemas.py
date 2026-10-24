@@ -77,8 +77,13 @@ class TestCaseIn(BaseModel):
 
 
 class EvaluateBatchRequest(DocumentScope):
+    model_config = ConfigDict(populate_by_name=True)
+
     test_cases: list[TestCaseIn] = Field(default_factory=list)
     pack_id: str | None = None
+    # "async" is a Python keyword, so the field has another name.
+    run_async: bool = Field(default=False, alias="async")
+    concurrency: int | None = Field(default=None, ge=1, le=12)
 
 
 class SyntheticRequest(BaseModel):
