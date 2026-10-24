@@ -17,7 +17,7 @@ from typing import Callable
 from .agreement import judge_agreement, load_labels
 from .config import Settings, get_settings
 from .evaluate import Evaluator, TestCase, failed_result, summarize_batch
-from .ingest import ParsedDocument, parse_document
+from .ingest import ParsedDocument, document_id_for, parse_document
 from .llm import ChatModel, EmbedModel, Judge, JudgeError, ModelUnavailable, build_models
 from .packs import PackError, discover, read_document_bytes, resolve_test_cases
 from .rag import RagSystem
@@ -348,6 +348,15 @@ class Engine:
         if spec is None:
             raise NotFound(f"pack {pack_id} not found")
         return spec
+
+    def load_pack_summary(self, pack_id: str) -> dict:
+        """Case count and document filenames of a pack, without ingesting anything."""
+        spec = self._pack(pack_id)
+        filenames = {}
+        for entry in spec.documents:
+            filename, data = read_document_bytes(spec, entry)
+            filenames[document_id_for(data)] = filename
+        return {**spec.summary(), "filenames": filenames}
 
     def load_pack(self, owner_id: str, pack_id: str) -> dict:
         spec = self._pack(pack_id)
