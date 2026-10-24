@@ -13,13 +13,13 @@ export interface FailureType {
 }
 
 export const FAILURE_TYPES: FailureType[] = [
-  { id: 'WRONG_CHUNK', plain: 'Bot read the wrong text', label: 'Wrong chunk', stage: 'retriever', hint: 'The text it was given doesn't contain the answer.' },
+  { id: 'WRONG_CHUNK', plain: 'Bot read the wrong text', label: 'Wrong chunk', stage: 'retriever', hint: 'The text it was given doesn’t contain the answer.' },
   { id: 'STALE_SOURCE', plain: 'Bot used an old version', label: 'Outdated source', stage: 'retriever', hint: 'It quoted an outdated document (e.g. old price).' },
   { id: 'DISTRACTOR_CONFUSION', plain: 'Fooled by similar-looking text', label: 'Distractor', stage: 'retriever', hint: 'It used text about something similar but different.' },
   { id: 'IGNORED_CONTEXT', plain: 'Answer was in the text, bot missed it', label: 'Ignored context', stage: 'generator', hint: 'The right text was there; the answer ignores it.' },
   { id: 'HALLUCINATION', plain: 'Bot made something up', label: 'Hallucination', stage: 'generator', hint: 'Says something none of the text says.' },
   { id: 'REASONING_ERROR', plain: 'Right text, wrong conclusion', label: 'Reasoning error', stage: 'generator', hint: 'Had the right text but misread it or got the maths wrong.' },
-  { id: 'UNANSWERABLE_ANSWERED', plain: 'Should have said “not in the documents”', label: 'Should have abstained', stage: 'generator', hint: 'The documents don't cover it, but it answered anyway.' },
+  { id: 'UNANSWERABLE_ANSWERED', plain: 'Should have said “not in the documents”', label: 'Should have abstained', stage: 'generator', hint: 'The documents don’t cover it, but it answered anyway.' },
   { id: 'FALSE_ABSTENTION', plain: "Said “I don't know” but could answer", label: 'Wrongly abstained', stage: 'generator', hint: 'Refused, but the answer was in the text.' },
   { id: 'OTHER', plain: 'Something else', label: 'Other', stage: 'none', hint: 'Wrong for a reason not listed; add a note.' },
 ];
