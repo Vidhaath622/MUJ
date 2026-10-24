@@ -63,6 +63,10 @@ export interface LabResult {
     category?: string;
     summary?: string;
     recommended_action?: string;
+    /** Phase 2 fine-grained type (WRONG_CHUNK, STALE_SOURCE, …); absent on older runs. */
+    failure_type?: string;
+    failure_type_text?: string;
+    stage?: string;
   };
   replay?: {
     answer?: string;
@@ -99,6 +103,7 @@ export interface LabPack {
 export interface LabRun {
   batch_id: string;
   created_at?: string;
+  pack_id?: string | null;
   total_evaluated?: number;
   failed_cases?: number;
   aggregates?: {
@@ -249,18 +254,30 @@ export function useLabData(packId: PackId, token: string | null, batchId?: strin
     [pack, token]
   );
 
-  const cases: LabCase[] = (pack?.test_cases ?? []).map((tc) => ({
-    test_id: tc.test_id,
-    question: tc.question,
-    type: tc.type,
-    stale_chunk_ids: tc.stale_chunk_ids ?? [],
-    note: tc.note,
-    result: run?.results.find((r) => r.test_id === tc.test_id),
-  }));
+  // A run opened by id may belong to no pack (an uploaded test set) or another pack:
+  // then its own results are the case list, not the selected pack's questions.
+  const foreignRun = !!run && (run.pack_id ?? null) !== packId;
+  const cases: LabCase[] = foreignRun
+    ? run!.results.map((r, i) => ({
+        test_id: r.test_id ?? `case_${i + 1}`,
+        question: r.query,
+        type: r.case_type,
+        stale_chunk_ids: r.stale_chunk_ids ?? [],
+        result: r,
+      }))
+    : (pack?.test_cases ?? []).map((tc) => ({
+        test_id: tc.test_id,
+        question: tc.question,
+        type: tc.type,
+        stale_chunk_ids: tc.stale_chunk_ids ?? [],
+        note: tc.note,
+        result: run?.results.find((r) => r.test_id === tc.test_id),
+      }));
 
   return {
     pack,
     run,
+    foreignRun,
     cases,
     loading,
     error,

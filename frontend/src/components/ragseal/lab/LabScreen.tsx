@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Loader2, Play } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { failureLabel } from '../shared/taxonomy';
 import { PackId } from '../../../types/ragseal';
 import { CaseReport } from './CaseReport';
 import { CountUp } from './motion';
@@ -81,9 +82,9 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) 
 
       <aside className="relative flex min-h-0 flex-col gap-3.5">
         <PackSummary
-          packName={PACK_NAME[packId] ?? packId}
+          packName={lab.foreignRun ? (lab.run?.pack_id ? PACK_NAME[lab.run.pack_id as PackId] ?? lab.run.pack_id : 'Uploaded test set') : PACK_NAME[packId] ?? packId}
           run={lab.run}
-          onRun={lab.runPack}
+          onRun={lab.foreignRun ? undefined : lab.runPack}
           running={lab.runningPack}
           startedAt={lab.runStartedAt}
           total={lab.cases.length}
@@ -178,9 +179,15 @@ const CaseRow: React.FC<{ c: LabCase; active: boolean; onClick: () => void }> = 
           <span className={cn('block truncate text-[13px] leading-snug', active ? 'text-white' : 'text-[#B4B9C0]')}>
             {c.question}
           </span>
-          <span className="mt-0.5 flex gap-2 text-[11px] text-[#7D838C]">
+          <span className="mt-0.5 flex flex-wrap gap-x-2 whitespace-nowrap text-[11px] text-[#7D838C]">
             <span className="font-mono">{c.test_id}</span>
-            {v && <span style={{ color: v.color }}>{v.label}</span>}
+            {v && (
+              <span style={{ color: v.color }}>
+                {c.result?.root_cause?.failure_type && c.result.root_cause.failure_type !== 'CLEAN_PASS'
+                  ? failureLabel(c.result.root_cause.failure_type)
+                  : v.label}
+              </span>
+            )}
             {c.type && c.type !== 'factoid' && <span>· {c.type} trap</span>}
           </span>
         </span>
@@ -192,7 +199,7 @@ const CaseRow: React.FC<{ c: LabCase; active: boolean; onClick: () => void }> = 
 const PackSummary: React.FC<{
   packName: string;
   run: LabRun | null;
-  onRun: () => void;
+  onRun?: () => void;
   running: boolean;
   startedAt: number | null;
   total: number;
@@ -206,7 +213,7 @@ const PackSummary: React.FC<{
     <section className="lab-panel rounded-2xl p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="text-xs text-[#8A9099]">
-          {packName} pack · {total} questions
+          {packName}{packName.endsWith('set') ? '' : ' pack'} · {total} questions
         </div>
       </div>
       <div className="mt-2.5 flex items-baseline gap-2.5">
@@ -242,6 +249,7 @@ const PackSummary: React.FC<{
         </>
       )}
 
+      {onRun && (
       <button
         onClick={onRun}
         disabled={running || !total}
@@ -250,6 +258,7 @@ const PackSummary: React.FC<{
         {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3 fill-current" />}
         {running ? `Scoring ${total} questions · ${elapsed}s` : run ? 'Re-run pack' : 'Run pack'}
       </button>
+      )}
       {running && (
         <p className="mt-2 text-[11px] leading-snug text-[#8A9099]">
           About 10 s a question on a cold judge; cached reruns take seconds.

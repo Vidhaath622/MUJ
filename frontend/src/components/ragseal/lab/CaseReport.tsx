@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { failureLabel, type Stage as FaultStage, STAGE_COLOR as FAULT_COLOR, STAGE_LABEL } from '../shared/taxonomy';
 import { LabChunk, LabClaim, LabResult } from './useLabData';
 import { CountUp } from './motion';
 import { AMBER, GREY, PASS, RED, StageState, pct, tint, verdictStyle } from './verdict';
@@ -26,6 +27,9 @@ const ACCURACY_THRESHOLD = 0.7;
 export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType, staleChunkIds, filenames }) => {
   const category = result.root_cause?.category ?? result.category ?? (result.error ? 'UNRESOLVED' : 'NEEDS_REVIEW');
   const v = verdictStyle(category);
+  const ft = result.root_cause?.failure_type;
+  const stage = result.root_cause?.stage;
+  const stageKey = (stage ?? 'none') as FaultStage;
   const m = result.metrics ?? {};
   const gold = new Set(result.gold_chunk_ids ?? []);
   const stale = new Set([...staleChunkIds, ...(result.stale_chunk_ids ?? [])]);
@@ -90,7 +94,21 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
           <div className="mt-1.5 text-[34px] font-semibold leading-none tracking-[-0.035em] 2xl:text-[40px]" style={{ color: v.color }}>
             {v.label}
           </div>
+          {ft && ft !== 'CLEAN_PASS' && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
+              <span
+                className="rounded-full px-2 py-0.5 font-medium"
+                style={{ background: tint(FAULT_COLOR[stageKey] ?? v.color, 0.14), color: FAULT_COLOR[stageKey] ?? v.color }}
+              >
+                {failureLabel(ft)}
+              </span>
+              {stage && <span className="text-[#8A9099]">{STAGE_LABEL[stage] ?? stage}</span>}
+            </div>
+          )}
           <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-[#B4B9C0]">{result.root_cause?.summary ?? v.blame}</p>
+          {result.root_cause?.failure_type_text && ft !== 'CLEAN_PASS' && (
+            <p className="mt-1.5 max-w-[52ch] text-xs leading-relaxed text-[#8A9099]">{result.root_cause.failure_type_text}</p>
+          )}
           {result.error && <p className="mt-2 text-xs text-[#F47783]">{result.error}</p>}
         </div>
 

@@ -13,6 +13,7 @@ import {
   Tags,
   User,
 } from 'lucide-react';
+import { judgePool } from '../shared/apiExtra';
 import { cn } from '../../../lib/utils';
 import { AuthUser } from '../../../types/ragseal';
 import { HealthResponse } from '../../../lib/api';
@@ -202,10 +203,15 @@ const ModelStatus: React.FC<{ live: boolean; health: HealthResponse | null }> = 
   const judge = health.models?.judge;
   const ready = health.engine_ready && gen?.ready !== false && judge?.ready !== false;
   const judgeName = (judge?.name ?? health.judge_model ?? 'judge').split('/').pop();
+  const pool = judgePool(health);
+  const poolText = pool.members.map((m) => `${m.name} (${m.role ?? 'judge'})`).join(', ');
   return (
     <div
       className="flex items-start justify-center gap-2.5 px-2.5 text-xs lg:justify-start"
-      title={[gen?.error, judge?.error, health.engine_error].filter(Boolean).join(' · ') || 'All models ready'}
+      title={
+        [gen?.error, judge?.error, health.engine_error].filter(Boolean).join(' · ') ||
+        `All models ready${poolText ? `. Judge pool: ${poolText}` : ''}`
+      }
     >
       <span
         className={cn(
@@ -219,6 +225,7 @@ const ModelStatus: React.FC<{ live: boolean; health: HealthResponse | null }> = 
         </div>
         <div className="truncate text-[#8A9099]">
           Judge <span className="font-mono text-[#C9CDD3]">{judgeName}</span>
+          {pool.keys != null && pool.keys > 1 && <span className="text-[#6F757E]"> ×{pool.keys} keys</span>}
         </div>
       </div>
     </div>
