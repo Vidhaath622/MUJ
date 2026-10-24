@@ -13,7 +13,7 @@ from .ingest import Chunk
 from .llm import Judge, JudgeError, ModelUnavailable
 from .rag import RagSystem, is_abstention
 from .scoring import MetricResult, score_case
-from .store import VectorStore
+from .store import ScoredChunk, VectorStore
 from .verdict import FAILURE_TYPE_TEXT, Facts, classify_failure, decide, needs_replay
 
 SUPPORT_SYSTEM = (
@@ -37,6 +37,9 @@ class TestCase:
     type: str = "factoid"  # factoid | unanswerable | stale | distractor
     manual_answer: str | None = None
     distractor_document_ids: list[str] = field(default_factory=list)
+    # Fault injection: use exactly these chunks as the retrieved context instead of searching.
+    forced_chunk_ids: list[str] | None = None
+    true_failure_type: str | None = None  # the injected fault, for the confusion matrix
 
     @property
     def unanswerable(self) -> bool:
@@ -95,7 +98,13 @@ class Evaluator:
         started = time.perf_counter()
         self.judge.start_tracking()
         counter = {"judge_calls": 0, "rule_shortcuts": 0}
-        if case.manual_answer:
+        if case.forced_chunk_ids is not None:
+            retrieved = [ScoredChunk(c, 0.0) for c in self.store.get_chunks(owner_id, case.forced_chunk_ids)]
+            if case.manual_answer:
+                answer, citations, gen_ms = case.manual_answer, [], 0
+            else:
+                answer, citations, gen_ms = self.rag.generate(case.question, [s.chunk for s in retrieved])
+        elif case.manual_answer:
             retrieved = self.rag.retrieve(owner_id, case.question, document_ids)
             answer, citations, gen_ms = case.manual_answer, [], 0
         else:
@@ -189,6 +198,7 @@ class Evaluator:
             "case_type": case.type,
             "query": case.question,
             "generated_answer": answer,
+            **({"true_failure_type": case.true_failure_type, "injected": True} if case.true_failure_type else {}),
             "ground_truth": case.ground_truth if not case.unanswerable else None,
             "expected_abstain": case.unanswerable,
             "retrieved_chunks": retrieved_out,

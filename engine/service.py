@@ -41,6 +41,8 @@ def _case_from_dict(raw: dict) -> TestCase:
         type=case_type,
         manual_answer=raw.get("manual_answer") or raw.get("optional_manual_answer"),
         distractor_document_ids=list(raw.get("distractor_document_ids") or []),
+        forced_chunk_ids=raw.get("forced_chunk_ids"),
+        true_failure_type=raw.get("true_failure_type"),
     )
 
 
@@ -375,6 +377,29 @@ class Engine:
             ],
             "test_cases": cases,
         }
+
+    # ------------------------------------------------------ fault injection
+
+    def injection_run(
+        self,
+        owner_id: str,
+        pack_ids: list[str] | None = None,
+        n_per_type: int = 5,
+        progress: Callable[[int, int, int], None] | None = None,
+        batch_id: str | None = None,
+    ) -> dict:
+        """Inject known faults into pack cases, diagnose them, and return the batch plus its confusion matrix."""
+        from .inject import build_cases, confusion
+
+        pack_ids = pack_ids or [p["pack_id"] for p in self.list_packs()]
+        per_pack = max(1, -(-n_per_type // len(pack_ids)))  # ceil: n_per_type is the total per fault type
+        document_ids, cases = [], []
+        for pack_id in pack_ids:
+            pack = self.load_pack(owner_id, pack_id)
+            document_ids += pack["document_ids"]
+            cases += build_cases(self, owner_id, pack, per_pack)
+        batch = self.evaluate_batch(owner_id, document_ids, cases, pack_id=None, progress=progress, batch_id=batch_id)
+        return {**batch, "kind": "injection", "injected_packs": pack_ids, "n_per_type": n_per_type, "confusion": confusion(batch["results"])}
 
     def pack_labels(self, pack_id: str) -> list[dict]:
         try:
