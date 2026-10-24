@@ -14,7 +14,7 @@ from .llm import Judge, JudgeError, ModelUnavailable
 from .rag import RagSystem, is_abstention
 from .scoring import MetricResult, score_case
 from .store import VectorStore
-from .verdict import Facts, decide, needs_replay
+from .verdict import FAILURE_TYPE_TEXT, Facts, classify_failure, decide, needs_replay
 
 SUPPORT_SYSTEM = (
     "Decide whether the passage states the ground-truth answer to the question. "
@@ -36,6 +36,7 @@ class TestCase:
     stale_chunk_ids: list[str] = field(default_factory=list)
     type: str = "factoid"  # factoid | unanswerable | stale | distractor
     manual_answer: str | None = None
+    distractor_document_ids: list[str] = field(default_factory=list)
 
     @property
     def unanswerable(self) -> bool:
@@ -139,6 +140,8 @@ class Evaluator:
             faithful=None if faith.score is None else faith.passed,
             correct=None if acc.score is None else acc.passed,
             stale_retrieved=bool(stale_retrieved),
+            contradicted_claims=any(c["verdict"] == "contradicted" for c in faith.extra.get("claims", [])),
+            distractor_retrieved=bool(chunks) and chunks[0].document_id in case.distractor_document_ids,
         )
 
         replay = None
@@ -151,6 +154,7 @@ class Evaluator:
             except JudgeError:
                 facts.replay_failed = True
         verdict = decide(facts)
+        failure_type, stage = classify_failure(facts, verdict.category)
         if replay is not None:
             replay["verdict_effect"] = verdict.verdict_effect or (
                 "Replay with the gold chunk answered correctly." if replay["passed"] else "Replay with the gold chunk was still wrong."
@@ -199,6 +203,9 @@ class Evaluator:
                 "summary": verdict.summary,
                 "recommended_action": verdict.recommended_action,
                 "evidence": evidence,
+                "failure_type": failure_type,
+                "stage": stage,
+                "failure_type_text": FAILURE_TYPE_TEXT[failure_type],
             },
             "gold_chunk_ids": gold_ids,
             "stale_chunk_ids": list(case.stale_chunk_ids),
@@ -260,6 +267,9 @@ def failed_result(case: TestCase, error: Exception, judge: Judge, generator_mode
             "summary": f"This case could not be evaluated ({error}).",
             "recommended_action": "Re-run the batch; judge calls already made are cached.",
             "evidence": [],
+            "failure_type": "UNRESOLVED",
+            "stage": "unknown",
+            "failure_type_text": FAILURE_TYPE_TEXT["UNRESOLVED"],
         },
         "gold_chunk_ids": list(case.gold_chunk_ids),
         "stale_chunk_ids": list(case.stale_chunk_ids),
@@ -278,7 +288,7 @@ def failed_result(case: TestCase, error: Exception, judge: Judge, generator_mode
 
 def summarize_batch(results: list[dict]) -> dict:
     """Aggregates for /api/evaluate/batch. Averages skip unmeasured (null) scores and report n."""
-    from .verdict import CATEGORIES
+    from .verdict import CATEGORIES, FAILURE_TYPES
 
     def avg(metric: str) -> tuple[float | None, int]:
         values = [r["metrics"][metric]["score"] for r in results if r["metrics"][metric]["score"] is not None]
@@ -305,6 +315,9 @@ def summarize_batch(results: list[dict]) -> dict:
             "n_answer_accuracy": acc_n,
         },
         "root_cause_breakdown": breakdown,
+        "failure_type_breakdown": {
+            t: sum(r["root_cause"].get("failure_type") == t for r in results) for t in FAILURE_TYPES
+        },
         "replays_run": sum(r["replay"] is not None for r in results),
         "gold_retrieval_rate": (
             round(sum(r["gold_retrieved"] for r in results if r["gold_chunk_ids"] and not r.get("error")) / n, 3)

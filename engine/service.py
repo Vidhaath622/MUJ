@@ -40,6 +40,7 @@ def _case_from_dict(raw: dict) -> TestCase:
         stale_chunk_ids=list(raw.get("stale_chunk_ids") or []),
         type=case_type,
         manual_answer=raw.get("manual_answer") or raw.get("optional_manual_answer"),
+        distractor_document_ids=list(raw.get("distractor_document_ids") or []),
     )
 
 
@@ -200,6 +201,7 @@ class Engine:
         case_type: str = "factoid",
         stale_chunk_ids: list[str] | None = None,
         test_id: str | None = None,
+        distractor_document_ids: list[str] | None = None,
     ) -> dict:
         self._check_documents(owner_id, document_ids)
         case = TestCase(
@@ -210,6 +212,7 @@ class Engine:
             stale_chunk_ids=stale_chunk_ids or [],
             type=case_type,
             manual_answer=manual_answer,
+            distractor_document_ids=distractor_document_ids or [],
         )
         return self.evaluator.evaluate(owner_id, case, document_ids)
 
@@ -354,11 +357,19 @@ class Engine:
             if not self.store.has_document(owner_id, doc.document_id):
                 self._embed_and_store(owner_id, doc, pack_id)
         cases = resolve_test_cases(spec, docs_by_file)
+        distractor_ids = [
+            docs_by_file[e["file"]].document_id
+            for e in spec.documents
+            if e.get("role") == "distractor" or "distractor" in e["file"].lower()
+        ]
+        for case in cases:
+            case["distractor_document_ids"] = distractor_ids
         return {
             "pack_id": pack_id,
             "name": spec.name,
             "demo_data": bool(spec.manifest.get("demo_data", True)),
             "document_ids": document_ids,
+            "distractor_document_ids": distractor_ids,
             "documents": [
                 {"document_id": d.document_id, "filename": d.filename, "chunk_count": len(d.chunks)} for d in docs_by_file.values()
             ],

@@ -72,3 +72,27 @@ def test_failed_replay_is_unresolved():
 
 def test_unknown_faithfulness_is_unresolved():
     assert decide(facts(faithful=None)).category == "UNRESOLVED"
+
+
+from engine.verdict import classify_failure
+
+
+@pytest.mark.parametrize(
+    "overrides, category, expected",
+    [
+        ({}, "CLEAN_PASS", ("CLEAN_PASS", "none")),
+        ({"gold_retrieved": False, "correct": False}, "RETRIEVAL_FAILURE", ("WRONG_CHUNK", "retriever")),
+        ({"correct": False, "stale_retrieved": True}, "RETRIEVAL_FAILURE", ("STALE_SOURCE", "retriever")),
+        ({"gold_retrieved": False, "correct": False, "distractor_retrieved": True}, "RETRIEVAL_FAILURE", ("DISTRACTOR_CONFUSION", "retriever")),
+        ({"gold_retrieved": False, "faithful": False, "correct": False}, "COMPOUND_FAILURE", ("WRONG_CHUNK", "both")),
+        ({"faithful": False, "correct": False, "contradicted_claims": True}, "GENERATION_HALLUCINATION", ("IGNORED_CONTEXT", "generator")),
+        ({"faithful": False, "correct": False}, "GENERATION_HALLUCINATION", ("HALLUCINATION", "generator")),
+        ({"correct": False}, "NEEDS_REVIEW", ("REASONING_ERROR", "generator")),
+        ({"correct": False, "abstained": True}, "NEEDS_REVIEW", ("FALSE_ABSTENTION", "generator")),
+        ({"unanswerable": True, "gold_known": False, "abstained": False}, "GENERATION_HALLUCINATION", ("UNANSWERABLE_ANSWERED", "generator")),
+        ({"correct": False, "stale_retrieved": True}, "UNRESOLVED", ("STALE_SOURCE", "both")),
+        ({"faithful": None}, "UNRESOLVED", ("UNRESOLVED", "unknown")),
+    ],
+)
+def test_failure_taxonomy(overrides, category, expected):
+    assert classify_failure(facts(**overrides), category) == expected
