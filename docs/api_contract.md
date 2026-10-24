@@ -353,3 +353,12 @@ export interface JudgeAgreement { agreement: number; n: number; false_pass: numb
 // MetricDetail gains: judged_by: 'model' | 'rule'
 // BatchSummary gains: pack_id, judge_agreement: JudgeAgreement | null, duration_ms
 ```
+
+### 4.9 Clarifications (Builder implementation notes)
+* **No ground truth:** `metrics.answer_accuracy.score` is `null`, `status` is `"REVIEW"` and `judged_by` is `"rule"`. The frontend must render `null` as "No ground truth" (amber), never as 0. So `MetricDetail.score` is `number | null`.
+* **Batch result items** are the full `EvaluationResult` plus the v1 flat fields (`test_id`, `category`, `context_relevance`, `faithfulness`, `answer_accuracy` as numbers or `null`).
+* **Extra optional fields:**
+  * `metrics.<name>.claims: { claim: string; supported: boolean; chunk_id?: string }[]`
+  * `retrieved_chunks[].similarity: number`, `.document_id: string`, `.cited: boolean`
+  * `TestCase.type: 'factoid' | 'unanswerable' | 'stale' | 'distractor'`
+* **Human labels for judge agreement:** `labels.json`, created with the engine's label CLI. Members 3 and 4 do the labelling. Until labels exist, `judge_agreement` is `null`; show "Not measured yet", not a number.
