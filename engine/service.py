@@ -449,6 +449,11 @@ class Engine:
 
         return list(PROFILES.values())
 
+    def compare(self, base_results: list[dict], candidate_results: list[dict], base: str, candidate: str) -> dict:
+        from .compare import compare_runs
+
+        return compare_runs(base_results, candidate_results, base, candidate)
+
     def run_profile(
         self, owner_id: str, pack_id: str, profile_id: str, progress: Callable[[int, int, int], None] | None = None, batch_id: str | None = None
     ) -> dict:
