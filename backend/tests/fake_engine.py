@@ -135,3 +135,17 @@ class FakeEngine:
         doc = self.ingest(owner_id, "fees_v2.md", b"Monthly fee is 5 USD.", pack_id)
         cases = [{"test_id": "bk_01", "question": "What is the monthly fee?", "ground_truth_answer": "5 USD", "type": "factoid"}]
         return {"pack_id": pack_id, "document_ids": [doc["document_id"]], "test_cases": cases}
+
+    def injection_run(self, owner_id, pack_ids=None, n_per_type=5, progress=None, batch_id=None):
+        results = []
+        for i, (true, pred) in enumerate([("WRONG_CHUNK", "WRONG_CHUNK"), ("HALLUCINATION", "IGNORED_CONTEXT")], start=1):
+            item = self._evaluation(f"q{i}", "gt")
+            item.update(test_id=f"inj_{i}", true_failure_type=true)
+            item["root_cause"] = {"category": "X", "failure_type": pred, "stage": "retriever"}
+            results.append(item)
+            if progress:
+                progress(i, 2, 0)
+        return {"batch_id": batch_id, "pack_id": None, "kind": "injection", "total_evaluated": 2, "aggregates": {"pass_rate": 0.0},
+                "results": results, "n_per_type": n_per_type, "injected_packs": pack_ids or ["banking"],
+                "confusion": {"labels": ["WRONG_CHUNK", "IGNORED_CONTEXT", "HALLUCINATION"], "matrix": [[1, 0, 0], [0, 0, 0], [0, 1, 0]],
+                              "per_class": {}, "accuracy": 0.5, "n": 2}}

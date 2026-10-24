@@ -70,3 +70,21 @@ def test_label_flow(client, alice, bob, fake_engine):
     client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"})
     again = client.get("/api/labels/queue", headers=alice, params={"pack_id": "banking", "labeler": "SR"}).json()
     assert again["batch_id"] == run["batch_id"]
+
+
+def test_injection_run_and_confusion(client, alice, bob, fake_engine):
+    from tests.test_api import _wait_for
+
+    empty = client.get("/api/trust/confusion", headers=alice).json()
+    assert empty["run_id"] is None and empty["n"] == 0
+    assert client.post("/api/trust/injection-run", headers=alice, json={"pack_id": "nope"}).status_code == 404
+
+    started = client.post("/api/trust/injection-run", headers=alice, json={"n_per_type": 2})
+    assert started.status_code == 202, started.text
+    run_id = started.json()["run_id"]
+    assert _wait_for(client, alice, run_id)["status"] == "done"
+
+    out = client.get("/api/trust/confusion", headers=alice).json()
+    assert out["run_id"] == run_id and out["accuracy"] == 0.5 and out["n"] == 2
+    assert out["matrix"][0][0] == 1 and out["cases"][1]["true_failure_type"] == "HALLUCINATION"
+    assert client.get("/api/trust/confusion", headers=bob, params={"run_id": run_id}).status_code == 404
