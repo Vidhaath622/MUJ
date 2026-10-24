@@ -1,6 +1,7 @@
 import { EvaluationResult, BatchSummary, PackId, AuthUser } from '../types/ragseal';
 
-export const API_BASE_URL = 'http://localhost:8000/api';
+// Relative so the app also works when opened from another laptop on the LAN; vite proxies /api to the backend.
+export const API_BASE_URL = '/api';
 
 export class ApiError extends Error {
   status: number;
