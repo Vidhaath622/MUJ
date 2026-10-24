@@ -88,14 +88,14 @@
 - [x] Implemented Tab 2 "How It Works" (interactive stage-by-stage pipeline walkthrough & copyable pitch deck diagram).
 - [x] Implemented Auth Modal (`demo@ragseal.dev` / `demo1234`).
 - [x] Strictly enforced Component Library usage (zero ad-hoc elements).
-- [x] Created API integration client layer in `frontend/src/lib/api.ts` connecting to `http://localhost:8000/api`.
-- [x] Committed and pushed `cfb282e` to `vidhaath/ui-frontend` and fast-forwarded `main`.
-- [x] Verified Sarthak's `origin/sarthak/core-engine` and `origin/sarthak/backend-api` branches merge cleanly with 0 conflicts.
+- [x] Merged `sarthak/docs-brief`, `sarthak/core-engine`, and `sarthak/backend-api` cleanly into `main` with 0 conflicts.
+- [x] Verified and ran all 23 backend unit tests (`23 passed in 7.45s`).
+- [x] Launched live FastAPI backend on `http://localhost:8000` (daemon).
+- [x] Connected frontend to real backend at `http://localhost:8000` across Tab 1 (Lab: auto-login, health probe, live evaluation, run history) and Tab 2 (How It Works: interactive backend ping, live latency & engine diagnostic, API contract route mapping).
+- [x] Pushed commit `7e25811` to `origin/main` and `origin/vidhaath/ui-frontend`.
 
 ### In Progress / Next Up
-- [ ] **6:15 PM – 8:15 PM Surprise Twist**: Stand by for the hackathon organizers' surprise problem statement release.
-- [ ] Merge `sarthak/backend-api` and `sarthak/core-engine` into `main` (or coordinate with Sarthak to merge).
-- [ ] Run full end-to-end integration test (Vite dev server + FastAPI backend on port 8000).
+- [ ] **6:15 PM – 8:15 PM Surprise Twist**: Stand by for the hackathon organizers' surprise problem statement release (~5 minutes).
 - [ ] Export architecture diagrams & metrics for Members 3 & 4 to include in the presentation deck.
 - [ ] 1:30 AM Hard Code Freeze $\rightarrow$ 3:00 AM Evaluation (PPT + Prototype).
 
@@ -119,6 +119,7 @@
 | `2026-10-24 17:41` | Sarthak Direct Alignment | **STRICT BOUNDARY ENFORCED**: Sarthak notified Vidhaath to never touch, add, or edit files in `/engine` or `/backend`. All engine/backend requests (including NVIDIA integration) are handed off to Sarthak & Claude on `sarthak/core-engine` & `sarthak/backend-api`. Mock judge removed because it faked scores. Antigravity strictly confined to `/frontend` and UI specs. |
 | `2026-10-24 17:45` | RAGSeal v2 Plan Delivered | Fully implemented locked v2 specifications: Tab 1 "Lab" (Industry Packs: Recruitment, Banking, Healthcare; Causal Replay experiment hero feature, Judge vs Human Agreement metric card, Run History), Tab 2 "How It Works" (interactive stage-by-stage pipeline walkthrough & copyable pitch deck diagram), and AuthModal (seeded demo user `demo@ragseal.dev`). Zero TypeScript errors, built strictly with component library primitives. |
 | `2026-10-24 17:55` | API Client Integration & Tree Verification | Added `frontend/src/lib/api.ts` covering `/auth/login`, `/packs`, `/rag/ask`, `/evaluate/query`, `/evaluate/batch`. Pushed to `vidhaath/ui-frontend` (`cfb282e`) and fast-forwarded `main`. Tested three-way merge tree with `sarthak/backend-api` and `sarthak/core-engine` - confirmed 100% clean merge with zero conflicts. |
+| `2026-10-24 18:05` | Full Repo Merge & Real Backend Live | Merged `sarthak/docs-brief`, `sarthak/core-engine`, and `sarthak/backend-api` cleanly into `main`. Spawned FastAPI backend on port 8000. Connected Tab 1 (Lab) and Tab 2 (How It Works) to `http://localhost:8000`. Auto-login and health polling verified. Pushed commit `7e25811` to `origin/main` and `origin/vidhaath/ui-frontend`. |
 
 ---
 
