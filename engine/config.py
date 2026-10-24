@@ -95,7 +95,8 @@ class Settings:
         Default: the other Groq models behind a Groq primary (each Groq model has its own per-minute limit).
         "none" disables overflow. Pairs whose provider has no key are skipped.
         """
-        default = "groq:openai/gpt-oss-20b,groq:qwen/qwen3.8-27b" if primary == "groq" else "none"
+        # gpt-oss-20b is left out: Groq's JSON validation rejects its replies to the judge prompt.
+        default = "groq:qwen/qwen3.8-27b" if primary == "groq" else "none"
         raw = _env("RAGSEAL_JUDGE_OVERFLOW", default)
         if raw.lower() == "none":
             return []

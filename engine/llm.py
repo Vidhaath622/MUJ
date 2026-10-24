@@ -345,6 +345,7 @@ class Judge:
         self.calls = 0
         self.cache_hits = 0
         self.fallback_calls = 0
+        self.rate_limited = 0
 
     @property
     def mode(self) -> str:
@@ -402,9 +403,9 @@ class Judge:
         ]
         last_error: Exception | None = None
         for _ in range(2):
+            raw = member.chat(messages, schema=schema, num_predict=800, patient=False).text
             with self._lock:
                 self.calls += 1
-            raw = member.chat(messages, schema=schema, num_predict=800, patient=False).text
             try:
                 result = _parse_json(raw)
             except JudgeError as exc:
@@ -452,6 +453,7 @@ class Judge:
             except RateLimited as exc:
                 with self._lock:
                     self._cooldown[id(member)] = time.time() + exc.wait
+                    self.rate_limited += 1
                 last_error = exc
                 continue
             except ModelUnavailable as exc:

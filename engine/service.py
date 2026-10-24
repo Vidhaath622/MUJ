@@ -219,6 +219,7 @@ class Engine:
         for i, case in enumerate(cases, start=1):
             case.test_id = case.test_id or f"tc_{i:02d}"
         calls_before, hits_before = self.judge.calls, self.judge.cache_hits
+        limited_before = getattr(self.judge, "rate_limited", 0)
         lock = threading.Lock()
         counts = {"done": 0, "failed": 0}
 
@@ -283,6 +284,7 @@ class Engine:
                 "cases_per_min": round(len(cases) / (wall_ms / 60000), 2) if wall_ms else None,
                 "judge_calls": self.judge.calls - calls_before,
                 "judge_cache_hits": self.judge.cache_hits - hits_before,
+                "rate_limited_retries": getattr(self.judge, "rate_limited", 0) - limited_before,
                 "rule_shortcuts": sum(ev.get("timing", {}).get("rule_shortcuts", 0) for ev in evaluations),
                 "concurrency": workers,
             },

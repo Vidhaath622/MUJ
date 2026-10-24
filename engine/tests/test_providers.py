@@ -131,6 +131,6 @@ def test_pool_waits_out_short_rate_limit_on_primary(tmp_path):
 
 def test_overflow_setting(monkeypatch):
     s = Settings(groq_api_key="g", nvidia_api_key="")
-    assert s.judge_overflow("groq") == [("groq", "openai/gpt-oss-20b"), ("groq", "qwen/qwen3.8-27b")]
+    assert s.judge_overflow("groq") == [("groq", "qwen/qwen3.8-27b")]
     monkeypatch.setenv("RAGSEAL_JUDGE_OVERFLOW", "nvidia:minimaxai/minimax-m3.1-flash,groq:openai/gpt-oss-120b")
     assert s.judge_overflow("groq") == []  # no NVIDIA key, and the primary itself is dropped
