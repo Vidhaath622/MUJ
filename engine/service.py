@@ -187,12 +187,16 @@ class Engine:
         manual_answer: str | None = None,
         gold_chunk_ids: list[str] | None = None,
         case_type: str = "factoid",
+        stale_chunk_ids: list[str] | None = None,
+        test_id: str | None = None,
     ) -> dict:
         self._check_documents(owner_id, document_ids)
         case = TestCase(
             question=query,
             ground_truth=ground_truth or None,
+            test_id=test_id,
             gold_chunk_ids=gold_chunk_ids or [],
+            stale_chunk_ids=stale_chunk_ids or [],
             type=case_type,
             manual_answer=manual_answer,
         )
