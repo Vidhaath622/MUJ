@@ -457,6 +457,10 @@ class Judge:
             except JudgeError as exc:
                 last_error = exc
                 continue
+            required = schema.get("required") or []
+            if isinstance(result, list) and len(required) == 1:
+                # Some models answer a one-field schema with the bare list itself.
+                result = {required[0]: result}
             if isinstance(result, dict):
                 return result
             last_error = JudgeError(f"judge returned {type(result).__name__}, expected an object")

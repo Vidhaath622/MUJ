@@ -250,3 +250,11 @@ def test_live_judge_is_separate_from_batch_judge(monkeypatch, tmp_path):
     assert engine.live_judge.model == "openai/gpt-oss-120b"
     assert len(engine.live_judge.primary) == 2  # key 1 and key 3
     assert engine.synth.judge is engine.live_judge and engine.live_evaluator.judge is engine.live_judge
+
+
+def test_bare_list_reply_is_wrapped_for_one_field_schema(tmp_path):
+    from engine.llm import Judge
+
+    judge = Judge(_Model("m", True, '[{"claim": "x", "verdict": "supported", "passage": 1}]'), tmp_path / "c.sqlite")
+    out = judge.ask("s", "u", {"type": "object", "properties": {"claims": {"type": "array"}}, "required": ["claims"]})
+    assert out == {"claims": [{"claim": "x", "verdict": "supported", "passage": 1}]}
