@@ -4,7 +4,7 @@ import { cn } from '../../../lib/utils';
 import { PackId } from '../../../types/ragseal';
 import { TopBarControls } from '../shell/AppShell';
 import { PASS, RED, tint } from '../lab/verdict';
-import { errorText, getLabelQueue, getProgress, LabelItem, listRuns, postLabel, RunProgress } from '../shared/apiExtra';
+import { DisagreementItem, errorText, getDisagreements, getLabelQueue, getProgress, LabelItem, listRuns, postLabel, RunProgress } from '../shared/apiExtra';
 import { FAILURE_TYPES, FailureType, failureLabel, STAGE_COLOR } from '../shared/taxonomy';
 import { EmptyState, ErrorBanner, fmtDuration, LoadState, PackSwitcher } from '../shared/ui';
 
@@ -50,6 +50,8 @@ interface LabelStudioPageProps {
 export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId, onPackChange }) => {
   const [labeler, setLabeler] = useState<string | null>(readLabeler);
   const [items, setItems] = useState<LabelItem[] | null>(null);
+  // Review mode: only the answers the two labellers disagreed on, for a second look.
+  const [review, setReview] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState<Record<string, 'correct' | string>>({});
@@ -72,6 +74,15 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
     setPickingType(false);
     (async () => {
       try {
+        if (review) {
+          const d = await getDisagreements(packId, token);
+          if (cancelled) return;
+          if (d.failure_types) setTypes(typesFrom(d.failure_types));
+          setWaitingFor(null);
+          setItems(d.items);
+          setIndex(0);
+          return;
+        }
         const [q, runs] = await Promise.all([getLabelQueue(packId, labeler, token), listRuns(token)]);
         if (cancelled) return;
         setTypes(typesFrom(q.failure_types));
@@ -102,7 +113,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
     return () => {
       cancelled = true;
     };
-  }, [token, labeler, packId, reload]);
+  }, [token, labeler, packId, reload, review]);
 
   // While waiting, re-check every 5 s; the queue loads itself once the run is done.
   useEffect(() => {
@@ -212,6 +223,19 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
             Labeling as <span className="font-medium text-[var(--ink)]">{labeler}</span> · switch
           </button>
         )}
+        {labeler && (
+          <button
+            onClick={() => setReview((r) => !r)}
+            className={cn(
+              'rounded-md border px-2.5 py-1 text-xs transition-colors',
+              review
+                ? 'border-[var(--retr)] bg-[color:color-mix(in_srgb,var(--retr)_12%,transparent)] text-[var(--ink)]'
+                : 'border-[var(--rule)] text-[var(--ink-2)] hover:text-[var(--ink)]'
+            )}
+          >
+            {review ? 'Reviewing disagreements · back to labelling' : 'Review disagreements'}
+          </button>
+        )}
         <PackSwitcher value={packId} onChange={onPackChange} />
       </TopBarControls>
 
@@ -230,6 +254,12 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
         <div className="p-6">
           <WaitingForRun p={waitingFor} />
         </div>
+      ) : items.length === 0 && review ? (
+        <div className="p-6">
+          <EmptyState title="No disagreements for this pack">
+            You and your teammate agree on every answer you both labelled here.
+          </EmptyState>
+        </div>
       ) : items.length === 0 ? (
         <div className="p-6">
           <EmptyState title="Nothing to label for this pack">
@@ -239,7 +269,11 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
       ) : (
         item && (
           <div className="mx-auto flex min-h-0 w-full max-w-[1320px] flex-1 flex-col gap-4 px-6 py-5">
-            <Progress labeled={labeledCount} total={items.length} index={index} />
+            {review ? (
+              <ReviewNote item={item as DisagreementItem} labeler={labeler} left={items.length - labeledCount} />
+            ) : (
+              <Progress labeled={labeledCount} total={items.length} index={index} />
+            )}
             <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
             <div key={item.test_id} className="lab-fade-up grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr]">
@@ -314,6 +348,21 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
           </div>
         )
       )}
+    </div>
+  );
+};
+
+/** Review mode header: what you said, and that your teammate said the opposite. Names stay out of it. */
+const ReviewNote: React.FC<{ item: DisagreementItem; labeler: string; left: number }> = ({ item, labeler, left }) => {
+  const mine = item.labels?.[labeler];
+  const said = mine == null ? 'nothing yet' : mine.correct ? 'Correct' : `Wrong${mine.failure_type ? ` (${failureLabel(mine.failure_type)})` : ''}`;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--retr)] bg-[color:color-mix(in_srgb,var(--retr)_8%,transparent)] px-4 py-2.5 text-[13px]">
+      <span className="text-[var(--ink)]">
+        You said <span className="font-semibold">{said}</span>. Your teammate disagreed. Look again: press{' '}
+        <span className="font-mono">1</span> for correct or <span className="font-mono">2</span> for wrong. Your new answer replaces the old one.
+      </span>
+      <span className="font-semibold tabular-nums text-[var(--ink)]">{Math.max(0, left)} disagreements left</span>
     </div>
   );
 };

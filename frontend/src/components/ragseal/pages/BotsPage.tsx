@@ -237,7 +237,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
             ))}
 
             {tricks.length > 0 && !busy && (
-              <div>
+              <div data-tour="tricks">
                 <div className="mb-2 text-[13px] font-semibold text-[var(--ink)]">Can you trick it?</div>
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                   {tricks.map((c) => {
@@ -297,7 +297,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
       </section>
 
       {/* X-ray */}
-      <aside className="flex min-w-0 flex-[45] flex-col border-l border-[var(--rule)] bg-[var(--paper)]">
+      <aside data-tour="xray" className="flex min-w-0 flex-[45] flex-col border-l border-[var(--rule)] bg-[var(--paper)]">
         <div className="flex items-center justify-between border-b border-[var(--rule)] px-5 py-3.5">
           <div>
             <div className="text-[13px] font-semibold text-[var(--ink)]">X-ray of this reply</div>
@@ -527,7 +527,7 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
         </ul>
       </section>
 
-      <section className="stamp-land" style={{ animationDelay: `${base + 900}ms` }}>
+      <section data-tour="verdict" className="stamp-land" style={{ animationDelay: `${base + 900}ms` }}>
         <SectionLabel n={3}>Verdict</SectionLabel>
         <div className="mt-2 rounded-xl border px-4 py-3" style={{ borderColor: `${tint(v.color, 0.33)}`, background: 'var(--panel)' }}>
           <div className="stamp my-1 text-[17px] leading-none" style={{ color: v.color }}>

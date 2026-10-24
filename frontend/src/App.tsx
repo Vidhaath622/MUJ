@@ -6,6 +6,7 @@ import { SignInScreen } from './components/ragseal/shell/SignInScreen';
 import { HowItWorksStory } from './components/ragseal/HowItWorksStory';
 import { LabScreen } from './components/ragseal/lab/LabScreen';
 import { AppShell, TopBarControls, useHashRoute } from './components/ragseal/shell/AppShell';
+import { Tour } from './components/ragseal/tour/Tour';
 import { ALL_PACKS, PACKS, PackSwitcher } from './components/ragseal/shared/ui';
 import { ImpactPage } from './components/ragseal/pages/ImpactPage';
 import { OverviewPage } from './components/ragseal/pages/OverviewPage';
@@ -217,6 +218,7 @@ export const App: React.FC = () => {
           </div>
         )}
       </AppShell>
+      <Tour enabled={!!authToken} />
 
       {/* Modal 1: Document Vault & Chunk Inspector */}
       <DocumentVaultModal

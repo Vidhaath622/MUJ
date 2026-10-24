@@ -197,6 +197,21 @@ export async function getLabelQueue(packId: string, labeler: string, token: stri
   return Array.isArray(body) ? { items: body } : body;
 }
 
+export interface DisagreementItem extends LabelItem {
+  /** Each labeller's call on this item, keyed by name. */
+  labels?: Record<string, { correct: boolean; failure_type?: string | null }>;
+}
+
+/** Answers where the two labellers disagree on correct vs wrong, for a second look. */
+export async function getDisagreements(
+  packId: string,
+  token: string
+): Promise<{ items: DisagreementItem[]; total?: number; failure_types?: string[] }> {
+  const qs = new URLSearchParams({ pack_id: packId });
+  const { body } = await call<{ items: DisagreementItem[]; total?: number } | DisagreementItem[]>(`/labels/disagreements?${qs}`, token);
+  return Array.isArray(body) ? { items: body } : body;
+}
+
 export interface LabelInput {
   test_id: string;
   batch_id?: string;
