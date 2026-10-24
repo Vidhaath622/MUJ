@@ -254,6 +254,18 @@ def _numbers(text: str) -> set[str]:
     return {n.replace(",", "").rstrip(".") for n in re.findall(r"\d[\d,]*(?:\.\d+)?", text)}
 
 
+_UNIT_WORDS = r"(?:cents?|days?|weeks?|months?|years?|hours?|minutes?|percent|items?|miles?|credits?|USD|dollars?)"
+
+
+def _units(text: str) -> set[tuple[str, str]]:
+    """(number, unit) pairs: "$" before, "%" after, or a unit word right after the number."""
+    pairs = set()
+    for m in re.finditer(r"(\$)?\s?(\d[\d,]*(?:\.\d+)?)\s?(%|" + _UNIT_WORDS + r")?", text, flags=re.IGNORECASE):
+        unit = m.group(1) or (m.group(3) or "").lower().rstrip("s")
+        pairs.add((m.group(2).replace(",", "").rstrip("."), unit))
+    return pairs
+
+
 def accuracy_rule(answer: str, ground_truth: str | None, unanswerable: bool = False) -> MetricResult | None:
     """Accuracy when no model is needed; None otherwise.
 
@@ -271,8 +283,10 @@ def accuracy_rule(answer: str, ground_truth: str | None, unanswerable: bool = Fa
         return MetricResult("answer_accuracy", None, "No ground truth was given, so accuracy was not measured.", "rule")
     if abstained:
         return MetricResult("answer_accuracy", 0.0, "The model abstained, but the ground truth has an answer.", "rule")
-    want, got = _numbers(ground_truth), _numbers(without_hedges(answer))
-    if want and got == want and len(without_hedges(answer)) <= 400:
+    clean = without_hedges(answer)
+    want, got = _numbers(ground_truth), _numbers(clean)
+    negated = re.search(r"\b(?:not|no|never|isn't|doesn't|don't|without|except)\b|n't\b", clean.lower())
+    if want and got == want and len(clean) <= 400 and not negated and _units(clean) == _units(ground_truth):
         return MetricResult(
             "answer_accuracy", 1.0, f"Numeric match: the answer states exactly the ground-truth values ({', '.join(sorted(want))}).", "rule"
         )
