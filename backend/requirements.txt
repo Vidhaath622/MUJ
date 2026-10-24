@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic>=2
+python-multipart
+PyJWT
+bcrypt
+python-dotenv
+httpx
+numpy
+pypdf
+pytest
