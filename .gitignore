@@ -7,6 +7,7 @@ Thumbs.db
 
 # Personal Claude context (each person's own)
 CLAUDE.local.md
+claude-sync.md
 
 # Secrets - never commit these
 .env
