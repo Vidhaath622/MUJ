@@ -197,3 +197,19 @@ def test_impact_flow(client, alice, bob, fake_engine):
     assert body["status"] == "done" and body["at_risk"] == 1 and body["tests"][0]["failure_type"] == "STALE_SOURCE"
     assert client.get("/api/impact/latest", headers=alice).json()["impact_id"] == iid
     assert client.get("/api/impact/latest", headers=bob).json() == {"impact_id": None, "status": "none"}
+
+
+def test_disagreements_and_upsert(client, alice, bob, fake_engine):
+    run = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"}).json()
+    item = client.get("/api/labels/queue", headers=alice, params={"pack_id": "banking", "labeler": "Sarthak"}).json()["items"][0]
+    base = {"test_id": item["test_id"], "batch_id": run["batch_id"]}
+    client.post("/api/labels", headers=alice, json={**base, "labeler": "Sarthak", "correct": True, "failure_type": None})
+    client.post("/api/labels", headers=bob, json={**base, "labeler": "Vidhaath", "correct": False, "failure_type": "HALLUCINATION"})
+    out = client.get("/api/labels/disagreements", headers=alice, params={"pack_id": "banking"}).json()
+    assert out["total"] == 1
+    assert out["items"][0]["labels"] == {"Sarthak": {"correct": True, "failure_type": None, "note": None},
+                                         "Vidhaath": {"correct": False, "failure_type": "HALLUCINATION", "note": None}}
+    # Re-labelling replaces the labeller's earlier label for that item (upsert), which resolves the disagreement.
+    client.post("/api/labels", headers=bob, json={**base, "labeler": "Vidhaath", "correct": True, "failure_type": None})
+    assert client.get("/api/labels/disagreements", headers=alice).json()["total"] == 0
+    assert client.get("/api/trust/agreement", headers=alice).json()["n_labels"] == 2
