@@ -230,6 +230,45 @@ class Evaluator:
         return items
 
 
+def failed_result(case: TestCase, error: Exception, judge: Judge, generator_model: str) -> dict:
+    """A batch row for a case that could not be evaluated: every score is null, never guessed."""
+    reason = f"Not evaluated: {error}"
+    blank = {"score": None, "status": "REVIEW", "details": reason, "judged_by": "rule"}
+    return {
+        "evaluation_id": "eval_" + uuid.uuid4().hex[:10],
+        "test_id": case.test_id,
+        "case_type": case.type,
+        "query": case.question,
+        "generated_answer": "",
+        "ground_truth": case.ground_truth if not case.unanswerable else None,
+        "expected_abstain": case.unanswerable,
+        "retrieved_chunks": [],
+        "citations": [],
+        "metrics": {
+            "context_relevance": dict(blank),
+            "faithfulness": dict(blank, claims=[], hallucinated_claims=[]),
+            "answer_accuracy": dict(blank),
+        },
+        "root_cause": {
+            "category": "UNRESOLVED",
+            "summary": f"This case could not be evaluated ({error}).",
+            "recommended_action": "Re-run the batch; judge calls already made are cached.",
+            "evidence": [],
+        },
+        "gold_chunk_ids": list(case.gold_chunk_ids),
+        "gold_source": "test_case" if case.gold_chunk_ids else None,
+        "retrieved_chunk_ids": [],
+        "gold_retrieved": False,
+        "replay": None,
+        "evaluation_mode": judge.mode,
+        "judge_model": judge.model,
+        "generator_model": generator_model,
+        "generation_ms": 0,
+        "duration_ms": 0,
+        "error": str(error),
+    }
+
+
 def summarize_batch(results: list[dict]) -> dict:
     """Aggregates for /api/evaluate/batch. Averages skip unmeasured (null) scores and report n."""
     from .verdict import CATEGORIES
@@ -247,6 +286,7 @@ def summarize_batch(results: list[dict]) -> dict:
     measured = [v for v in (rel, faith, acc) if v is not None]
     return {
         "total_evaluated": len(results),
+        "failed_cases": sum(1 for r in results if r.get("error")),
         "overall_score": round(sum(measured) / len(measured), 3) if measured else None,
         "aggregates": {
             "avg_context_relevance": rel,
@@ -260,8 +300,8 @@ def summarize_batch(results: list[dict]) -> dict:
         "root_cause_breakdown": breakdown,
         "replays_run": sum(r["replay"] is not None for r in results),
         "gold_retrieval_rate": (
-            round(sum(r["gold_retrieved"] for r in results if r["gold_chunk_ids"]) / n, 3)
-            if (n := sum(bool(r["gold_chunk_ids"]) for r in results))
+            round(sum(r["gold_retrieved"] for r in results if r["gold_chunk_ids"] and not r.get("error")) / n, 3)
+            if (n := sum(bool(r["gold_chunk_ids"]) and not r.get("error") for r in results))
             else None
         ),
     }

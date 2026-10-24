@@ -122,6 +122,27 @@ class OllamaClient:
         return out
 
 
+def _retry_wait(resp: httpx.Response, attempt: int) -> float:
+    """Seconds to wait before retrying: retry-after if given, else Groq's token-window reset, else backoff."""
+    for header in ("retry-after", "x-ratelimit-reset-tokens"):
+        value = resp.headers.get(header)
+        if not value:
+            continue
+        # Groq sends durations like "7.66s", "1m26.4s" or "585ms".
+        match = re.fullmatch(r"(?:(\d+)m)?(?:([\d.]+)s)?|([\d.]+)ms", value.strip())
+        try:
+            if match and match.group(3):
+                seconds = float(match.group(3)) / 1000
+            elif match and (match.group(1) or match.group(2)):
+                seconds = int(match.group(1) or 0) * 60 + float(match.group(2) or 0)
+            else:
+                seconds = float(value)
+        except ValueError:
+            continue
+        return min(max(seconds, 1.0), 60.0)
+    return float(min(2**attempt, 30))
+
+
 class OpenAICompatClient:
     """NVIDIA NIM and Groq both speak the OpenAI chat-completions protocol."""
 
@@ -156,16 +177,17 @@ class OpenAICompatClient:
 
     def _post(self, path: str, payload: dict) -> dict:
         last_error = "no attempt made"
-        for attempt in range(4):
+        for attempt in range(8):
             try:
                 resp = self._http.post(path, json=payload, headers={"Authorization": f"Bearer {self._api_key}"})
             except httpx.HTTPError as exc:
                 last_error = str(exc)
-                time.sleep(2**attempt)
+                time.sleep(min(2**attempt, 30))
                 continue
             if resp.status_code in (429, 500, 502, 503, 504):
-                last_error = f"HTTP {resp.status_code}"
-                time.sleep(float(resp.headers.get("retry-after", 2**attempt)))
+                # Free tiers rate-limit per minute; retry-after says how long to wait.
+                last_error = f"HTTP {resp.status_code}" + (" (rate limited)" if resp.status_code == 429 else "")
+                time.sleep(_retry_wait(resp, attempt))
                 continue
             if resp.status_code in (401, 403):
                 raise ModelUnavailable(f"{self.name} rejected the API key (HTTP {resp.status_code})")
@@ -184,6 +206,9 @@ class OpenAICompatClient:
         }
         if schema is not None and self.json_mode:
             payload["response_format"] = {"type": "json_object"}
+        if "gpt-oss" in model:
+            # Grading needs little reasoning; low effort keeps calls fast and inside per-minute token limits.
+            payload["reasoning_effort"] = "low"
         start = time.perf_counter()
         data = self._post("/chat/completions", payload)
         latency = int((time.perf_counter() - start) * 1000)
@@ -307,7 +332,7 @@ class Judge:
         ]
         last_error: Exception | None = None
         for _ in range(2):
-            raw = self.chat_model.chat(messages, schema=schema, num_predict=1024).text
+            raw = self.chat_model.chat(messages, schema=schema, num_predict=800).text
             try:
                 result = _parse_json(raw)
             except JudgeError as exc:

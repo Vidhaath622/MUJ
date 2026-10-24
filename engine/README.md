@@ -12,6 +12,7 @@ Python library behind the backend: the RAG system under test, the three metrics,
 | `evaluate.py` | One case end to end, including the replay with only the gold chunk(s). |
 | `synth.py` | Synthetic Q + ground truth + gold chunk. A case is kept only if the quoted evidence really appears in the chunk. Also builds unanswerable and stale-version traps. |
 | `agreement.py` | Judge vs human labels (`labels.json`). |
+| `label_cli.py` | Hand-labelling tool for judge agreement: `python -m engine.label_cli run.json <pack>/labels.json --labeller XX`. |
 | `packs.py` | Pack loader: `docs/packs/<id>/pack.json` first, then `engine/packs_builtin/`. The format is documented at the top of the file. |
 | `llm.py` | Ollama, Groq and NVIDIA NIM clients, per-role model selection, and the judge disk cache (`<data_dir>/judge_cache.sqlite`). |
 

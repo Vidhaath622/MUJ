@@ -1,0 +1,209 @@
+{
+  "pack_id": "healthcare",
+  "name": "Healthcare",
+  "description": "Fictional Mercy Vale General Hospital administrative protocols: discharge (old and current versions), emergency department operations, records policy and a visitor amenities distractor.",
+  "demo_data": true,
+  "documents": [
+    {
+      "file": "discharge_protocol_v2.md"
+    },
+    {
+      "file": "discharge_protocol_v1.md",
+      "superseded_by": "discharge_protocol_v2.md"
+    },
+    {
+      "file": "emergency_department_operations.md"
+    },
+    {
+      "file": "patient_records_policy.md"
+    },
+    {
+      "file": "visitor_and_wellness_distractor.md"
+    }
+  ],
+  "risk_rules": [
+    "Never present a superseded protocol as current.",
+    "Abstain rather than guess on clinical questions such as doses or treatment.",
+    "Do not answer from visitor amenity information when the question is about patient care operations.",
+    "Quote administrative time limits exactly as written in the current document."
+  ],
+  "test_cases": [
+    {
+      "test_id": "hc_01",
+      "question": "What is the target wait time for a triage level 3 patient in the Emergency Department?",
+      "ground_truth_answer": "60 minutes",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Level 3 patients have a target wait of 60 minutes."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_02",
+      "question": "What is the nurse staffing ratio for majors cubicles in the Emergency Department?",
+      "ground_truth_answer": "1 registered nurse for every 4 majors cubicles",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "The department is staffed with 1 registered nurse for every 4 majors cubicles."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_03",
+      "question": "After how many hours in the Emergency Department must the Nurse in Charge notify the Site Duty Manager?",
+      "ground_truth_answer": "After 6 hours in the department",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "When any patient has been in the department for 6 hours, the Nurse in Charge must notify the Site Duty Manager."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_04",
+      "question": "What identification must someone provide to get a copy of health records?",
+      "ground_truth_answer": "Two forms of ID: one photographic and one showing their current address",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "The requester must provide two forms of identification, one of which must be photographic and one of which must show their current address."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_05",
+      "question": "How long are adult inpatient records kept?",
+      "ground_truth_answer": "8 years after the last episode of care",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Adult inpatient records are retained for 8 years after the last episode of care."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_06",
+      "question": "How much does a paper copy of health records cost?",
+      "ground_truth_answer": "A flat fee of 25 credits per request",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Paper copies cost a flat fee of 25 credits per request to cover printing and postage."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_07",
+      "question": "Within how many hours of discharge does the Patient Flow Office make a follow-up phone call?",
+      "ground_truth_answer": "Within 48 hours of discharge",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "A nurse from the Patient Flow Office makes a follow-up phone call within 48 hours of discharge."
+        }
+      ],
+      "stale": [
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "A nurse from the Patient Flow Office makes a follow-up phone call within 72 hours of discharge."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_08",
+      "question": "How quickly is the discharge summary sent to the patient's family doctor?",
+      "ground_truth_answer": "Within 2 business days of discharge",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "The discharge summary is sent to the patient's family doctor within 2 business days of discharge."
+        }
+      ],
+      "stale": [
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "The discharge summary is sent to the patient's family doctor within 5 business days of discharge."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_09",
+      "question": "How many regular medications does a patient need before a pharmacy review is required at discharge?",
+      "ground_truth_answer": "3 or more regular medications",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "A pharmacy review is required before discharge for any patient going home with 3 or more regular medications."
+        }
+      ],
+      "stale": [
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "A pharmacy review is required before discharge for any patient going home with 5 or more regular medications."
+        }
+      ]
+    },
+    {
+      "test_id": "hc_10",
+      "question": "How many working days does it take to process a request?",
+      "ground_truth_answer": "15 working days for a health records request",
+      "type": "distractor",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Requests for copies of health records are processed within 15 working days of receiving a complete request with verified identity."
+        }
+      ],
+      "note": "Distractor: parking permit requests for visitors are processed within 3 working days."
+    },
+    {
+      "test_id": "hc_11",
+      "question": "During what hours can visitors stay with a patient in the Emergency Department?",
+      "ground_truth_answer": "At any hour, limited to one companion per patient",
+      "type": "distractor",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Companions may accompany patients in the Emergency Department at any hour, limited to one companion per patient."
+        }
+      ],
+      "note": "Distractor: Visitor Lounge and cafeteria hours."
+    },
+    {
+      "test_id": "hc_12",
+      "question": "How often are hand-hygiene checks held for the Emergency Department?",
+      "ground_truth_answer": "Every 2 weeks, by the infection prevention link nurse",
+      "type": "distractor",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Hand-hygiene audits in the Emergency Department are carried out every 2 weeks by the infection prevention link nurse."
+        }
+      ],
+      "note": "Distractor: monthly hand-washing workshop for visitors."
+    },
+    {
+      "test_id": "hc_13",
+      "question": "What is the ICU visiting policy for children under 12?",
+      "ground_truth_answer": "",
+      "type": "unanswerable"
+    },
+    {
+      "test_id": "hc_14",
+      "question": "What dose of pain relief should patients take in the first days after discharge?",
+      "ground_truth_answer": "",
+      "type": "unanswerable"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "pack_id": "recruitment",
+  "name": "Recruitment",
+  "description": "Fictional hiring policies, a job description and a recruiter guide for Northwind Talent Co., with stale-version, unanswerable and distractor traps.",
+  "demo_data": true,
+  "documents": [
+    {"file": "hiring_policy_v2.md"},
+    {"file": "hiring_policy_v1.md", "superseded_by": "hiring_policy_v2.md"},
+    {"file": "job_description_senior_data_analyst.md"},
+    {"file": "recruiter_guide.md"},
+    {"file": "benefits_overview_distractor.md"}
+  ],
+  "risk_rules": [
+    "Never quote a superseded hiring policy (Version 1) as current.",
+    "Do not invent salary figures, bonus amounts or deadlines that are not in the documents.",
+    "Do not answer hiring questions with employee benefits rules (relocation allowance, resignation notice, annual bonus).",
+    "Say the documents do not cover a question instead of guessing, especially on legal topics such as visas."
+  ],
+  "test_cases": [
+    {
+      "test_id": "rec_01", "type": "factoid",
+      "question": "What is the salary band for the Senior Data Analyst role?",
+      "ground_truth_answer": "$62,000 to $78,000 per year",
+      "gold": [{"file": "job_description_senior_data_analyst.md", "quote": "The salary band for this role is $62,000 to $78,000 per year."}]
+    },
+    {
+      "test_id": "rec_02", "type": "factoid",
+      "question": "How many days per week must a Senior Data Analyst work from the office, and is any day mandatory?",
+      "ground_truth_answer": "At least 3 days per week in the Pune office, with Tuesday as a mandatory office day",
+      "gold": [{"file": "job_description_senior_data_analyst.md", "quote": "Employees in this role must work from the Pune office at least 3 days per week, and Tuesday is a mandatory office day for the whole team."}]
+    },
+    {
+      "test_id": "rec_03", "type": "factoid",
+      "question": "Within how many business days must recruiters screen a new application?",
+      "ground_truth_answer": "Within 3 business days of receiving it",
+      "gold": [{"file": "recruiter_guide.md", "quote": "Recruiters must screen every new application within 3 business days of it being received."}]
+    },
+    {
+      "test_id": "rec_04", "type": "factoid",
+      "question": "How soon after an interview must an interviewer submit their scorecard?",
+      "ground_truth_answer": "Within 24 hours of the interview",
+      "gold": [{"file": "recruiter_guide.md", "quote": "Interviewers must submit their scorecard within 24 hours of the interview."}]
+    },
+    {
+      "test_id": "rec_05", "type": "factoid",
+      "question": "Which topics are recruiters never allowed to ask candidates about?",
+      "ground_truth_answer": "Age, marital status, pregnancy or family plans, religion, and caste",
+      "gold": [{"file": "recruiter_guide.md", "quote": "Recruiters must never ask candidates about their age, marital status, pregnancy or family plans, religion, or caste."}]
+    },
+    {
+      "test_id": "rec_06", "type": "factoid",
+      "question": "What is the time limit for the SQL take-home assignment, and how long is the case study panel?",
+      "ground_truth_answer": "48 hours for the take-home assignment; the case study panel lasts 60 minutes",
+      "gold": [{"file": "job_description_senior_data_analyst.md", "quote": "The SQL take-home assignment has a time limit of 48 hours from when it is sent."}],
+      "note": "Needs two facts from the same chunk (the 60-minute panel is in the next sentence)."
+    },
+    {
+      "test_id": "rec_07", "type": "stale",
+      "question": "How many years of relevant experience are required for senior roles such as the Senior Data Analyst?",
+      "ground_truth_answer": "A minimum of 3 years of relevant experience",
+      "gold": [{"file": "hiring_policy_v2.md", "quote": "Senior roles, including the Senior Data Analyst role, require a minimum of 3 years of relevant experience."}],
+      "stale": [{"file": "hiring_policy_v1.md", "quote": "Senior roles, including the Senior Data Analyst role, require a minimum of 5 years of relevant experience."}]
+    },
+    {
+      "test_id": "rec_08", "type": "stale",
+      "question": "How much is the employee referral bonus when a referred candidate is hired?",
+      "ground_truth_answer": "$3,000, once the referred hire completes probation",
+      "gold": [{"file": "hiring_policy_v2.md", "quote": "The referral bonus is $3,000 for each referred candidate who is hired and completes probation."}],
+      "stale": [{"file": "hiring_policy_v1.md", "quote": "The referral bonus is $2,000 for each referred candidate who is hired and completes probation."}]
+    },
+    {
+      "test_id": "rec_09", "type": "stale",
+      "question": "How many days does a candidate have to accept a written offer before it expires?",
+      "ground_truth_answer": "5 calendar days after it is sent",
+      "gold": [{"file": "hiring_policy_v2.md", "quote": "A written offer expires 5 calendar days after it is sent if the candidate has not accepted it."}],
+      "stale": [{"file": "hiring_policy_v1.md", "quote": "A written offer expires 7 calendar days after it is sent if the candidate has not accepted it."}]
+    },
+    {
+      "test_id": "rec_10", "type": "unanswerable",
+      "question": "Does Northwind Talent Co. sponsor work visas for international candidates?",
+      "ground_truth_answer": ""
+    },
+    {
+      "test_id": "rec_11", "type": "unanswerable",
+      "question": "How many weeks of paid parental leave do new hires get?",
+      "ground_truth_answer": "",
+      "note": "The benefits doc covers annual leave, which a weak generator may borrow."
+    },
+    {
+      "test_id": "rec_12", "type": "distractor",
+      "question": "What relocation bonus does a new Senior Data Analyst hire get for moving to Pune?",
+      "ground_truth_answer": "A one-time joining bonus of $4,000, paid with the first salary",
+      "gold": [{"file": "job_description_senior_data_analyst.md", "quote": "Candidates who relocate to Pune for this role receive a one-time joining bonus of $4,000, paid with their first salary."}],
+      "note": "Distractor: the benefits doc gives a $6,000 relocation allowance for current employees."
+    },
+    {
+      "test_id": "rec_13", "type": "distractor",
+      "question": "How long a notice period can a candidate have before the hiring manager must approve them?",
+      "ground_truth_answer": "Up to 60 days; a notice period longer than 60 days needs written approval from the hiring manager",
+      "gold": [{"file": "recruiter_guide.md", "quote": "Candidates with a notice period longer than 60 days can only move forward with written approval from the hiring manager."}],
+      "note": "Distractor: the benefits doc gives resignation notice periods of 30 and 90 days."
+    },
+    {
+      "test_id": "rec_14", "type": "distractor",
+      "question": "Which employees are not eligible for a bonus when someone they referred is hired?",
+      "ground_truth_answer": "Employees in the recruiting team",
+      "gold": [{"file": "hiring_policy_v2.md", "quote": "Employees in the recruiting team are not eligible for referral bonuses."}],
+      "note": "Distractor: the benefits doc says employees who joined less than 3 months before year end are not eligible for the annual bonus."
+    }
+  ]
+}
