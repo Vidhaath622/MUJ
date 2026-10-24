@@ -155,5 +155,7 @@ def get_stability(
     jobs: BatchJobs = Depends(get_jobs),
 ) -> dict:
     if stability_id == "latest":
-        stability_id = db.latest_analysis(user.id, "stability") or ""
+        stability_id = db.latest_analysis(user.id, "stability")
+        if stability_id is None:
+            return {"stability_id": None, "status": "none"}
     return analysis_response(response, db.get_analysis(user.id, stability_id, "stability"), jobs, user, "stability_id")

@@ -127,3 +127,36 @@ def test_compare_flow(client, alice, fake_engine):
     assert body["status"] == "done", body
     assert body["n"] == 1 and body["pass_to_fail"] == 1 and body["flips"][0]["direction"] == "pass_to_fail"
     assert body["flips"][0]["pack_id"] == "banking"
+
+
+def test_queue_waits_for_full_size_run_and_locks(client, alice, fake_engine):
+    import time
+
+    # An async run of the right size in progress: the queue says so instead of serving anything else.
+    fake_engine.batch_delay = 0.5
+    started = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking", "async": True}).json()
+    waiting = client.get("/api/labels/queue", headers=alice, params={"pack_id": "banking", "labeler": "SR"}).json()
+    assert waiting["items"] == [] and waiting["running_batch_id"] == started["batch_id"] and "in progress" in waiting["message"]
+    for _ in range(100):
+        if client.get(f"/api/runs/{started['batch_id']}/progress", headers=alice).json()["status"] == "done":
+            break
+        time.sleep(0.05)
+    fake_engine.batch_delay = 0
+
+    queue = client.get("/api/labels/queue", headers=alice, params={"pack_id": "banking", "labeler": "SR"}).json()
+    assert queue["batch_id"] == started["batch_id"] and queue["locked"] is False
+    item = queue["items"][0]
+    label = {"test_id": item["test_id"], "batch_id": started["batch_id"], "labeler": "SR", "correct": True, "failure_type": None}
+    assert client.post("/api/labels", headers=alice, json=label).status_code == 201
+
+    # A newer run does not move the pack off its locked run, and labels for another run are refused.
+    newer = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"}).json()
+    after = client.get("/api/labels/queue", headers=alice, params={"pack_id": "banking", "labeler": "VP"}).json()
+    assert after["batch_id"] == started["batch_id"] and after["locked"] is True
+    conflict = client.post("/api/labels", headers=alice, json={**label, "batch_id": newer["batch_id"], "labeler": "VP"})
+    assert conflict.status_code == 409
+
+
+def test_latest_analyses_without_any(client, alice):
+    assert client.get("/api/trust/stability/latest", headers=alice).json() == {"stability_id": None, "status": "none"}
+    assert client.get("/api/compare/latest", headers=alice).json() == {"compare_id": None, "status": "none"}

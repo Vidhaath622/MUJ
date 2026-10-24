@@ -45,6 +45,11 @@ CREATE TABLE IF NOT EXISTS analyses (
     created_at TEXT NOT NULL,
     json TEXT NOT NULL DEFAULT '{}'
 );
+CREATE TABLE IF NOT EXISTS label_locks (
+    pack_id TEXT PRIMARY KEY,
+    batch_id TEXT NOT NULL,
+    locked_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS labels (
     batch_id TEXT NOT NULL,
     test_id TEXT NOT NULL,
@@ -210,35 +215,35 @@ class Database:
 
     # ------------------------------------------------------------- labels
 
-    def latest_done_run(self, user_id: str, pack_id: str) -> dict | None:
-        with self._connect() as conn:
-            row = conn.execute(
-                "SELECT json FROM runs WHERE user_id = ? AND pack_id = ? AND status = 'done' ORDER BY created_at DESC, rowid DESC LIMIT 1",
-                (user_id, pack_id),
-            ).fetchone()
-        return json.loads(row["json"]) if row else None
-
-    def latest_done_run_any_user(self, pack_id: str) -> dict | None:
-        with self._connect() as conn:
-            row = conn.execute(
-                "SELECT json FROM runs WHERE pack_id = ? AND status = 'done' ORDER BY created_at DESC, rowid DESC LIMIT 1", (pack_id,)
-            ).fetchone()
-        return json.loads(row["json"]) if row else None
-
     def run_by_id(self, batch_id: str) -> dict | None:
         """Any user's finished run: labels and agreement are shared across the labelling team."""
         with self._connect() as conn:
             row = conn.execute("SELECT json FROM runs WHERE batch_id = ? AND status = 'done'", (batch_id,)).fetchone()
         return json.loads(row["json"]) if row else None
 
-    def labelling_batch(self, pack_id: str) -> str | None:
-        """The run that already holds the most labels for this pack, so every labeller sees the same answers."""
+    def label_lock(self, pack_id: str) -> str | None:
+        """The run every labeller of this pack works on, fixed by the first label."""
         with self._connect() as conn:
-            row = conn.execute(
-                "SELECT batch_id, COUNT(*) AS n FROM labels WHERE pack_id = ? GROUP BY batch_id ORDER BY n DESC, MAX(created_at) DESC LIMIT 1",
-                (pack_id,),
-            ).fetchone()
+            row = conn.execute("SELECT batch_id FROM label_locks WHERE pack_id = ?", (pack_id,)).fetchone()
         return row["batch_id"] if row else None
+
+    def lock_labels(self, pack_id: str, batch_id: str) -> str:
+        """Lock the pack to this run unless it is already locked; returns the run it is locked to."""
+        with self._connect() as conn:
+            conn.execute("INSERT OR IGNORE INTO label_locks VALUES (?, ?, ?)", (pack_id, batch_id, utc_now()))
+            return conn.execute("SELECT batch_id FROM label_locks WHERE pack_id = ?", (pack_id,)).fetchone()["batch_id"]
+
+    def labelling_candidate(self, pack_id: str, case_count: int) -> tuple[dict | None, str | None]:
+        """(newest finished run of the pack's current size, a newer run of that size still running)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT batch_id, status FROM runs WHERE pack_id = ? AND total_evaluated = ? AND status IN ('done', 'running')"
+                " ORDER BY created_at DESC, rowid DESC",
+                (pack_id, case_count),
+            ).fetchall()
+        running = next((r["batch_id"] for r in rows if r["status"] == "running"), None)
+        done = next((r["batch_id"] for r in rows if r["status"] == "done"), None)
+        return (self.run_by_id(done) if done else None), running
 
     def save_label(self, user_id: str, label: dict) -> None:
         with self._connect() as conn:

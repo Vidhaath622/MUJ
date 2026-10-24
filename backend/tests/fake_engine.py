@@ -10,6 +10,7 @@ from app.engine_bridge import ModelUnavailable, NotFound
 class FakeEngine:
     def __init__(self):
         self.batch_error = None
+        self.batch_delay = 0
         self.docs: dict[tuple[str, str], dict] = {}
         self.uploads: list[tuple[str, str, bytes]] = []
         self.calls: list[tuple] = []
@@ -95,6 +96,10 @@ class FakeEngine:
     def evaluate_batch(self, owner_id, document_ids, test_cases, pack_id=None, progress=None, batch_id=None, concurrency=None):
         if self.batch_error is not None:
             raise self.batch_error
+        if self.batch_delay:
+            import time
+
+            time.sleep(self.batch_delay)
         self.calls.append(("evaluate_batch", owner_id, tuple(document_ids), len(test_cases), pack_id))
         self.last_batch_cases = test_cases
         self._check(owner_id, document_ids)
@@ -178,3 +183,8 @@ class FakeEngine:
         ]
         return {"base": base, "candidate": candidate, "n": len(candidate_results), "flips": flips,
                 "pass_to_fail": sum(f["direction"] == "pass_to_fail" for f in flips)}
+
+    def load_pack_summary(self, pack_id):
+        if pack_id != "banking":
+            raise NotFound(f"pack {pack_id} not found")
+        return {"pack_id": pack_id, "test_case_count": 1, "filenames": {}}

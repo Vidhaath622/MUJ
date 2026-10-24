@@ -11,7 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ..db import Database, User
-from ..deps import get_current_user, get_db
+from ..deps import get_current_user, get_db, get_engine
+from ..engine_bridge import Engine
 
 router = APIRouter(prefix="/labels", tags=["labels"])
 
@@ -37,19 +38,38 @@ class LabelIn(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
 
-def _labelling_run(db: Database, user: User, pack_id: str) -> dict | None:
-    batch_id = db.labelling_batch(pack_id)
-    run = db.run_by_id(batch_id) if batch_id else None
-    # Labellers may use their own accounts: fall back to the latest run of the pack by anyone.
-    return run or db.latest_done_run(user.id, pack_id) or db.latest_done_run_any_user(pack_id)
+def _labelling_run(db: Database, engine: Engine, pack_id: str) -> tuple[dict | None, str | None, dict]:
+    """(run to label, run of the right size still in progress, pack) for a pack.
+
+    Locked packs always use their locked run. Otherwise the newest finished run whose size
+    equals the pack's current case count, so a run of an older, smaller pack never qualifies.
+    """
+    pack = engine.load_pack_summary(pack_id)
+    locked = db.label_lock(pack_id)
+    if locked:
+        return db.run_by_id(locked), None, pack
+    run, running = db.labelling_candidate(pack_id, pack["test_case_count"])
+    return run, running, pack
 
 
 @router.get("/queue")
-def label_queue(pack_id: str, labeler: str, user: User = Depends(get_current_user), db: Database = Depends(get_db)) -> dict:
-    run = _labelling_run(db, user, pack_id)
+def label_queue(
+    pack_id: str,
+    labeler: str,
+    user: User = Depends(get_current_user),
+    db: Database = Depends(get_db),
+    engine: Engine = Depends(get_engine),
+) -> dict:
+    run, running, pack = _labelling_run(db, engine, pack_id)
     if run is None:
-        return {"items": [], "labeled": 0, "total": 0, "batch_id": None, "failure_types": FAILURE_TYPES,
-                "message": f"No finished run for pack {pack_id} yet: run the pack first."}
+        message = (
+            f"The {pack['test_case_count']}-case run of pack {pack_id} is still in progress."
+            if running
+            else f"No finished {pack['test_case_count']}-case run of pack {pack_id} yet: run the pack first."
+        )
+        return {"items": [], "labeled": 0, "total": 0, "batch_id": None, "running_batch_id": running,
+                "failure_types": FAILURE_TYPES, "message": message}
+    filenames = pack.get("filenames", {})
     mine = {l["test_id"] for l in db.labels(pack_id) if l["batch_id"] == run["batch_id"] and l["labeler"] == labeler}
     items = []
     for result in run.get("results", []):
@@ -65,7 +85,8 @@ def label_queue(pack_id: str, labeler: str, user: User = Depends(get_current_use
                 "expected_abstain": result.get("expected_abstain", False),
                 "generated_answer": result["generated_answer"],
                 "retrieved_chunks": [
-                    {"chunk_id": c["chunk_id"], "document_id": c.get("document_id"), "text": c["text"]}
+                    {"chunk_id": c["chunk_id"], "document_id": c.get("document_id"),
+                     "filename": filenames.get(c.get("document_id")), "text": c["text"]}
                     for c in result.get("retrieved_chunks", [])
                 ],
                 "labeled": result["test_id"] in mine,
@@ -73,7 +94,8 @@ def label_queue(pack_id: str, labeler: str, user: User = Depends(get_current_use
         )
     # Unlabelled first, in pack order.
     items.sort(key=lambda item: item["labeled"])
-    return {"items": items, "labeled": len(mine), "total": len(items), "batch_id": run["batch_id"], "failure_types": FAILURE_TYPES}
+    return {"items": items, "labeled": len(mine), "total": len(items), "batch_id": run["batch_id"],
+            "locked": db.label_lock(pack_id) == run["batch_id"], "failure_types": FAILURE_TYPES}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -88,8 +110,13 @@ def submit_label(body: LabelIn, user: User = Depends(get_current_user), db: Data
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"failure_type must be one of {', '.join(FAILURE_TYPES)}")
     if body.correct and body.failure_type:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "a correct answer has no failure_type")
+    pack_id = run.get("pack_id")
+    if pack_id and db.lock_labels(pack_id, body.batch_id) != body.batch_id:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, f"pack {pack_id} is being labelled on run {db.label_lock(pack_id)}, not {body.batch_id}"
+        )
     db.save_label(
         user.id,
-        {**body.model_dump(), "pack_id": run.get("pack_id"), "question": result["query"], "answer": result["generated_answer"]},
+        {**body.model_dump(), "pack_id": pack_id, "question": result["query"], "answer": result["generated_answer"]},
     )
     return {"ok": True, "test_id": body.test_id, "batch_id": body.batch_id, "labeler": body.labeler}

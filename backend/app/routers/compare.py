@@ -101,5 +101,7 @@ def get_compare(
     jobs: BatchJobs = Depends(get_jobs),
 ) -> dict:
     if compare_id == "latest":
-        compare_id = db.latest_analysis(user.id, "compare") or ""
+        compare_id = db.latest_analysis(user.id, "compare")
+        if compare_id is None:
+            return {"compare_id": None, "status": "none"}
     return analysis_response(response, db.get_analysis(user.id, compare_id, "compare"), jobs, user, "compare_id")
