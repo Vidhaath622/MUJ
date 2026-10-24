@@ -216,3 +216,24 @@ def test_interactive_call_goes_ahead_of_batch_calls(tmp_path):
     judge._interactive_waiting = 0
     batch.join(timeout=2)
     assert order == ["live", "batch"]
+
+
+def test_interactive_call_uses_local_judge_when_hosted_are_capped(tmp_path):
+    from engine.llm import Judge, RateLimited
+
+    class Capped(_Model):
+        def chat(self, messages, schema=None, num_predict=512, patient=True):
+            raise RateLimited("429 tokens per day", wait=3600)
+
+    judge = Judge(Capped("hosted", True), tmp_path / "c.sqlite", fallback=_Model("local", False, '{"score": 1}'))
+    judge.start_tracking()
+    with judge.interactive():
+        assert judge.ask("s", "u", {"type": "object"}) == {"score": 1}
+    used = judge.used()
+    assert used["judge_model"] == "local" and used["evaluation_mode"] == "local" and used["judge_fallback_used"]
+
+
+def test_nvidia_key_2_wins(monkeypatch):
+    monkeypatch.setenv("NVIDIA_API_KEY", "old")
+    monkeypatch.setenv("NVIDIA_API_KEY_2", "new")
+    assert Settings().nvidia_api_key == "new"

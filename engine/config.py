@@ -48,7 +48,8 @@ class Settings:
         default_factory=lambda: _env("OLLAMA_HOST_URL", _env("OLLAMA_BASE_URL", "http://localhost:11434"))
     )
     groq_api_key: str = field(default_factory=lambda: _env("GROQ_API_KEY", ""))
-    nvidia_api_key: str = field(default_factory=lambda: _env("NVIDIA_API_KEY", ""))
+    # NVIDIA_API_KEY_2 (a newer build.nvidia.com account) wins over the old key, which most models reject.
+    nvidia_api_key: str = field(default_factory=lambda: _env("NVIDIA_API_KEY_2", _env("NVIDIA_API_KEY", "")))
     nvidia_base_url: str = field(default_factory=lambda: _env("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"))
     data_dir: Path = field(default_factory=lambda: Path(_env("RAGSEAL_DATA_DIR", str(ENGINE_DIR / ".data"))))
     packs_dirs: tuple[Path, ...] = field(

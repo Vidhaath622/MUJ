@@ -513,8 +513,14 @@ class Judge:
                 candidates = [m for m in pool if self._cooldown.get(id(m), 0) <= now]
                 if not candidates:
                     reopen = min(self._cooldown.get(id(m), now) for m in (hosted_usable or usable))
-                    time.sleep(min(2.0, max(0.1, reopen - now)))
-                    continue
+                    local = [m for m in usable if not m.hosted]
+                    # Every hosted judge is rate-limited (a daily cap can mean hours). A person waiting
+                    # gets the local judge at once; a batch only once the wait is over ten minutes.
+                    if local and reopen - now > (max_wait if interactive else 600):
+                        candidates = local
+                    else:
+                        time.sleep(min(2.0, max(0.1, reopen - now)))
+                        continue
             member = None
             for m in candidates:
                 if not interactive and not self._batch_slots[id(m)].acquire(blocking=False):
