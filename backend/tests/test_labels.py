@@ -222,3 +222,67 @@ def test_original_agreement_snapshot(client, alice):
     assert client.get("/api/trust/agreement", headers=alice, params={"snapshot": "original"}).json()["original"]["n"] == 213
     live = client.get("/api/trust/agreement", headers=alice).json()
     assert live["original"]["n"] == 213 and live["computed_from"] == "pre-review backup 23:30"
+
+
+def _queue(client, headers, labeler):
+    return client.get("/api/labels/queue", headers=headers, params={"pack_id": "banking", "labeler": labeler}).json()
+
+
+def test_queue_shows_my_own_label_only(client, alice, bob, fake_engine):
+    run = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"}).json()
+    item = _queue(client, alice, "Sarthak")["items"][0]
+    assert item["my_label"] is None and item["labeled"] is False
+    base = {"test_id": item["test_id"], "batch_id": run["batch_id"]}
+    client.post("/api/labels", headers=bob, json={**base, "labeler": "Vidhaath", "correct": False, "failure_type": "WRONG_CHUNK"})
+    # Another labeller's label is not mine.
+    assert _queue(client, alice, "Sarthak")["items"][0]["my_label"] is None
+    client.post("/api/labels", headers=alice, json={**base, "labeler": "Sarthak", "correct": True, "failure_type": None, "note": "ok"})
+    mine = _queue(client, alice, "Sarthak")["items"][0]
+    assert mine["my_label"] == {"correct": True, "failure_type": None, "note": "ok"} and mine["labeled"] is True
+    assert _queue(client, bob, "Vidhaath")["items"][0]["my_label"] == {"correct": False, "failure_type": "WRONG_CHUNK", "note": None}
+    # Every other queue field is unchanged.
+    assert set(mine) == {"test_id", "batch_id", "pack_id", "question", "ground_truth", "expected_abstain",
+                         "generated_answer", "retrieved_chunks", "labeled", "my_label"}
+
+
+def test_disagreements_my_label_only_when_labeler_given(client, alice, bob, fake_engine):
+    run = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"}).json()
+    item = _queue(client, alice, "Sarthak")["items"][0]
+    base = {"test_id": item["test_id"], "batch_id": run["batch_id"]}
+    client.post("/api/labels", headers=alice, json={**base, "labeler": "Sarthak", "correct": True, "failure_type": None})
+    client.post("/api/labels", headers=bob, json={**base, "labeler": "Vidhaath", "correct": False, "failure_type": "HALLUCINATION"})
+    plain = client.get("/api/labels/disagreements", headers=alice).json()["items"][0]
+    assert "my_label" not in plain
+    mine = client.get("/api/labels/disagreements", headers=alice, params={"labeler": "Vidhaath"}).json()["items"][0]
+    assert mine["my_label"] == {"correct": False, "failure_type": "HALLUCINATION", "note": None}
+    assert mine["labels"] == plain["labels"]
+    nobody = client.get("/api/labels/disagreements", headers=alice, params={"labeler": "Someone"}).json()["items"][0]
+    assert nobody["my_label"] is None
+
+
+def test_relabelling_updates_in_place(client, alice, fake_engine):
+    run = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"}).json()
+    item = _queue(client, alice, "Sarthak")["items"][0]
+    base = {"test_id": item["test_id"], "batch_id": run["batch_id"], "labeler": "Sarthak"}
+    db = client.app.state.db  # the per-test temporary database, never backend/data
+
+    def post(**fields):
+        resp = client.post("/api/labels", headers=alice, json={**base, **fields})
+        assert resp.status_code == 201, resp.text
+
+    def stored():
+        rows = [l for l in db.labels("banking") if l["test_id"] == item["test_id"] and l["labeler"] == "Sarthak"]
+        assert len(rows) == 1, f"expected one row, got {len(rows)}"
+        return rows[0]
+
+    post(correct=True, failure_type=None)
+    assert stored()["correct"] is True and stored()["failure_type"] is None
+    post(correct=False, failure_type="STALE_SOURCE", note="quotes the v1 fee")  # correct -> wrong, type set
+    assert (stored()["correct"], stored()["failure_type"], stored()["note"]) == (False, "STALE_SOURCE", "quotes the v1 fee")
+    post(correct=False, failure_type=None, note=None)  # type cleared, still wrong
+    assert (stored()["correct"], stored()["failure_type"], stored()["note"]) == (False, None, None)
+    post(correct=True, failure_type=None)  # wrong -> correct
+    assert stored()["correct"] is True and stored()["failure_type"] is None
+    assert len(db.labels()) == 1  # no duplicate rows anywhere
+    assert _queue(client, alice, "Sarthak")["items"][0]["my_label"] == {"correct": True, "failure_type": None, "note": None}
+    assert client.get("/api/trust/agreement", headers=alice).json()["n_labels"] == 1

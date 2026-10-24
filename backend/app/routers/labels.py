@@ -38,6 +38,13 @@ class LabelIn(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
 
+def _label_view(label: dict | None) -> dict | None:
+    """The fields a labeller sees of a stored label."""
+    if label is None:
+        return None
+    return {"correct": label["correct"], "failure_type": label.get("failure_type"), "note": label.get("note")}
+
+
 def _labelling_run(db: Database, engine: Engine, pack_id: str) -> tuple[dict | None, str | None, dict]:
     """(run to label, run of the right size still in progress, pack) for a pack.
 
@@ -70,7 +77,8 @@ def label_queue(
         return {"items": [], "labeled": 0, "total": 0, "batch_id": None, "running_batch_id": running,
                 "failure_types": FAILURE_TYPES, "message": message}
     filenames = pack.get("filenames", {})
-    mine = {l["test_id"] for l in db.labels(pack_id) if l["batch_id"] == run["batch_id"] and l["labeler"] == labeler}
+    # This labeller's current label per item: the queue lets them see and change what they said.
+    mine = {l["test_id"]: l for l in db.labels(pack_id) if l["batch_id"] == run["batch_id"] and l["labeler"] == labeler}
     items = []
     for result in run.get("results", []):
         if result.get("error"):
@@ -90,6 +98,7 @@ def label_queue(
                     for c in result.get("retrieved_chunks", [])
                 ],
                 "labeled": result["test_id"] in mine,
+                "my_label": _label_view(mine.get(result["test_id"])),
             }
         )
     # Unlabelled first, in pack order.
@@ -125,6 +134,7 @@ def submit_label(body: LabelIn, user: User = Depends(get_current_user), db: Data
 @router.get("/disagreements")
 def label_disagreements(
     pack_id: str | None = None,
+    labeler: str | None = None,
     user: User = Depends(get_current_user),
     db: Database = Depends(get_db),
 ) -> dict:
@@ -152,6 +162,7 @@ def label_disagreements(
             "generated_answer": result["generated_answer"],
             "retrieved_chunks": [{"chunk_id": c["chunk_id"], "document_id": c.get("document_id"), "filename": c.get("filename"), "text": c["text"]}
                                  for c in result.get("retrieved_chunks", [])],
-            "labels": {name: {"correct": v["correct"], "failure_type": v.get("failure_type"), "note": v.get("note")} for name, v in votes.items()},
+            "labels": {name: _label_view(v) for name, v in votes.items()},
+            **({"my_label": _label_view(votes.get(labeler))} if labeler else {}),
         })
     return {"items": items, "total": len(items)}
