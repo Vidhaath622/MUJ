@@ -614,6 +614,8 @@ class Models:
     judge_fallback: ChatModel | None = None
     judge_overflow: tuple[ChatModel, ...] = ()
     judge_replicas: tuple[ChatModel, ...] = ()
+    live_judge: ChatModel | None = None
+    live_replicas: tuple[ChatModel, ...] = ()
 
 
 def build_models(settings: Settings) -> Models:
@@ -645,4 +647,9 @@ def build_models(settings: Settings) -> Models:
             for c in [client(provider), *(extra_groq if provider == "groq" else [])]
         ),
         judge_replicas=tuple(ChatModel(c, settings.model_for("judge", "groq")) for c in extra_groq) if judge_provider == "groq" else (),
+        live_judge=ChatModel(client(judge_provider), settings.live_judge_model) if settings.live_judge_model else None,
+        live_replicas=(
+            tuple(ChatModel(c, settings.live_judge_model) for c in extra_groq)
+            if settings.live_judge_model and judge_provider == "groq" else ()
+        ),
     )

@@ -57,6 +57,7 @@ class Engine:
     ):
         self.settings = settings or get_settings()
         self.settings.data_dir.mkdir(parents=True, exist_ok=True)
+        models = None
         if generator is None or embedder is None or judge is None:
             models = build_models(self.settings)
             generator = generator or models.generator
@@ -69,13 +70,25 @@ class Engine:
                 replicas=models.judge_replicas,
                 max_wait_s=self.settings.judge_overflow_wait_s,
             )
+        live_judge = None
+        if models is not None and models.live_judge is not None:
+            live_judge = Judge(
+                models.live_judge,
+                self.settings.data_dir / "judge_cache.sqlite",
+                fallback=models.judge_fallback,
+                replicas=models.live_replicas,
+                max_wait_s=self.settings.judge_overflow_wait_s,
+            )
         self.generator = generator
         self.embedder = embedder
         self.judge = judge
+        # Interactive calls (live questions, synthetic) may use their own judge; batches use self.judge.
+        self.live_judge = live_judge or judge
         self.store = VectorStore(self.settings.data_dir / "vectors.sqlite")
         self.rag = RagSystem(self.store, generator, embedder, self.settings.top_k)
         self.evaluator = Evaluator(self.store, self.rag, self.judge)
-        self.synth = SyntheticGenerator(self.judge, self.rag)
+        self.live_evaluator = Evaluator(self.store, self.rag, self.live_judge)
+        self.synth = SyntheticGenerator(self.live_judge, self.rag)
 
     # ------------------------------------------------------------- status
 
@@ -112,6 +125,7 @@ class Engine:
             "evaluation_mode": self.judge.mode if judge_ready else "unavailable",
             "judge_model": self.judge.model,
             "judge_provider": self.judge.provider,
+            "live_judge_model": self.live_judge.model,
             "judge_pool": roles_pool if members else None,
             # Tokens this process sent per API key and model; daily_cap is Groq's own figure from its last 429.
             "judge_token_usage": usage,
@@ -227,7 +241,7 @@ class Engine:
         """Judge calls made inside this block go ahead of running batches."""
         from contextlib import nullcontext
 
-        return self.judge.interactive() if hasattr(self.judge, "interactive") else nullcontext()
+        return self.live_judge.interactive() if hasattr(self.live_judge, "interactive") else nullcontext()
 
     def _evaluate_query(self, owner_id, query, document_ids, ground_truth, manual_answer, gold_chunk_ids,
                         case_type, stale_chunk_ids, test_id, distractor_document_ids) -> dict:
@@ -241,7 +255,7 @@ class Engine:
             manual_answer=manual_answer,
             distractor_document_ids=distractor_document_ids or [],
         )
-        return self.evaluator.evaluate(owner_id, case, document_ids)
+        return self.live_evaluator.evaluate(owner_id, case, document_ids)
 
     def evaluate_batch(
         self,

@@ -74,6 +74,9 @@ class Settings:
     # How long the primary judge may be waited for before a call overflows to another model.
     # 0 means overflow as soon as the primary is rate-limited.
     judge_overflow_wait_s: float = field(default_factory=lambda: float(_env("RAGSEAL_JUDGE_OVERFLOW_WAIT_S", "12")))
+    # Optional separate judge model for interactive calls (live questions, synthetic), on the same
+    # provider as the batch judge; empty means the batch judge serves both.
+    live_judge_model: str = field(default_factory=lambda: _env("RAGSEAL_LIVE_JUDGE_MODEL", ""))
 
     def _has_key(self, provider: str) -> bool:
         return {"nvidia": bool(self.nvidia_api_key), "groq": bool(self.groq_api_key), "ollama": True}[provider]

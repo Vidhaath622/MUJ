@@ -237,3 +237,16 @@ def test_nvidia_key_2_wins(monkeypatch):
     monkeypatch.setenv("NVIDIA_API_KEY", "old")
     monkeypatch.setenv("NVIDIA_API_KEY_2", "new")
     assert Settings().nvidia_api_key == "new"
+
+
+def test_live_judge_is_separate_from_batch_judge(monkeypatch, tmp_path):
+    monkeypatch.setenv("RAGSEAL_GROQ_MODEL", "qwen/qwen3.8-27b")
+    monkeypatch.setenv("RAGSEAL_LIVE_JUDGE_MODEL", "openai/gpt-oss-120b")
+    monkeypatch.setenv("GROQ_API_KEY_3", "third")
+    monkeypatch.setenv("RAGSEAL_JUDGE_OVERFLOW", "none")
+    settings = Settings(groq_api_key="first", nvidia_api_key="", data_dir=tmp_path)
+    engine = Engine(settings, generator=FakeGenerator(), embedder=FakeEmbedder())
+    assert engine.judge.model == "qwen/qwen3.8-27b"
+    assert engine.live_judge.model == "openai/gpt-oss-120b"
+    assert len(engine.live_judge.primary) == 2  # key 1 and key 3
+    assert engine.synth.judge is engine.live_judge and engine.live_evaluator.judge is engine.live_judge
