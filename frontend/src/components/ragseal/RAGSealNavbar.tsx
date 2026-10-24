@@ -15,6 +15,7 @@ import {
   HeartPulse
 } from 'lucide-react';
 import { PackId, AuthUser } from '../../types/ragseal';
+import { HealthResponse } from '../../lib/api';
 
 interface RAGSealNavbarProps {
   isLiveBackend: boolean;
@@ -27,6 +28,7 @@ interface RAGSealNavbarProps {
   onSelectPack: (packId: PackId) => void;
   activeTab: 'lab' | 'story' | 'components';
   onSelectTab: (tab: 'lab' | 'story' | 'components') => void;
+  backendHealth?: HealthResponse | null;
 }
 
 export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
@@ -40,6 +42,7 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
   onSelectPack,
   activeTab,
   onSelectTab,
+  backendHealth,
 }) => {
   const packs = [
     { id: 'recruitment' as PackId, label: 'Recruitment ATS', icon: Briefcase },
@@ -150,7 +153,13 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
           {/* Backend / Mock Mode Indicator */}
           <button
             onClick={onToggleLiveBackend}
-            title={isLiveBackend ? "Connected to backend API (http://localhost:8000)" : "Using verified offline mock dataset"}
+            title={
+              isLiveBackend
+                ? `Connected to FastAPI Backend (http://localhost:8000)${
+                    backendHealth ? ` | Engine: ${backendHealth.evaluation_mode || 'local'} (${backendHealth.latencyMs}ms)` : ''
+                  }`
+                : 'Using verified offline benchmark dataset'
+            }
             className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-mono flex items-center gap-1.5 transition ${
               isLiveBackend 
                 ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' 
@@ -160,7 +169,12 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
             {isLiveBackend ? (
               <>
                 <Wifi className="w-3 h-3 text-emerald-400 animate-pulse" />
-                <span>API: LIVE</span>
+                <span>API: LIVE (8000)</span>
+                {backendHealth?.latencyMs && (
+                  <span className="text-[10px] text-emerald-500 font-normal">
+                    {backendHealth.latencyMs}ms
+                  </span>
+                )}
               </>
             ) : (
               <>
@@ -203,10 +217,10 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
 
           <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400">
             <span className="bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800 text-neutral-300">
-              Model: llama3.2:3b
+              Model: {backendHealth?.generator_model || 'llama3.2:3b'}
             </span>
             <span className="bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800 text-neutral-300">
-              Judge: qwen3:8b (cached)
+              Judge: {backendHealth?.judge_model || 'qwen3:8b'} (cached)
             </span>
           </div>
         </div>

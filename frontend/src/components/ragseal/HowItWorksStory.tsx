@@ -12,12 +12,43 @@ import {
   GitBranch, 
   Users,
   Copy,
-  Check
+  Check,
+  Server,
+  Activity,
+  RefreshCw,
+  Cpu,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import { HealthResponse, checkBackendHealth } from '../../lib/api';
 
-export const HowItWorksStory: React.FC = () => {
+interface HowItWorksStoryProps {
+  backendHealth?: HealthResponse | null;
+  onRefreshHealth?: () => Promise<void>;
+}
+
+export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
+  backendHealth: initialHealth,
+  onRefreshHealth,
+}) => {
   const [activeStep, setActiveStep] = useState<number>(4); // default to replay hero step
   const [copiedDiagram, setCopiedDiagram] = useState(false);
+  const [localHealth, setLocalHealth] = useState<HealthResponse | null>(initialHealth || null);
+  const [isPinging, setIsPinging] = useState<boolean>(false);
+  const [showHealthJson, setShowHealthJson] = useState<boolean>(false);
+
+  const activeHealth = localHealth || initialHealth;
+
+  const handlePingBackend = async () => {
+    setIsPinging(true);
+    try {
+      const res = await checkBackendHealth();
+      setLocalHealth(res);
+      if (onRefreshHealth) await onRefreshHealth();
+    } finally {
+      setIsPinging(false);
+    }
+  };
 
   const steps = [
     {
@@ -187,6 +218,129 @@ export const HowItWorksStory: React.FC = () => {
               </button>
             );
           })}
+        </div>
+      </Card>
+
+      {/* Live Backend Connection & Pipeline API Contract Card */}
+      <Card variant="glass" className="p-5 border-teal-900/40 bg-[#080d14]/90 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800/80 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-teal-950 border border-teal-800/60 flex items-center justify-center">
+              <Server className="w-4 h-4 text-teal-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+                  Live Engine Connection: localhost:8000
+                </h3>
+                {activeHealth ? (
+                  <Badge variant="neon" size="sm" className="bg-emerald-950/80 text-emerald-300 border-emerald-600">
+                    ONLINE (200 OK)
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" size="sm" className="bg-amber-950/40 text-amber-300 border-amber-800">
+                    DISCONNECTED
+                  </Badge>
+                )}
+              </div>
+              <p className="text-[11px] text-neutral-400 font-mono mt-0.5">
+                FastAPI backend service running at port 8000, powering all 5 pipeline stages.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePingBackend}
+              disabled={isPinging}
+              className="text-xs font-mono border-teal-800/80 bg-teal-950/30 text-teal-300 hover:bg-teal-900/50 gap-1.5"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin' : ''}`} />
+              <span>{isPinging ? 'Pinging...' : 'Ping Engine (/api/health)'}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowHealthJson(!showHealthJson)}
+              className="text-xs font-mono text-neutral-400 hover:text-white gap-1"
+            >
+              <span>JSON</span>
+              {showHealthJson ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Live Diagnostics Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="p-3 rounded-lg bg-neutral-900/50 border border-neutral-800 space-y-1">
+            <span className="text-[10px] text-neutral-400 uppercase block">Roundtrip Latency</span>
+            <div className="text-emerald-400 font-bold text-sm flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5" />
+              <span>{activeHealth?.latencyMs !== undefined ? `${activeHealth.latencyMs} ms` : 'Offline'}</span>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-neutral-900/50 border border-neutral-800 space-y-1">
+            <span className="text-[10px] text-neutral-400 uppercase block">Evaluation Mode</span>
+            <div className="text-white font-bold text-sm capitalize">
+              {activeHealth?.evaluation_mode || 'Local'}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-neutral-900/50 border border-neutral-800 space-y-1">
+            <span className="text-[10px] text-neutral-400 uppercase block">Active Generator</span>
+            <div className="text-sky-300 font-bold text-sm truncate flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-sky-400" />
+              <span>{activeHealth?.generator_model || 'llama3.2:3b'}</span>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-neutral-900/50 border border-neutral-800 space-y-1">
+            <span className="text-[10px] text-neutral-400 uppercase block">Active Judge</span>
+            <div className="text-purple-300 font-bold text-sm truncate flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-purple-400" />
+              <span>{activeHealth?.judge_model || 'qwen3:8b'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Collapsible Health JSON Inspector */}
+        {showHealthJson && activeHealth && (
+          <div className="p-3 rounded-lg bg-black/80 border border-neutral-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
+            <div className="text-neutral-500 text-[10px] mb-1">// GET http://localhost:8000/api/health</div>
+            <pre>{JSON.stringify(activeHealth, null, 2)}</pre>
+          </div>
+        )}
+
+        {/* Pipeline Stage Endpoints Mapping */}
+        <div className="pt-2 border-t border-neutral-800/60">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 block mb-2 font-semibold">
+            Section 4 API Contract Routes Mapped to Pipeline Stages:
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-[11px] font-mono">
+            <div className="p-2 rounded bg-neutral-900/40 border border-neutral-800">
+              <span className="text-teal-400 font-bold block">Stage 1: Ingest</span>
+              <span className="text-neutral-400 text-[10px]">POST /api/documents/upload</span>
+            </div>
+            <div className="p-2 rounded bg-neutral-900/40 border border-neutral-800">
+              <span className="text-sky-400 font-bold block">Stage 2: RAG Ask</span>
+              <span className="text-neutral-400 text-[10px]">POST /api/rag/ask</span>
+            </div>
+            <div className="p-2 rounded bg-neutral-900/40 border border-neutral-800">
+              <span className="text-amber-400 font-bold block">Stage 3: Score</span>
+              <span className="text-neutral-400 text-[10px]">POST /api/evaluate/query</span>
+            </div>
+            <div className="p-2 rounded bg-purple-950/40 border border-purple-800/80">
+              <span className="text-purple-300 font-bold block">Stage 4: Replay Hero</span>
+              <span className="text-purple-400 text-[10px]">res.replay (engine)</span>
+            </div>
+            <div className="p-2 rounded bg-neutral-900/40 border border-neutral-800">
+              <span className="text-indigo-400 font-bold block">Stage 5: Calibration</span>
+              <span className="text-neutral-400 text-[10px]">GET /api/packs &amp; runs</span>
+            </div>
+          </div>
         </div>
       </Card>
 

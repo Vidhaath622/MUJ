@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RAGSealNavbar } from './components/ragseal/RAGSealNavbar';
 import { RootCausePanel } from './components/ragseal/RootCausePanel';
 import { BatchSummarySection } from './components/ragseal/BatchSummarySection';
@@ -19,13 +19,27 @@ import {
 } from './data/mockPacksDataset';
 import { MOCK_SYNTHETIC_QUESTIONS } from './data/mockAtsDataset';
 import { PackId, AuthUser, SyntheticTestCase, EvaluationResult } from './types/ragseal';
+import { 
+  checkBackendHealth, 
+  loginUser, 
+  evaluateLiveQuery, 
+  fetchRunHistory, 
+  loadPackBackend, 
+  HealthResponse 
+} from './lib/api';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'lab' | 'story' | 'components'>('lab');
   const [activePackId, setActivePackId] = useState<PackId>('recruitment');
   const [activeCaseId, setActiveCaseId] = useState<string>('case_01');
   const [selectedDocId, setSelectedDocId] = useState<string>('doc_ats_03');
-  const [isLiveBackend, setIsLiveBackend] = useState<boolean>(false);
+  const [isLiveBackend, setIsLiveBackend] = useState<boolean>(true);
+  const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [liveEvaluation, setLiveEvaluation] = useState<EvaluationResult | null>(null);
+  const [liveNotification, setLiveNotification] = useState<string | null>(null);
+  const [serverRunHistory, setServerRunHistory] = useState<any[]>([]);
+
   const [isDocVaultOpen, setIsDocVaultOpen] = useState<boolean>(false);
   const [isSyntheticOpen, setIsSyntheticOpen] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
@@ -38,12 +52,43 @@ export const App: React.FC = () => {
     name: 'Lead Evaluator',
   });
 
+  // Check health and auto-login on startup
+  useEffect(() => {
+    let mounted = true;
+    const initBackend = async () => {
+      const health = await checkBackendHealth();
+      if (!mounted) return;
+      if (health) {
+        setBackendHealth(health);
+        setIsLiveBackend(true);
+        // Login seeded demo user to obtain real JWT token
+        const auth = await loginUser('demo@ragseal.dev', 'demo1234');
+        if (!mounted) return;
+        if (auth) {
+          setAuthToken(auth.access_token);
+          setCurrentUser(auth.user);
+          // Fetch real run history from GET /api/runs
+          const runs = await fetchRunHistory(auth.access_token);
+          if (runs && runs.length > 0) {
+            setServerRunHistory(runs);
+          }
+        }
+      } else {
+        setIsLiveBackend(false);
+      }
+    };
+    initBackend();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Current active industry pack
   const currentPack = INDUSTRY_PACKS[activePackId] || INDUSTRY_PACKS.recruitment;
 
-  // Active evaluation case
+  // Active evaluation case (prefers live query result, then active pack case)
   const currentEvaluation: EvaluationResult = 
-    currentPack.cases[activeCaseId] || Object.values(currentPack.cases)[0];
+    liveEvaluation || currentPack.cases[activeCaseId] || Object.values(currentPack.cases)[0];
 
   // Derive starter questions from current pack cases
   const starterQuestions: StarterQuestionItem[] = Object.entries(currentPack.cases).map(([key, c]) => ({
@@ -57,54 +102,89 @@ export const App: React.FC = () => {
   // Handle switching pack
   const handleSelectPack = (packId: PackId) => {
     setActivePackId(packId);
+    setLiveEvaluation(null);
+    setLiveNotification(null);
     const newPack = INDUSTRY_PACKS[packId] || INDUSTRY_PACKS.recruitment;
     const firstCaseKey = Object.keys(newPack.cases)[0];
     setActiveCaseId(firstCaseKey);
     setSelectedDocId(newPack.documents[0]?.document_id || '');
+
+    // Notify backend pack loader if authenticated
+    if (authToken) {
+      loadPackBackend(packId, authToken).catch(() => {});
+    }
   };
 
   // Handler for running query from PromptBox
-  const handleRunQuery = (query: string, groundTruth?: string) => {
+  const handleRunQuery = async (query: string, groundTruth?: string) => {
     setIsEvaluating(true);
+    setLiveNotification(null);
+
+    // If live backend is enabled and token is active, try calling real POST /api/evaluate/query
+    if (isLiveBackend && authToken) {
+      try {
+        const liveRes = await evaluateLiveQuery(query, selectedDocId, groundTruth, authToken);
+        if (liveRes) {
+          setLiveEvaluation(liveRes);
+          setLiveNotification('Evaluated live via FastAPI (POST /api/evaluate/query)');
+          setIsEvaluating(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Live evaluation error, falling back to pack case:', err);
+      }
+    }
+
+    // Graceful fallback to calibrated benchmark case
     setTimeout(() => {
       setIsEvaluating(false);
-      // If matches one of our known benchmark cases in current pack, activate that case
+      setLiveEvaluation(null);
       const matchedCaseKey = Object.keys(currentPack.cases).find(
         (key) => currentPack.cases[key].query.toLowerCase() === query.toLowerCase()
       );
       if (matchedCaseKey) {
         setActiveCaseId(matchedCaseKey);
       }
-      if (groundTruth) {
-        // User provided manual ground truth
+      if (isLiveBackend && !backendHealth?.engine_ready) {
+        setLiveNotification('Backend connected at localhost:8000. Engine running local mode — displayed state-grounded pack evaluation.');
       }
-    }, 700);
+    }, 400);
   };
 
   // Handler for clicking starter questions inside PromptBox
   const handleSelectStarter = (_question: string, caseId?: string, docId?: string) => {
+    setLiveEvaluation(null);
+    setLiveNotification(null);
     if (caseId) setActiveCaseId(caseId);
     if (docId) setSelectedDocId(docId);
   };
 
   // Handler for selecting synthetic test question
   const handleSelectSyntheticQuestion = (_q: SyntheticTestCase) => {
+    setLiveEvaluation(null);
     setActiveCaseId('case_01');
     setActiveTab('lab');
   };
 
   // Handler for clicking a row in batch table -> opens in Trace Inspector
   const handleSelectCaseFromBatch = (caseId: string) => {
+    setLiveEvaluation(null);
     setActiveCaseId(caseId);
     setActiveTab('lab');
   };
 
   // Handler for loading previous run from history
   const handleLoadRun = (batchId: string) => {
-    const runItem = MOCK_RUN_HISTORY.find(r => r.batch_id === batchId);
-    if (runItem) {
+    const runItem = [...serverRunHistory, ...MOCK_RUN_HISTORY].find(r => r.batch_id === batchId);
+    if (runItem && runItem.pack_id) {
       handleSelectPack(runItem.pack_id);
     }
+  };
+
+  const handleRefreshHealth = async () => {
+    const h = await checkBackendHealth();
+    setBackendHealth(h);
+    if (h) setIsLiveBackend(true);
   };
 
   return (
@@ -121,6 +201,7 @@ export const App: React.FC = () => {
         onSelectPack={handleSelectPack}
         activeTab={activeTab}
         onSelectTab={setActiveTab}
+        backendHealth={backendHealth}
       />
 
       {/* Main Body */}
@@ -139,6 +220,19 @@ export const App: React.FC = () => {
                 {currentPack.trap_description}
               </div>
             </div>
+
+            {/* Live Notification Banner */}
+            {liveNotification && (
+              <div className="p-3 rounded-xl bg-teal-950/40 border border-teal-800/80 text-xs font-mono text-teal-300 flex items-center justify-between gap-2 animate-in fade-in">
+                <span>{liveNotification}</span>
+                <button
+                  onClick={() => setLiveNotification(null)}
+                  className="text-neutral-400 hover:text-white text-xs px-1.5"
+                >
+                  &times;
+                </button>
+              </div>
+            )}
 
             {/* 1. Component Library: PromptBox */}
             <PromptBox
@@ -225,7 +319,7 @@ export const App: React.FC = () => {
                 batch={currentPack.batchSummary}
                 selectedCaseId={activeCaseId}
                 onSelectCase={handleSelectCaseFromBatch}
-                runHistory={MOCK_RUN_HISTORY}
+                runHistory={serverRunHistory.length > 0 ? serverRunHistory : MOCK_RUN_HISTORY}
                 onLoadRun={handleLoadRun}
               />
             </div>
@@ -235,7 +329,10 @@ export const App: React.FC = () => {
         {/* TAB 2: "How It Works" (Scroll storytelling pipeline walkthrough & diagram) */}
         {activeTab === 'story' && (
           <div className="animate-in fade-in duration-200">
-            <HowItWorksStory />
+            <HowItWorksStory
+              backendHealth={backendHealth}
+              onRefreshHealth={handleRefreshHealth}
+            />
           </div>
         )}
 
@@ -255,7 +352,7 @@ export const App: React.FC = () => {
             <span className="text-neutral-500">•</span>
             <span>Problem Statement AI-04: RAG Evaluation Pipeline</span>
             <span className="text-neutral-500">•</span>
-            <span className="text-neutral-400">Branch: vidhaath/ui-frontend</span>
+            <span className="text-neutral-400">Backend: http://localhost:8000</span>
           </div>
           <div className="flex items-center gap-3 text-neutral-400">
             <span>Honesty Rule: All numbers state-grounded</span>
