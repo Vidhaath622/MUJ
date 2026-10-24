@@ -11,7 +11,15 @@
 - **Local Path**: `/Users/root1/hackathon`
 - **Remote URL**: `https://github.com/Vidhaath622/MUJ.git`
 - **Default Branch**: `main`
-- **Current Objective**: Select problem statement, establish team architecture/split, build Round 1 prototype & pitch deck.
+- **Selected Problem Statement**: **AI-04: RAG Evaluation Pipeline — Retriever and Generator Tested Apart**
+- **Track**: AI & Machine Learning
+- **Core Mission**: Build an automated pipeline that evaluates a Retrieval-Augmented Generation (RAG) system by decoupling retrieval from generation, pinpointing whether bad answers stem from poor chunk retrieval or LLM hallucination.
+
+### 4 Mandatory Deliverables:
+1. **Scoring Backend**: Context Relevance, Faithfulness / Groundedness, and Answer Accuracy / Correctness.
+2. **Synthetic Test-Question Generator**: Automatically generate question-answer-context triples from uploaded docs.
+3. **Automated Root-Cause Diagnosis**: Classify failures into `RETRIEVAL_FAILURE` vs `GENERATION_HALLUCINATION` vs `PARTIAL_CONTEXT_MISMATCH`.
+4. **Clean Single-Screen Dashboard**: Document uploader, live query tester, side-by-side retrieved chunk vs answer comparison, and color-coded scorecards (green for accurate, red for hallucinated/missing).
 
 ---
 
@@ -59,12 +67,11 @@
 ---
 
 ## 4. Tech Stack & Architecture Decisions
-*(To be populated once finalized with the user)*
-- **Frontend**: TBD
-- **Backend**: TBD
-- **Database / Storage**: TBD
-- **AI / External APIs**: TBD
-- **Deployment / Hosting**: TBD
+- **Frontend (`/frontend`)**: React 18 / Vite + TypeScript + Tailwind CSS + Lucide Icons + Recharts (Single-screen dashboard, side-by-side inspection, interactive scorecard badges).
+- **Backend (`/backend`)**: Python FastAPI + Pydantic (Async endpoints, file upload handling, test execution orchestrator, JSON/SQLite storage for evaluation runs).
+- **Evaluation Engine (`/engine`)**: Python module (Context Relevance evaluator, Faithfulness/Hallucination NLI detector, Answer Accuracy evaluator, Synthetic Q&A generator).
+- **Shared API Contract**: Defined in `docs/api_contract.md`.
+- **Demo Packaging**: Local runner or Docker compose + sample test documents with pre-baked tricky hallucination cases for the live demo.
 
 ---
 
@@ -75,12 +82,16 @@
 - [x] Created `memory.md` persistent context tracker for long-term memory across sessions.
 - [x] Researched official HYPNEXIS'26 website and captured all 15 problem statements.
 - [x] Configured team structure with Member 2 running dual Claude agents + Antigravity on frontend.
+- [x] **Locked Problem Statement: AI-04 (RAG Evaluation Pipeline)**.
 
-### In Progress / Next Up
-- [ ] Select final problem statement during lunch break (Recommend `AI-03` or `HM-02`).
-- [ ] Write `docs/api_contract.md` defining data schemas so all 3 agents can code in parallel.
-- [ ] Scaffold `/frontend`, `/backend`, and `/engine` directories.
-- [ ] Hit 5:15 PM first integration checkpoint.
+### In Progress / Next Up (Sprint 1: 1:00 PM – 5:30 PM)
+- [ ] Create `docs/api_contract.md` defining request/response schemas for `/frontend` and `/backend`.
+- [ ] Scaffold `/frontend` with mock data to build the single-screen dashboard immediately.
+- [ ] Member 2 (Claude 1) scaffolds `/backend` (FastAPI endpoints).
+- [ ] Member 2 (Claude 2) scaffolds `/engine` (Evaluation metrics + synthetic question generator).
+- [ ] Merge checkpoint at 5:15 PM before Hi-Tea.
+- [ ] Incorporate 6:15 PM "Additional Problem Statement" twist.
+- [ ] 1:30 AM Hard Code Freeze $\rightarrow$ 3:00 AM Evaluation (PPT + Prototype).
 
 ---
 
@@ -93,6 +104,7 @@
 | `2026-10-24 11:43` | Schedule Logged | Captured HYPNEXIS'26 official schedule into memory. Identified 3:00 AM R1 evaluation deadline and 6:15 PM surprise problem release. |
 | `2026-10-24 12:00` | Problem Statements Fetched | Parsed all 15 official problem statements across 6 tracks directly from `hypnexismuj.com`. |
 | `2026-10-24 12:28` | Team Role Matrix | Structured dual-Claude allocation for Member 2 + Antigravity for Member 1. |
+| `2026-10-24 12:52` | Track Selection | Team selected **AI-04: RAG Evaluation Pipeline**. Updated roadmap & tech stack. |
 
 ---
 
