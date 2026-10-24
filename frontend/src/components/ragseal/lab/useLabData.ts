@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  API_BASE_URL,
   ApiError,
   evaluateBatchByPack,
+  evaluateLiveQuery,
   fetchRunDetail,
   fetchRunHistory,
   loadPackBackend,
@@ -125,37 +125,6 @@ export interface LabCase {
   result?: LabResult;
 }
 
-// TODO(Vidhaath): move into lib/api.ts. evaluateLiveQuery only sends one
-// document_id, and a pack question must search every pack document or the
-// stale-version traps cannot happen.
-async function evaluateAcrossDocs(
-  query: string,
-  documentIds: string[],
-  token: string,
-  groundTruth?: string
-): Promise<LabResult> {
-  const res = await fetch(`${API_BASE_URL}/evaluate/query`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({
-      query,
-      document_ids: documentIds,
-      optional_ground_truth: groundTruth || null,
-    }),
-  });
-  if (!res.ok) {
-    let detail = `${res.status} ${res.statusText}`;
-    try {
-      const data = await res.json();
-      if (typeof data?.detail === 'string') detail = data.detail;
-    } catch {
-      // keep status text
-    }
-    throw new ApiError(res.status, detail);
-  }
-  return res.json();
-}
-
 function errorText(err: unknown): string {
   if (err instanceof ApiError) return err.detail;
   if (err instanceof Error) return err.message;
@@ -228,7 +197,13 @@ export function useLabData(packId: PackId, token: string | null) {
       setAsking(true);
       setError(null);
       try {
-        setAdHoc(await evaluateAcrossDocs(query, pack.document_ids, token, groundTruth));
+        const res = await evaluateLiveQuery({
+          query,
+          documentIds: pack.document_ids,
+          groundTruth,
+          token,
+        });
+        setAdHoc(res as unknown as LabResult);
       } catch (err) {
         setError(errorText(err));
       } finally {

@@ -218,15 +218,77 @@ export async function askRag(
   return await res.json();
 }
 
+export interface EvaluateQueryOptions {
+  query: string;
+  documentIds?: string[];
+  document_ids?: string[];
+  documentId?: string;
+  document_id?: string;
+  groundTruth?: string;
+  optional_ground_truth?: string;
+  goldChunkIds?: string[];
+  gold_chunk_ids?: string[];
+  caseType?: string;
+  type?: string;
+  token?: string;
+}
+
 export async function evaluateLiveQuery(
-  query: string,
-  documentIds: string | string[],
-  groundTruth?: string,
-  goldChunkIds?: string[],
-  caseType?: string,
-  token?: string
+  arg1: string | EvaluateQueryOptions,
+  arg2?: string | string[] | { documentIds?: string[]; documentId?: string; token?: string; groundTruth?: string },
+  arg3?: string,
+  arg4?: string[] | string,
+  arg5?: string,
+  arg6?: string
 ): Promise<EvaluationResult> {
-  const docIdsArray = Array.isArray(documentIds) ? documentIds : [documentIds];
+  let query = '';
+  let documentIds: string[] = [];
+  let groundTruth: string | null = null;
+  let goldChunkIds: string[] | null = null;
+  let caseType = 'factoid';
+  let token: string | undefined = undefined;
+
+  if (typeof arg1 === 'object') {
+    query = arg1.query || '';
+    const ids = arg1.documentIds || arg1.document_ids || (arg1.documentId ? [arg1.documentId] : (arg1.document_id ? [arg1.document_id] : []));
+    documentIds = Array.isArray(ids) ? ids : (ids ? [ids] : []);
+    groundTruth = arg1.groundTruth || arg1.optional_ground_truth || null;
+    goldChunkIds = arg1.goldChunkIds || arg1.gold_chunk_ids || null;
+    caseType = arg1.caseType || arg1.type || 'factoid';
+    token = arg1.token;
+  } else {
+    query = arg1;
+    if (typeof arg2 === 'object' && !Array.isArray(arg2)) {
+      const ids = arg2.documentIds || (arg2.documentId ? [arg2.documentId] : []);
+      documentIds = Array.isArray(ids) ? ids : [ids];
+      groundTruth = arg2.groundTruth || null;
+      token = arg2.token;
+    } else {
+      const ids = arg2 ? (Array.isArray(arg2) ? arg2 : [arg2]) : [];
+      documentIds = ids;
+
+      // When arg3 is token and arg4 is groundTruth string:
+      // evaluateLiveQuery(query, documentIds, token, groundTruth)
+      if (typeof arg3 === 'string' && typeof arg4 === 'string') {
+        token = arg3;
+        groundTruth = arg4;
+      } else if (typeof arg3 === 'string' && arg3.startsWith('ey')) {
+        token = arg3;
+        if (typeof arg4 === 'string') groundTruth = arg4;
+      } else {
+        // evaluateLiveQuery(query, documentIds, groundTruth, goldChunkIds, caseType, token)
+        groundTruth = typeof arg3 === 'string' ? arg3 : null;
+        if (Array.isArray(arg4)) {
+          goldChunkIds = arg4;
+          caseType = arg5 || 'factoid';
+          token = arg6;
+        } else if (typeof arg4 === 'string') {
+          token = arg4;
+        }
+      }
+    }
+  }
+
   const res = await fetch(`${API_BASE_URL}/evaluate/query`, {
     method: 'POST',
     headers: {
@@ -235,7 +297,7 @@ export async function evaluateLiveQuery(
     },
     body: JSON.stringify({
       query,
-      document_ids: docIdsArray,
+      document_ids: documentIds,
       optional_ground_truth: groundTruth || null,
       gold_chunk_ids: goldChunkIds || null,
       type: caseType || 'factoid',
