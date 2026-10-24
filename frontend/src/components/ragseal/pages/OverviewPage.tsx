@@ -5,6 +5,7 @@ import { HealthResponse } from '../../../lib/api';
 import { getRun, listRuns, RunSummary } from '../shared/apiExtra';
 import { LoadState, PACKS } from '../shared/ui';
 import { RagFigure } from '../shared/RagFigure';
+import { DiagnosisTree } from '../shared/Diagrams';
 import { StartStory } from '../story/StartStory';
 
 interface OverviewPageProps {
@@ -63,6 +64,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ token, health, onOpe
       )}
 
       <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-4 px-6 pb-10 pt-6">
+        <DiagnosisTree fig="Fig. 2" />
         <details className="group rounded-2xl" style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-4">
             <span>

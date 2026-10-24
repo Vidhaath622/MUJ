@@ -237,6 +237,36 @@
 .drawer-backdrop { animation: drawer-fade 200ms ease-out both; }
 @media (prefers-reduced-motion: reduce) { .drawer-panel, .drawer-backdrop { animation: none; } }
 
+/* Node-graph flowcharts (shared/NodeGraph.tsx). Light: paper nodes with an accent edge; dark: navy nodes. */
+:root {
+  --node-bg: #FBF9F4;
+  --node-border: #9DB3CB;
+  --node-ink: #1E3A5C;
+  --node-decision-bg: #EEF2F7;
+  --node-edge: #8E8A80;
+  --node-pill-bg: #1E3A5C;
+  --node-pill-ink: #F6F3EC;
+}
+:root[data-theme="dark"] {
+  --node-bg: #0E2747;
+  --node-border: #1F3E69;
+  --node-ink: #A9C7F0;
+  --node-decision-bg: #08162A;
+  --node-edge: #8C95A3;
+  --node-pill-bg: #08162A;
+  --node-pill-ink: #A9C7F0;
+}
+.ng-edge { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); }
+.ng-on .ng-edge { animation: ng-draw 700ms ease-out forwards; animation-delay: var(--d); }
+.ng-node { opacity: 0; transform: translateY(6px); transform-box: fill-box; }
+.ng-on .ng-node { animation: ng-in 420ms ease-out forwards; animation-delay: var(--d); }
+@keyframes ng-draw { to { stroke-dashoffset: 0; } }
+@keyframes ng-in { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .ng-edge { stroke-dasharray: none; stroke-dashoffset: 0; animation: none !important; }
+  .ng-node { opacity: 1; transform: none; animation: none !important; }
+}
+
 /* Guided tour: dim layer fades in, card rises, spotlight ring breathes once. */
 @keyframes tour-rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes tour-ring { 0% { stroke-opacity: 0; } 40% { stroke-opacity: 1; } 100% { stroke-opacity: 0.7; } }

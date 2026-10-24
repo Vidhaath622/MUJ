@@ -19,6 +19,7 @@ import {
 import { HealthResponse, checkBackendHealth } from '../../lib/api';
 import { Panel, GhostButton } from './shared/ui';
 import { RagFigure } from './shared/RagFigure';
+import { ArchitectureGraph, DiagnosisTree, ReleaseGate } from './shared/Diagrams';
 import { DiagnosticBadge } from '../domain/diagnostic-badge';
 
 interface HowItWorksStoryProps {
@@ -161,6 +162,9 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
 
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-6 py-2">
+      <DiagnosisTree fig="Fig. 1" />
+      <ArchitectureGraph fig="Fig. 2" />
+      <ReleaseGate fig="Fig. 3" />
       {/* Top Header Panel */}
       <Panel className="p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
