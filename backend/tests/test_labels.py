@@ -213,3 +213,12 @@ def test_disagreements_and_upsert(client, alice, bob, fake_engine):
     client.post("/api/labels", headers=bob, json={**base, "labeler": "Vidhaath", "correct": True, "failure_type": None})
     assert client.get("/api/labels/disagreements", headers=alice).json()["total"] == 0
     assert client.get("/api/trust/agreement", headers=alice).json()["n_labels"] == 2
+
+
+def test_original_agreement_snapshot(client, alice):
+    assert client.get("/api/trust/agreement", headers=alice, params={"snapshot": "original"}).status_code == 404
+    db_dir = client.app.state.db.path.parent
+    (db_dir / "agreement_original.json").write_text('{"original": {"n": 213}, "computed_from": "pre-review backup 23:30"}')
+    assert client.get("/api/trust/agreement", headers=alice, params={"snapshot": "original"}).json()["original"]["n"] == 213
+    live = client.get("/api/trust/agreement", headers=alice).json()
+    assert live["original"]["n"] == 213 and live["computed_from"] == "pre-review backup 23:30"

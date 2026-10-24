@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -18,11 +19,24 @@ router = APIRouter(prefix="/trust", tags=["trust"])
 INJECTION_PACK = "injection"
 
 
+def _original_agreement(db: Database) -> dict | None:
+    """Agreement before any label review, computed once from the pre-review backup (data/agreement_original.json)."""
+    path = db.path.parent / "agreement_original.json"
+    return json.loads(path.read_text()) if path.exists() else None
+
+
 @router.get("/agreement")
-def get_agreement(pack_id: str | None = None, user: User = Depends(get_current_user), db: Database = Depends(get_db)) -> dict:
+def get_agreement(
+    pack_id: str | None = None, snapshot: str | None = None, user: User = Depends(get_current_user), db: Database = Depends(get_db)
+) -> dict:
+    original = _original_agreement(db)
+    if snapshot == "original":
+        if original is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "no pre-review snapshot has been computed")
+        return original
     labels = db.labels(pack_id)
     runs = {batch_id: run for batch_id in {l["batch_id"] for l in labels} if (run := db.run_by_id(batch_id))}
-    return {"pack_id": pack_id, **agreement(labels, runs)}
+    return {"pack_id": pack_id, **agreement(labels, runs), **({"original": original["original"], "computed_from": original["computed_from"]} if original else {})}
 
 
 class InjectionRequest(BaseModel):
