@@ -65,6 +65,7 @@ class Settings:
     chunk_chars: int = field(default_factory=lambda: int(_env("RAGSEAL_CHUNK_CHARS", "700")))
     seed: int = 42
     request_timeout_s: float = field(default_factory=lambda: float(_env("RAGSEAL_TIMEOUT_S", "180")))
+    batch_concurrency: int = field(default_factory=lambda: int(_env("RAGSEAL_BATCH_CONCURRENCY", "6")))
 
     def _has_key(self, provider: str) -> bool:
         return {"nvidia": bool(self.nvidia_api_key), "groq": bool(self.groq_api_key), "ollama": True}[provider]
@@ -87,6 +88,24 @@ class Settings:
         if choice not in PROVIDERS:
             raise ValueError(f"RAGSEAL_JUDGE_FALLBACK_PROVIDER={choice!r} is not a provider")
         return choice if choice != primary else None
+
+    def judge_overflow(self, primary: str) -> list[tuple[str, str]]:
+        """RAGSEAL_JUDGE_OVERFLOW: comma-separated provider:model pairs tried when the primary judge is rate-limited.
+
+        Default: the other Groq models behind a Groq primary (each Groq model has its own per-minute limit).
+        "none" disables overflow. Pairs whose provider has no key are skipped.
+        """
+        default = "groq:openai/gpt-oss-20b,groq:qwen/qwen3.8-27b" if primary == "groq" else "none"
+        raw = _env("RAGSEAL_JUDGE_OVERFLOW", default)
+        if raw.lower() == "none":
+            return []
+        pairs = []
+        for item in raw.split(","):
+            provider, _, model = item.strip().partition(":")
+            if provider in PROVIDERS and model and self._has_key(provider):
+                pairs.append((provider, model))
+        primary_model = self.model_for("judge", primary)
+        return [p for p in pairs if p != (primary, primary_model)]
 
     def model_for(self, role: str, provider: str) -> str:
         env_name, default = MODEL_DEFAULTS[(role, provider)]

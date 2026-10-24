@@ -39,7 +39,7 @@ class FakeGenerator:
     def ready(self):
         return True, None
 
-    def chat(self, messages, schema=None, num_predict=512) -> Generation:
+    def chat(self, messages, schema=None, num_predict=512, patient=True) -> Generation:
         prompt = messages[-1]["content"]
         question = prompt.rsplit("Question:", 1)[-1].replace("Answer:", "").strip()
         context = prompt.split("Question:", 1)[0]
@@ -79,6 +79,7 @@ class FakeJudge:
 
     def __init__(self):
         self.calls = 0
+        self.cache_hits = 0
         self.chat_model = self
 
     def ready(self):
@@ -96,6 +97,8 @@ class FakeJudge:
 
     def ask(self, system: str, user: str, schema: dict) -> dict:
         self.calls += 1
+        if "You evaluate one answer" in system:
+            return self._merged(user, schema)
         if "grade a search system" in system:
             question = user.split("\n", 1)[0]
             q_tokens = set(_tokens(question)) - {"question", "how", "many", "what", "is", "the", "a", "of", "do", "does"}
@@ -124,3 +127,18 @@ class FakeJudge:
             passage = user.split("Passage:", 1)[1]
             return {"supports": bool(self._numbers(truth)) and self._numbers(truth) <= self._numbers(passage), "reason": "rule"}
         raise AssertionError(f"unexpected judge prompt: {system[:60]}")
+
+    def _merged(self, user: str, schema: dict) -> dict:
+        """The one-call prompt from engine.scoring.score_case, answered with the single-task rules above."""
+        sections = dict(re.findall(r"(QUESTION|PASSAGES|ANSWER|GROUND TRUTH):\s*(.*?)(?=\n\n(?:QUESTION|PASSAGES|ANSWER|GROUND TRUTH):|\Z)", user, flags=re.DOTALL))
+        tasks = schema["properties"]
+        out = {}
+        if "passages" in tasks:
+            out["passages"] = self.ask("grade a search system", f"Question: {sections['QUESTION']}\nPassages:{sections['PASSAGES']}", {})["passages"]
+        if "claims" in tasks:
+            out["claims"] = self.ask("check an AI answer for hallucinations", f"{sections['PASSAGES']}\nANSWER: {sections['ANSWER']}", {})["claims"]
+        if "accuracy" in tasks:
+            out["accuracy"] = self.ask(
+                "compare an AI answer with a ground-truth", f"Ground truth: {sections['GROUND TRUTH']}\nAI answer: {sections['ANSWER']}", {}
+            )
+        return out

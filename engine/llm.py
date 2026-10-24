@@ -30,6 +30,14 @@ class ModelUnavailable(RuntimeError):
     """The model server is down, a key is missing, or the model has not been pulled."""
 
 
+class RateLimited(ModelUnavailable):
+    """A hosted provider said "too many requests"; `wait` is how long its window needs."""
+
+    def __init__(self, message: str, wait: float):
+        super().__init__(message)
+        self.wait = wait
+
+
 class JudgeError(RuntimeError):
     """The judge returned something we could not parse."""
 
@@ -97,7 +105,9 @@ class OllamaClient:
             raise ModelUnavailable(f"Ollama error {resp.status_code}: {resp.text[:300]}")
         return resp.json()
 
-    def chat(self, model: str, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512) -> Generation:
+    def chat(
+        self, model: str, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512, patient: bool = True
+    ) -> Generation:
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -175,9 +185,9 @@ class OpenAICompatClient:
     def has_model(self, model: str) -> bool:
         return model in self.list_models()
 
-    def _post(self, path: str, payload: dict) -> dict:
+    def _post(self, path: str, payload: dict, patient: bool = True) -> dict:
         last_error = "no attempt made"
-        for attempt in range(8):
+        for attempt in range(8 if patient else 3):
             try:
                 resp = self._http.post(path, json=payload, headers={"Authorization": f"Bearer {self._api_key}"})
             except httpx.HTTPError as exc:
@@ -187,6 +197,9 @@ class OpenAICompatClient:
             if resp.status_code in (429, 500, 502, 503, 504):
                 # Free tiers rate-limit per minute; retry-after says how long to wait.
                 last_error = f"HTTP {resp.status_code}" + (" (rate limited)" if resp.status_code == 429 else "")
+                if resp.status_code == 429 and not patient:
+                    # The judge pool routes around the limit instead of sleeping on it.
+                    raise RateLimited(f"{self.name} rate limited", _retry_wait(resp, attempt))
                 time.sleep(_retry_wait(resp, attempt))
                 continue
             if resp.status_code in (401, 403):
@@ -196,7 +209,9 @@ class OpenAICompatClient:
             return resp.json()
         raise ModelUnavailable(f"{self.name} request failed after retries: {last_error}")
 
-    def chat(self, model: str, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512) -> Generation:
+    def chat(
+        self, model: str, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512, patient: bool = True
+    ) -> Generation:
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -210,7 +225,7 @@ class OpenAICompatClient:
             # Grading needs little reasoning; low effort keeps calls fast and inside per-minute token limits.
             payload["reasoning_effort"] = "low"
         start = time.perf_counter()
-        data = self._post("/chat/completions", payload)
+        data = self._post("/chat/completions", payload, patient)
         latency = int((time.perf_counter() - start) * 1000)
         text = data["choices"][0]["message"].get("content") or ""
         return Generation(text=_strip_thinking(text), model=model, latency_ms=latency)
@@ -245,8 +260,8 @@ class ChatModel:
     def hosted(self) -> bool:
         return self.client.hosted
 
-    def chat(self, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512) -> Generation:
-        return self.client.chat(self.model, messages, schema=schema, num_predict=num_predict)
+    def chat(self, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512, patient: bool = True) -> Generation:
+        return self.client.chat(self.model, messages, schema=schema, num_predict=num_predict, patient=patient)
 
     def ready(self) -> tuple[bool, str | None]:
         if isinstance(self.client, UnavailableClient):
@@ -299,22 +314,37 @@ class JudgeCache:
 
 
 class Judge:
-    """JSON-returning judge with a disk cache.
+    """JSON-returning judge with a disk cache and a small pool of models.
 
-    If the primary (usually hosted) judge stays unavailable after its retries, for
-    example a free-tier rate limit, the call goes to the fallback (usually local
-    Ollama) instead. Every call records which model answered, so results can say
-    exactly who judged them.
+    The primary model (gpt-oss-120b by default) judges everything it can. When it is
+    rate-limited for longer than `max_wait_s`, a call overflows to the next pool member
+    (other hosted models, then local Ollama as the last resort). The cache is keyed by
+    model, and every call records which model answered, so each result says exactly who
+    judged it and batches can report how often overflow happened.
     """
 
-    def __init__(self, chat_model: ChatModel, cache_path: Path, fallback: ChatModel | None = None):
+    def __init__(
+        self,
+        chat_model: ChatModel,
+        cache_path: Path,
+        fallback: ChatModel | None = None,
+        overflow: tuple[ChatModel, ...] = (),
+        max_inflight: int = 3,
+        max_wait_s: float = 12.0,
+    ):
         self.chat_model = chat_model
         self.fallback = fallback
+        self.members = [chat_model, *overflow, *([fallback] if fallback is not None else [])]
         self.cache = JudgeCache(cache_path)
+        self.max_wait_s = max_wait_s
+        self._lock = threading.Lock()
+        self._slots = {id(m): threading.BoundedSemaphore(max_inflight if m.hosted else 1) for m in self.members}
+        self._cooldown: dict[int, float] = {}
+        self._ready: dict[int, tuple[float, bool]] = {}
+        self._local = threading.local()
         self.calls = 0
         self.cache_hits = 0
         self.fallback_calls = 0
-        self._used: list[ChatModel] = []
 
     @property
     def mode(self) -> str:
@@ -328,12 +358,14 @@ class Judge:
     def provider(self) -> str:
         return self.chat_model.provider
 
+    # ---------------------------------------------------- per-case tracking
+
     def start_tracking(self) -> None:
-        self._used = []
+        self._local.used = []
 
     def used(self) -> dict:
-        """Who judged since start_tracking(): judge_model, evaluation_mode and the list of models."""
-        models = list(dict.fromkeys(self._used)) or [self.chat_model]
+        """Who judged since start_tracking() on this thread."""
+        models = list(dict.fromkeys(getattr(self._local, "used", []))) or [self.chat_model]
         return {
             "judge_model": " + ".join(m.model for m in models),
             "evaluation_mode": "hosted" if any(m.hosted for m in models) else "local",
@@ -341,41 +373,100 @@ class Judge:
             "judge_fallback_used": any(m is not self.chat_model for m in models),
         }
 
-    def _ask_model(self, chat_model: ChatModel, system: str, user: str, schema: dict) -> dict:
-        key = JudgeCache.key(chat_model.provider, chat_model.model, system, user, json.dumps(schema, sort_keys=True))
-        cached = self.cache.get(key)
-        if cached is not None:
-            self.cache_hits += 1
-            self._used.append(chat_model)
-            return cached
+    def _record(self, member: ChatModel) -> None:
+        if not hasattr(self._local, "used"):
+            self._local.used = []
+        self._local.used.append(member)
+
+    # ------------------------------------------------------------ calling
+
+    @staticmethod
+    def _key(member: ChatModel, system: str, user: str, schema: dict) -> str:
+        return JudgeCache.key(member.provider, member.model, system, user, json.dumps(schema, sort_keys=True))
+
+    def _member_ready(self, member: ChatModel) -> bool:
+        if member is self.chat_model:
+            return True
+        now = time.time()
+        cached = self._ready.get(id(member))
+        if cached and now - cached[0] < 60:
+            return cached[1]
+        ok = member.ready()[0]
+        self._ready[id(member)] = (now, ok)
+        return ok
+
+    def _call(self, member: ChatModel, system: str, user: str, schema: dict) -> dict:
         messages = [
             {"role": "system", "content": system + "\nRespond with one JSON object only, matching this JSON schema: " + json.dumps(schema)},
             {"role": "user", "content": user},
         ]
         last_error: Exception | None = None
         for _ in range(2):
-            self.calls += 1
-            raw = chat_model.chat(messages, schema=schema, num_predict=800).text
+            with self._lock:
+                self.calls += 1
+            raw = member.chat(messages, schema=schema, num_predict=800, patient=False).text
             try:
                 result = _parse_json(raw)
             except JudgeError as exc:
                 last_error = exc
                 continue
             if isinstance(result, dict):
-                self.cache.put(key, result)
-                self._used.append(chat_model)
                 return result
             last_error = JudgeError(f"judge returned {type(result).__name__}, expected an object")
         raise last_error or JudgeError("judge failed")
 
     def ask(self, system: str, user: str, schema: dict) -> dict:
-        try:
-            return self._ask_model(self.chat_model, system, user, schema)
-        except ModelUnavailable:
-            if self.fallback is None or not self.fallback.ready()[0]:
-                raise
-        self.fallback_calls += 1
-        return self._ask_model(self.fallback, system, user, schema)
+        # A cached verdict from the primary first; overflow members' cache only if the primary never judged it.
+        for member in self.members:
+            cached = self.cache.get(self._key(member, system, user, schema))
+            if cached is not None:
+                with self._lock:
+                    self.cache_hits += 1
+                self._record(member)
+                return cached
+
+        deadline = time.time() + 300
+        last_error: Exception | None = None
+        broken: set[int] = set()  # members that failed for a reason other than a rate limit
+        while time.time() < deadline:
+            now = time.time()
+            usable = [m for m in self.members if id(m) not in broken and self._member_ready(m)]
+            if not usable:
+                raise last_error or ModelUnavailable("no judge model is available")
+            primary_wait = self._cooldown.get(id(self.chat_model), 0) - now
+            candidates = [self.chat_model] if self.chat_model in usable and primary_wait <= self.max_wait_s else []
+            candidates += [m for m in usable if m is not self.chat_model and self._cooldown.get(id(m), 0) <= now]
+            if not candidates:
+                # Everyone usable is rate-limited: wait for the first window to reopen.
+                reopen = min(self._cooldown.get(id(m), now) for m in usable)
+                time.sleep(min(2.0, max(0.2, reopen - now)))
+                continue
+            member = candidates[0]
+            if member is self.chat_model and primary_wait > 0:
+                time.sleep(primary_wait)
+            slot = self._slots[id(member)]
+            if not slot.acquire(timeout=1.0):
+                continue
+            try:
+                result = self._call(member, system, user, schema)
+            except RateLimited as exc:
+                with self._lock:
+                    self._cooldown[id(member)] = time.time() + exc.wait
+                last_error = exc
+                continue
+            except ModelUnavailable as exc:
+                broken.add(id(member))
+                last_error = exc
+                continue
+            finally:
+                slot.release()
+            self.cache.put(self._key(member, system, user, schema), result)
+            if member is not self.chat_model:
+                with self._lock:
+                    self.fallback_calls += 1
+            self._record(member)
+            return result
+        raise ModelUnavailable(f"no judge available within 300 s: {last_error}")
 
 
 # ------------------------------------------------------------------ factory
@@ -420,6 +511,7 @@ class Models:
     judge: ChatModel
     embedder: EmbedModel
     judge_fallback: ChatModel | None = None
+    judge_overflow: tuple[ChatModel, ...] = ()
 
 
 def build_models(settings: Settings) -> Models:
@@ -442,4 +534,5 @@ def build_models(settings: Settings) -> Models:
         judge_fallback=(
             ChatModel(client(fallback_provider), settings.model_for("judge", fallback_provider)) if fallback_provider else None
         ),
+        judge_overflow=tuple(ChatModel(client(provider), model) for provider, model in settings.judge_overflow(judge_provider)),
     )

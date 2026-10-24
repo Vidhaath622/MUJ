@@ -9,8 +9,10 @@ from .fakes import FakeEmbedder, FakeGenerator
 
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch):
-    for name in ("RAGSEAL_GENERATOR_PROVIDER", "RAGSEAL_JUDGE_PROVIDER", "RAGSEAL_EMBED_PROVIDER"):
+    for name in ("RAGSEAL_GENERATOR_PROVIDER", "RAGSEAL_JUDGE_PROVIDER", "RAGSEAL_EMBED_PROVIDER", "RAGSEAL_JUDGE_OVERFLOW"):
         monkeypatch.delenv(name, raising=False)
+    # Tests never reach a real local judge, whatever is pulled on this machine.
+    monkeypatch.setenv("RAGSEAL_JUDGE_FALLBACK_PROVIDER", "none")
 
 
 def test_auto_order():
@@ -60,7 +62,7 @@ class _Model:
     def ready(self):
         return True, None
 
-    def chat(self, messages, schema=None, num_predict=512):
+    def chat(self, messages, schema=None, num_predict=512, patient=True):
         from engine.llm import Generation
 
         if self.reply is None:
@@ -89,7 +91,46 @@ def test_judge_without_fallback_raises(tmp_path):
 
 
 def test_fallback_provider_setting(monkeypatch):
+    monkeypatch.delenv("RAGSEAL_JUDGE_FALLBACK_PROVIDER")
     assert Settings().judge_fallback_provider("groq") == "ollama"
     assert Settings().judge_fallback_provider("ollama") is None
     monkeypatch.setenv("RAGSEAL_JUDGE_FALLBACK_PROVIDER", "none")
     assert Settings().judge_fallback_provider("groq") is None
+
+
+def test_pool_skips_broken_primary_and_uses_overflow(tmp_path):
+    from engine.llm import Judge
+
+    judge = Judge(
+        _Model("primary", True), tmp_path / "c.sqlite",
+        overflow=(_Model("overflow", True, '{"score": 0.5}'),), fallback=_Model("local", False, '{"score": 1}'),
+    )
+    judge.start_tracking()
+    assert judge.ask("s", "u", {"type": "object"}) == {"score": 0.5}
+    assert judge.used()["judge_model"] == "overflow"
+
+
+def test_pool_waits_out_short_rate_limit_on_primary(tmp_path):
+    from engine.llm import Generation, Judge, RateLimited
+
+    class Flaky(_Model):
+        calls = 0
+
+        def chat(self, messages, schema=None, num_predict=512, patient=True):
+            Flaky.calls += 1
+            if Flaky.calls == 1:
+                raise RateLimited("429", wait=0.3)
+            return Generation('{"score": 1}', self.model, 1)
+
+    judge = Judge(Flaky("primary", True), tmp_path / "c.sqlite", overflow=(_Model("overflow", True, '{"score": 0}'),))
+    judge.start_tracking()
+    # A short wait on the primary beats switching judges.
+    assert judge.ask("s", "u", {"type": "object"}) == {"score": 1}
+    assert judge.used()["judge_fallback_used"] is False
+
+
+def test_overflow_setting(monkeypatch):
+    s = Settings(groq_api_key="g", nvidia_api_key="")
+    assert s.judge_overflow("groq") == [("groq", "openai/gpt-oss-20b"), ("groq", "qwen/qwen3.8-27b")]
+    monkeypatch.setenv("RAGSEAL_JUDGE_OVERFLOW", "nvidia:minimaxai/minimax-m3.1-flash,groq:openai/gpt-oss-120b")
+    assert s.judge_overflow("groq") == []  # no NVIDIA key, and the primary itself is dropped

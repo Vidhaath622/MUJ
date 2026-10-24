@@ -12,12 +12,7 @@ from dataclasses import dataclass, field
 from .ingest import Chunk
 from .llm import Judge, JudgeError, ModelUnavailable
 from .rag import RagSystem, is_abstention
-from .scoring import (
-    MetricResult,
-    score_answer_accuracy,
-    score_context_relevance,
-    score_faithfulness,
-)
+from .scoring import MetricResult, score_case
 from .store import VectorStore
 from .verdict import Facts, decide, needs_replay
 
@@ -45,13 +40,6 @@ class TestCase:
     @property
     def unanswerable(self) -> bool:
         return self.type == "unanswerable"
-
-
-def _safe(fn, *args, **kwargs) -> MetricResult | None:
-    try:
-        return fn(*args, **kwargs)
-    except JudgeError:
-        return None
 
 
 class Evaluator:
@@ -82,10 +70,13 @@ class Evaluator:
 
     # -------------------------------------------------------------- replay
 
-    def replay(self, case: TestCase, gold_chunks: list[Chunk]) -> dict:
+    def replay(self, case: TestCase, gold_chunks: list[Chunk], counter: dict | None = None) -> dict:
         answer, citations, latency = self.rag.generate(case.question, gold_chunks)
-        faith = score_faithfulness(self.judge, answer, gold_chunks)
-        acc = score_answer_accuracy(self.judge, case.question, answer, case.ground_truth, case.unanswerable)
+        scores = score_case(self.judge, case.question, answer, gold_chunks, case.ground_truth, case.unanswerable, with_relevance=False)
+        faith, acc = scores.faithfulness, scores.accuracy
+        if counter is not None:
+            counter["judge_calls"] += scores.judge_calls
+            counter["rule_shortcuts"] += scores.rule_shortcuts
         return {
             "answer": answer,
             "answer_accuracy": acc.score,
@@ -102,6 +93,7 @@ class Evaluator:
     def evaluate(self, owner_id: str, case: TestCase, document_ids: list[str]) -> dict:
         started = time.perf_counter()
         self.judge.start_tracking()
+        counter = {"judge_calls": 0, "rule_shortcuts": 0}
         if case.manual_answer:
             retrieved = self.rag.retrieve(owner_id, case.question, document_ids)
             answer, citations, gen_ms = case.manual_answer, [], 0
@@ -111,9 +103,16 @@ class Evaluator:
         chunks = [s.chunk for s in retrieved]
         retrieved_ids = [c.chunk_id for c in chunks]
 
-        relevance, per_chunk = score_context_relevance(self.judge, case.question, chunks)
-        faith = _safe(score_faithfulness, self.judge, answer, chunks)
-        acc = _safe(score_answer_accuracy, self.judge, case.question, answer, case.ground_truth, case.unanswerable)
+        judge_started = time.perf_counter()
+        try:
+            scores = score_case(self.judge, case.question, answer, chunks, case.ground_truth, case.unanswerable)
+            relevance, per_chunk, faith, acc = scores.relevance, scores.per_chunk, scores.faithfulness, scores.accuracy
+            counter["judge_calls"] += scores.judge_calls
+            counter["rule_shortcuts"] += scores.rule_shortcuts
+        except JudgeError:
+            relevance, per_chunk, faith, acc = None, [], None, None
+        if relevance is None:
+            relevance = MetricResult("context_relevance", None, "The judge returned an unreadable result.", "model")
         if faith is None:
             faith = MetricResult("faithfulness", None, "The judge returned an unreadable result.", "model", {"claims": [], "hallucinated_claims": []})
         if acc is None:
@@ -145,7 +144,7 @@ class Evaluator:
         replay = None
         if needs_replay(facts):
             try:
-                replay = self.replay(case, gold_chunks)
+                replay = self.replay(case, gold_chunks, counter)
                 facts.replay_ran = True
                 facts.replay_correct = replay["passed"]
                 facts.replay_failed = replay["answer_accuracy"] is None
@@ -211,6 +210,12 @@ class Evaluator:
             "generator_model": self.rag.generator_model,
             "generation_ms": gen_ms,
             "duration_ms": int((time.perf_counter() - started) * 1000),
+            "timing": {
+                "generation_ms": gen_ms,
+                "judge_ms": int((time.perf_counter() - judge_started) * 1000),
+                "total_ms": int((time.perf_counter() - started) * 1000),
+                **counter,
+            },
         }
 
     def _evidence(self, gold_chunks, retrieved_ids, retrieved_out, faith, stale_retrieved, owner_id, gold_source) -> list[dict]:

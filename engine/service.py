@@ -8,8 +8,10 @@
 
 from __future__ import annotations
 
+import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
 from .agreement import judge_agreement, load_labels
@@ -56,7 +58,12 @@ class Engine:
             models = build_models(self.settings)
             generator = generator or models.generator
             embedder = embedder or models.embedder
-            judge = judge or Judge(models.judge, self.settings.data_dir / "judge_cache.sqlite", fallback=models.judge_fallback)
+            judge = judge or Judge(
+                models.judge,
+                self.settings.data_dir / "judge_cache.sqlite",
+                fallback=models.judge_fallback,
+                overflow=models.judge_overflow,
+            )
         self.generator = generator
         self.embedder = embedder
         self.judge = judge
@@ -197,29 +204,38 @@ class Engine:
         document_ids: list[str],
         test_cases: list[dict],
         pack_id: str | None = None,
-        progress: Callable[[int, int], None] | None = None,
+        progress: Callable[[int, int, int], None] | None = None,
+        batch_id: str | None = None,
+        concurrency: int | None = None,
     ) -> dict:
+        """Evaluate many cases. `progress(done, total, failed)` is called after each case."""
         self._check_documents(owner_id, document_ids)
         started = time.perf_counter()
         cases = [_case_from_dict(raw) for raw in test_cases]
         for i, case in enumerate(cases, start=1):
             case.test_id = case.test_id or f"tc_{i:02d}"
-        done = 0
+        calls_before, hits_before = self.judge.calls, self.judge.cache_hits
+        lock = threading.Lock()
+        counts = {"done": 0, "failed": 0}
 
         def run(case: TestCase) -> dict:
-            nonlocal done
             try:
                 result = self.evaluator.evaluate(owner_id, case, document_ids)
             except (ModelUnavailable, JudgeError) as exc:
                 result = failed_result(case, exc, self.judge, self.generator.model)
-            done += 1
+            with lock:
+                counts["done"] += 1
+                counts["failed"] += bool(result.get("error"))
+                snapshot = (counts["done"], len(cases), counts["failed"])
             if progress:
-                progress(done, len(cases))
+                progress(*snapshot)
             return result
 
-        # One case at a time: local Ollama serializes anyway, and hosted free tiers are
-        # rate-limited per minute, so parallel calls only add 429 retries.
-        evaluations = [run(case) for case in cases]
+        # Several cases in flight: the local generator and the hosted judge overlap, and the
+        # judge pool keeps each model inside its rate limit.
+        workers = max(1, min(concurrency or self.settings.batch_concurrency, len(cases) or 1))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            evaluations = list(pool.map(run, cases))
         if evaluations and all(ev.get("error") for ev in evaluations):
             # Nothing could run (provider down or out of quota): report that instead of an all-UNRESOLVED batch.
             raise ModelUnavailable(evaluations[0]["error"])
@@ -235,9 +251,16 @@ class Engine:
         labels = self.pack_labels(pack_id) if pack_id else []
         agreement = judge_agreement(self.judge, labels, {c.test_id for c in cases}) if labels else None
 
+        wall_ms = int((time.perf_counter() - started) * 1000)
+        fallback_models: dict[str, int] = {}
+        for ev in evaluations:
+            if ev.get("judge_fallback_used"):
+                for name in ev.get("judge_models_used", []):
+                    if name != f"{self.judge.provider}:{self.judge.model}":
+                        fallback_models[name] = fallback_models.get(name, 0) + 1
         summary = summarize_batch(evaluations)
         return {
-            "batch_id": "batch_" + uuid.uuid4().hex[:10],
+            "batch_id": batch_id or "batch_" + uuid.uuid4().hex[:10],
             "pack_id": pack_id,
             "document_ids": document_ids,
             "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -247,8 +270,18 @@ class Engine:
             "judge_model": self.judge.model,
             "judge_models_used": sorted({m for ev in evaluations for m in ev.get("judge_models_used", [])}),
             "judge_fallback_cases": sum(bool(ev.get("judge_fallback_used")) for ev in evaluations),
+            "judge_fallback_models": fallback_models,
             "generator_model": self.generator.model,
-            "duration_ms": int((time.perf_counter() - started) * 1000),
+            "duration_ms": wall_ms,
+            "timing": {
+                "wall_ms": wall_ms,
+                "per_case_ms_avg": int(wall_ms / len(cases)) if cases else None,
+                "cases_per_min": round(len(cases) / (wall_ms / 60000), 2) if wall_ms else None,
+                "judge_calls": self.judge.calls - calls_before,
+                "judge_cache_hits": self.judge.cache_hits - hits_before,
+                "rule_shortcuts": sum(ev.get("timing", {}).get("rule_shortcuts", 0) for ev in evaluations),
+                "concurrency": workers,
+            },
             "results": results,
         }
 
