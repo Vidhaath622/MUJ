@@ -442,14 +442,15 @@ class Judge:
         return ok
 
     def _call(self, member: ChatModel, system: str, user: str, schema: dict) -> dict:
+        terse = "" if member.hosted else "\nKeep every reason under 8 words."  # a local model's time is mostly output tokens
         messages = [
-            {"role": "system", "content": system + "\nRespond with one JSON object only, matching this JSON schema: " + json.dumps(schema)},
+            {"role": "system", "content": system + terse + "\nRespond with one JSON object only, matching this JSON schema: " + json.dumps(schema)},
             {"role": "user", "content": user},
         ]
         last_error: Exception | None = None
         for _ in range(2):
             try:
-                raw = member.chat(messages, schema=schema, num_predict=800, patient=False).text
+                raw = member.chat(messages, schema=schema, num_predict=800 if member.hosted else 500, patient=False).text
                 with self._lock:
                     self.calls += 1
                 result = _parse_json(raw)
