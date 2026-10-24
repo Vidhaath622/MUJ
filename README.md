@@ -15,6 +15,8 @@
 
 **HYPNEXIS'26 Hackathon** · Problem Statement **AI-04** · Team **Monster Energy**
 
+**Live demo: [ragseal.vercel.app](https://ragseal.vercel.app)** (frontend on Vercel; the models and backend run on the team laptop during judging)
+
 </div>
 
 ---
@@ -172,8 +174,34 @@ flowchart TB
 
 ## Features
 
-| Feature / Page | Description | Screenshot Slot |
-|---|---|---|
+| Feature / Page | Description |
+|---|---|
+
+### Screenshots
+
+<table>
+<tr>
+<td width="50%"><img src="docs/assets/bots.png" alt="Try a chatbot: live X-ray of every reply"/><br/><sub><b>Try a chatbot</b>: every reply X-rayed live: what the bot read, three checks, verdict, replay.</sub></td>
+<td width="50%"><img src="docs/assets/diagnose.png" alt="Diagnose answers"/><br/><sub><b>Diagnose</b>: retrieved text beside the answer, colour-coded scorecards, root cause.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/assets/impact.png" alt="Change impact radar"/><br/><sub><b>Change impact</b>: diff two document versions, see which answers just went stale.</sub></td>
+<td><img src="docs/assets/trust.png" alt="Checker trust"/><br/><sub><b>Checker trust</b>: human agreement, failure-type confusion matrix, judge-swap stability.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/assets/testsets.png" alt="Documents and questions"/><br/><sub><b>Documents &amp; questions</b>: upload, read, generate test questions with known answers.</sub></td>
+<td><img src="docs/assets/compare.png" alt="Compare versions"/><br/><sub><b>Compare versions</b>: McNemar test and bootstrap CI decide if a change is real.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/assets/labels.png" alt="Label studio"/><br/><sub><b>Label answers</b>: blind two-person labelling with editable labels.</sub></td>
+<td><img src="docs/assets/seal.png" alt="The Seal"/><br/><sub><b>The Seal</b>: a certificate per bot, with an embeddable badge.</sub></td>
+</tr>
+<tr>
+<td colspan="2"><img src="docs/assets/runs.png" alt="Run a full test"/><br/><sub><b>Run a full test</b>: whole packs with live progress against the 15-minute budget.</sub></td>
+</tr>
+</table>
+
+---|---|---|
 | **Bots Under Test (Live X-Ray)** | Real-time inspection of bot prompts, retrieval chunks, token citations, and answer generation. | `docs/assets/bots.png` |
 | **Diagnose** | Deep-dive root-cause explorer showing context relevance, faithfulness, accuracy, and counterfactual replay proofs. | `docs/assets/diagnose.png` |
 | **Documents & Question Generator** | Ingest markdown/text documents and automatically generate synthetic ground-truth test Q&A pairs. | `docs/assets/testsets.png` |
@@ -193,8 +221,9 @@ All benchmark metrics reflect verified experimental results:
 
 ### 1. Evaluator Reliability & Human Agreement
 * **Human Label Consensus**: **213 answers** independently evaluated by two human labellers.
-  * Pipeline vs Human Consensus Agreement: **95.0%**
-  * Critical Safety Metric: **0 false passes** ($n = 160$ clean pass cases).
+  * Before any review, the two humans agreed with each other on **75%** of answers (n = 213; most splits were on the banking outdated-fee traps).
+  * Pipeline vs human consensus: **95.0%** agreement on the **160** answers both humans agreed on.
+  * Critical safety metric: **0 false passes**: RAGSeal never passed an answer both humans marked wrong.
 * **Fault Injection Validation**: **54 planted failures** across diverse edge cases:
   * Exact failure type pinpointed: **89%** ($48/54$).
   * Correct pipeline stage isolated (Retriever vs Generator): **96%** ($52/54$).
@@ -217,9 +246,9 @@ All benchmark metrics reflect verified experimental results:
 ### 3. Built-In Industry Packs
 | Benchmark Pack | Questions | Pass Rate | Primary Failure Modes Tested |
 |---|---|---|---|
-| **Banking** | 71 | **86%** | Fee updates, loan terms, distractor accounts |
-| **Recruitment** | 71 | **89%** | Candidate qualifications, salary bans, policy traps |
-| **Healthcare** | 71 | **93%** | Drug interactions, dosage guidelines, contraindications |
+| **Banking** | 71 | **86%** | Fee schedule v1 → v2 (outdated fees), savings terms, dispute procedure, look-alike card promotion |
+| **Recruitment** | 71 | **89%** | Hiring policy v1 → v2, job description, recruiter guide, look-alike benefits overview |
+| **Healthcare** | 71 | **93%** | Discharge protocol v1 → v2, ED operations, patient records policy, look-alike visitor guide |
 | **Real IRS Documents** | 22 | **72.7%** | Mileage rates & retirement limits across 2025/2026 revisions |
 | **RAGSeal Guide** | 14 | **78.6%** | Architecture self-test, taxonomy boundaries, replay mechanics |
 
