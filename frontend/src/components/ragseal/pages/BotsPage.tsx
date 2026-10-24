@@ -27,12 +27,15 @@ const PERSONAS: Persona[] = [
   { pack: 'banking', org: 'Harbor Ridge Bank', role: 'Fees & accounts assistant', initials: 'HR', accent: 'var(--accent)' },
   { pack: 'recruitment', org: 'Northwind Talent', role: 'HR policy assistant', initials: 'NT', accent: 'var(--violet)' },
   { pack: 'healthcare', org: 'Mercy Vale General Hospital', role: 'Patient help desk', initials: 'MV', accent: 'var(--teal)' },
+  // Breaks the fourth wall: a bot built on RAGSeal's own docs, X-rayed by RAGSeal itself.
+  { pack: 'ragseal', org: 'RAGSeal guide', role: 'Ask about RAGSeal itself; its own answers get X-rayed', initials: 'RS', accent: 'var(--retr)' },
 ];
 
 const TRAP: Record<string, { badge: string; teaser: string }> = {
   stale: { badge: 'Old version exists', teaser: 'There is an outdated copy of this policy in the documents too.' },
   distractor: { badge: 'Look-alike document', teaser: 'A different document talks about something very similar.' },
   unanswerable: { badge: 'Not in the documents', teaser: 'The honest answer is “I don’t know”. Will it make one up?' },
+  factoid: { badge: 'Straight question', teaser: 'The answer is in the documents. Does it find it and stick to it?' },
 };
 
 interface Turn {
@@ -119,9 +122,15 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
   // "Can you trick it?": one question per trap kind from the pack's real test set.
   const tricks = useMemo(() => {
     const cases = pack?.test_cases ?? [];
-    return (['stale', 'distractor', 'unanswerable'] as const)
+    const picked = (['stale', 'distractor', 'unanswerable'] as const)
       .map((t) => cases.find((c) => c.type === t && c.test_id !== example?.test_id))
       .filter((c): c is LabTestCase => !!c);
+    // Packs without every trap kind (e.g. the RAGSeal guide) fill up with plain questions.
+    for (const c of cases) {
+      if (picked.length >= 3) break;
+      if (c.test_id !== example?.test_id && !picked.includes(c)) picked.push(c);
+    }
+    return picked;
   }, [pack, example]);
 
   const ask = async (question: string, known?: LabTestCase) => {

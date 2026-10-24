@@ -12,6 +12,7 @@ import {
   fmtTime,
   LoadState,
   PACK_LABEL,
+  ALL_PACKS,
   PackSwitcher,
   Panel,
   PrimaryButton,
@@ -109,7 +110,7 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
       <TopBarControls>
-        <PackSwitcher value={packId} onChange={onPackChange} />
+        <PackSwitcher value={packId} onChange={onPackChange} packs={ALL_PACKS} />
         <PrimaryButton onClick={start} busy={starting} disabled={!token}>
           {!starting && <Play className="h-3 w-3 fill-current" />}
           Run {PACK_LABEL[packId]} pack

@@ -462,3 +462,67 @@ export interface DocumentDetail {
 export async function getDocument(documentId: string, token: string): Promise<DocumentDetail> {
   return (await call<DocumentDetail>(`/documents/${encodeURIComponent(documentId)}`, token)).body;
 }
+
+// ---------- Change impact radar (POST /api/impact, GET /api/impact/{id}|latest) ----------
+
+export interface ImpactChange {
+  kind: 'changed' | 'added' | 'removed';
+  old: string | null;
+  new: string | null;
+  numbers_changed?: { old: string; new: string }[];
+  old_chunk_id?: string | null;
+  new_chunk_id?: string | null;
+  tested?: boolean;
+}
+
+export interface ImpactTest {
+  test_id: string;
+  question: string;
+  gold?: string;
+  expected_answer?: string;
+  old_fact?: string;
+  answer?: string;
+  verdict?: string;
+  failure_type?: string | null;
+  stage?: string | null;
+  at_risk?: boolean;
+  quotes_old_value?: boolean;
+  stale_retrieved?: boolean;
+  gold_retrieved?: boolean;
+  judge_model?: string;
+  evaluation_id?: string;
+  /** The full stored evaluation, so the normal case report can open it. */
+  evaluation?: unknown;
+}
+
+export interface ImpactResult {
+  impact_id: string | null;
+  status: 'running' | 'done' | 'failed' | 'none';
+  created_at?: string;
+  progress?: RunProgress;
+  error?: string | null;
+  old_document?: { document_id: string; filename: string };
+  new_document?: { document_id: string; filename: string };
+  summary?: { unchanged?: number; changed?: number; added?: number; removed?: number; tests?: number; at_risk?: number };
+  changes?: ImpactChange[];
+  tests?: ImpactTest[];
+  at_risk?: number;
+  judge_model?: string;
+}
+
+export async function startImpact(
+  oldDocumentId: string,
+  newDocumentId: string,
+  token: string,
+  maxTests = 10
+): Promise<ImpactResult> {
+  const { body } = await call<ImpactResult>('/impact', token, {
+    method: 'POST',
+    body: JSON.stringify({ old_document_id: oldDocumentId, new_document_id: newDocumentId, max_tests: maxTests }),
+  });
+  return body;
+}
+
+export async function getImpact(impactId: string, token: string): Promise<ImpactResult> {
+  return (await call<ImpactResult>(`/impact/${encodeURIComponent(impactId)}`, token)).body;
+}

@@ -6,7 +6,8 @@ import { SignInScreen } from './components/ragseal/shell/SignInScreen';
 import { HowItWorksStory } from './components/ragseal/HowItWorksStory';
 import { LabScreen } from './components/ragseal/lab/LabScreen';
 import { AppShell, TopBarControls, useHashRoute } from './components/ragseal/shell/AppShell';
-import { PackSwitcher } from './components/ragseal/shared/ui';
+import { ALL_PACKS, PACKS, PackSwitcher } from './components/ragseal/shared/ui';
+import { ImpactPage } from './components/ragseal/pages/ImpactPage';
 import { OverviewPage } from './components/ragseal/pages/OverviewPage';
 import { RunsPage } from './components/ragseal/pages/RunsPage';
 import { LabelStudioPage } from './components/ragseal/pages/LabelStudioPage';
@@ -178,6 +179,7 @@ export const App: React.FC = () => {
               )}
               <PackSwitcher
                 value={activePackId}
+                packs={ALL_PACKS}
                 onChange={(p) => {
                   handleSelectPack(p);
                   if (openBatch) go('diagnose');
@@ -192,13 +194,22 @@ export const App: React.FC = () => {
           <RunsPage token={authToken} packId={activePackId} onPackChange={handleSelectPack} onOpenRun={openRun} />
         )}
 
-        {route === 'label' && <LabelStudioPage token={authToken} packId={activePackId} onPackChange={handleSelectPack} />}
+        {route === 'label' && (
+          // Only the three 71-question packs are labelled; other packs fall back to the first.
+          <LabelStudioPage
+            token={authToken}
+            packId={PACKS.some((p) => p.id === activePackId) ? activePackId : PACKS[0].id}
+            onPackChange={handleSelectPack}
+          />
+        )}
 
         {route === 'trust' && <TrustPage token={authToken} health={backendHealth} />}
 
         {route === 'compare' && <ComparePage token={authToken} />}
 
         {route === 'seal' && <SealPage token={authToken} />}
+
+        {route === 'impact' && <ImpactPage token={authToken} />}
 
         {route === 'learn' && (
           <div className="mx-auto max-w-7xl p-4 md:p-8">

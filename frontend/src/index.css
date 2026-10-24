@@ -220,3 +220,12 @@
 @media (prefers-reduced-motion: reduce) {
   .signin-seal, .signin-seal-ring, .signin-seal-tick, .signin-seal-dots { animation: none; stroke-dashoffset: 0; }
 }
+
+/* Change impact radar: a slow sweep while the impact run is in progress. */
+@keyframes radar-sweep { to { transform: rotate(360deg); } }
+@keyframes radar-ping { 0% { transform: scale(0.4); opacity: 0.9; } 100% { transform: scale(1.6); opacity: 0; } }
+.radar-sweep { transform-origin: 60px 60px; animation: radar-sweep 2.4s linear infinite; }
+.radar-ping { transform-origin: center; transform-box: fill-box; animation: radar-ping 1.8s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep, .radar-ping { animation: none; }
+}

@@ -12,6 +12,7 @@ const BOT: Record<string, { name: string; role: string }> = {
   recruitment: { name: 'Northwind Talent', role: 'HR policy assistant' },
   healthcare: { name: 'Mercy Vale General Hospital', role: 'Patient help desk' },
   realworld: { name: 'Public tax guidance', role: 'Answers from IRS news releases' },
+  ragseal: { name: 'RAGSeal guide', role: 'Answers questions about RAGSeal itself' },
 };
 
 const PACK_NAME: Record<string, string> = {
@@ -19,6 +20,7 @@ const PACK_NAME: Record<string, string> = {
   recruitment: 'Recruitment',
   healthcare: 'Healthcare',
   realworld: 'Real documents',
+  ragseal: 'RAGSeal guide',
 };
 
 /** Human agreement below this many double-labelled answers is shown as pending. */

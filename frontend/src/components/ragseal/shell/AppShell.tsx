@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   ListChecks,
   PlayCircle,
+  Radar,
   ScanSearch,
   ShieldCheck,
   Stamp,
@@ -20,7 +21,7 @@ import { cn } from '../../../lib/utils';
 import { AuthUser } from '../../../types/ragseal';
 import { HealthResponse } from '../../../lib/api';
 
-export type Route = 'bots' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'label' | 'trust' | 'compare' | 'seal' | 'learn';
+export type Route = 'bots' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'impact' | 'label' | 'trust' | 'compare' | 'seal' | 'learn';
 
 interface NavItem {
   id: Route;
@@ -39,6 +40,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { id: 'bots', label: 'Try a chatbot', hint: 'Ask a bot; every reply gets checked', icon: MessagesSquare },
       { id: 'diagnose', label: 'Diagnose answers', hint: 'See why a single answer went wrong', icon: ScanSearch },
       { id: 'testsets', label: 'Documents & questions', hint: 'Upload a document, generate test questions', icon: FlaskConical },
+      { id: 'impact', label: 'Change impact', hint: 'What a document update breaks for users today', icon: Radar },
       { id: 'runs', label: 'Run a full test', hint: 'Check every question in a pack at once', icon: PlayCircle },
     ],
   },
@@ -60,6 +62,7 @@ export const ROUTE_TITLE: Record<Route, string> = {
   diagnose: 'Diagnose answers',
   runs: 'Run a full test',
   testsets: 'Documents & questions',
+  impact: 'Change impact',
   label: 'Label answers',
   trust: 'Can you trust the checker?',
   compare: 'Compare versions',
@@ -73,6 +76,7 @@ export const ROUTE_BLURB: Record<Route, string> = {
   bots: 'Ask a sample chatbot anything. Each reply is checked: did it find the right text, stick to it, and get it right?',
   diagnose: 'Pick a question on the left to see the text the bot found, its answer, and who is to blame.',
   testsets: 'Upload a document, read it, then generate test questions with known answers and check them.',
+  impact: 'Pick an old and a new version of a document. RAGSeal finds what changed, writes a test for each change and shows which answers still give the old fact.',
   runs: 'Run every question in a pack in one go and watch the progress.',
   label: 'Mark the bot\u2019s answers right or wrong yourself. We compare your labels with RAGSeal\u2019s.',
   trust: 'Evidence that RAGSeal\u2019s verdicts can be trusted: agreement with humans, planted failures, and stability.',

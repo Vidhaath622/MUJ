@@ -9,7 +9,7 @@ export type RootCauseCategory =
   | 'UNRESOLVED'
   | 'PARTIAL_CONTEXT_MISMATCH';
 
-export type PackId = 'recruitment' | 'banking' | 'healthcare' | 'custom';
+export type PackId = 'recruitment' | 'banking' | 'healthcare' | 'realworld' | 'ragseal' | 'custom';
 
 export type ReleaseDecision = 'SHIP' | 'REVIEW' | 'BLOCK';
 

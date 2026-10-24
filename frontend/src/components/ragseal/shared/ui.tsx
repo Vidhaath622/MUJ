@@ -12,7 +12,14 @@ export const PACKS: { id: PackId; label: string }[] = [
   { id: 'healthcare', label: 'Healthcare' },
 ];
 
-export const PACK_LABEL: Record<string, string> = Object.fromEntries(PACKS.map((p) => [p.id, p.label]));
+/** The labelled packs above plus the real IRS documents and RAGSeal's own docs (not labelled). */
+export const ALL_PACKS: { id: PackId; label: string }[] = [
+  ...PACKS,
+  { id: 'realworld', label: 'Real documents' },
+  { id: 'ragseal', label: 'RAGSeal guide' },
+];
+
+export const PACK_LABEL: Record<string, string> = Object.fromEntries(ALL_PACKS.map((p) => [p.id, p.label]));
 
 export const Panel: React.FC<{
   title?: React.ReactNode;
@@ -55,9 +62,13 @@ export const Metric: React.FC<{
   </div>
 );
 
-export const PackSwitcher: React.FC<{ value: PackId; onChange: (p: PackId) => void }> = ({ value, onChange }) => (
+export const PackSwitcher: React.FC<{
+  value: PackId;
+  onChange: (p: PackId) => void;
+  packs?: { id: PackId; label: string }[];
+}> = ({ value, onChange, packs = PACKS }) => (
   <div className="flex items-center gap-0.5 rounded-[10px] border border-[var(--panel-2)] p-[3px] text-[13px]" role="tablist">
-    {PACKS.map((p) => (
+    {packs.map((p) => (
       <button
         key={p.id}
         role="tab"

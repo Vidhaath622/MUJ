@@ -201,12 +201,18 @@ export function useLabData(packId: PackId, token: string | null, batchId?: strin
         let runId = batchId ?? null;
         if (!runId) {
           const history = (await fetchRunHistory(token)) as (RunHistoryItem & { status?: string })[];
-          runId =
-            history
-              .filter((r) => r.pack_id === packId && (r.status ?? 'done') === 'done')
-              .sort((a, b) => b.created_at.localeCompare(a.created_at))[0]?.batch_id ?? null;
-        }
-        if (runId) {
+          // Newest first; version-compare runs of another profile (v2…) are skipped so the
+          // Lab shows the baseline bot.
+          const candidates = history
+            .filter((r) => r.pack_id === packId && (r.status ?? 'done') === 'done')
+            .sort((a, b) => b.created_at.localeCompare(a.created_at));
+          for (const c of candidates) {
+            const detail = (await fetchRunDetail(c.batch_id, token)) as unknown as LabRun & { profile?: string };
+            if (detail?.profile && detail.profile !== 'v1') continue;
+            if (!cancelled && Array.isArray(detail?.results)) setRun(detail);
+            break;
+          }
+        } else {
           const detail = (await fetchRunDetail(runId, token)) as unknown as LabRun;
           // A run still in progress answers with a progress body and no results.
           if (!cancelled && Array.isArray(detail?.results)) setRun(detail);
