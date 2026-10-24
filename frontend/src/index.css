@@ -220,17 +220,3 @@
 @media (prefers-reduced-motion: reduce) {
   .signin-seal, .signin-seal-ring, .signin-seal-tick, .signin-seal-dots { animation: none; stroke-dashoffset: 0; }
 }
-
-/* Theme tokens used by the Start-here story and the Seal page (Lab report light values). */
-:root {
-  --paper: #F6F3EC;
-  --panel: #FBF9F4;
-  --rule: #E3DED3;
-  --ink: #1B1B18;
-  --ink-2: #5E5B53;
-  --ok: #1F7A4D;
-  --retr: #B26B00;
-  --gen: #B3261E;
-  --review: #6B675E;
-  --accent: #2F5D8A;
-}

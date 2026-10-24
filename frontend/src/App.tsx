@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DocumentVaultModal } from './components/ragseal/DocumentVaultModal';
 import { SyntheticGeneratorModal } from './components/ragseal/SyntheticGeneratorModal';
 import { AuthModal } from './components/ragseal/AuthModal';
+import { SignInScreen } from './components/ragseal/shell/SignInScreen';
 import { HowItWorksStory } from './components/ragseal/HowItWorksStory';
 import { LabScreen } from './components/ragseal/lab/LabScreen';
 import { AppShell, TopBarControls, useHashRoute } from './components/ragseal/shell/AppShell';
@@ -45,6 +46,8 @@ export const App: React.FC = () => {
   const [isLiveBackend, setIsLiveBackend] = useState<boolean>(true);
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  // True once the startup auto-login has finished, so the sign-in screen never flashes during it.
+  const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [, setServerRunHistory] = useState<any[]>([]);
 
   const [isDocVaultOpen, setIsDocVaultOpen] = useState<boolean>(false);
@@ -86,6 +89,7 @@ export const App: React.FC = () => {
       } else {
         setIsLiveBackend(false);
       }
+      if (mounted) setAuthChecked(true);
     };
     initBackend();
     return () => {
@@ -120,6 +124,21 @@ export const App: React.FC = () => {
     if (h) setIsLiveBackend(true);
   };
 
+  // #/signin also opens it on purpose (e.g. to demo the screen without signing out).
+  if ((authChecked && !authToken) || window.location.hash.startsWith('#/signin')) {
+    return (
+      <SignInScreen
+        backendDown={!isLiveBackend}
+        onSignedIn={(user, token) => {
+          setCurrentUser(user);
+          setAuthToken(token);
+          setIsAuthOpen(false);
+          if (window.location.hash.startsWith('#/signin')) window.location.hash = '';
+        }}
+      />
+    );
+  }
+
   return (
     <>
       <AppShell
@@ -153,8 +172,8 @@ export const App: React.FC = () => {
           <div className="h-full px-6 py-5">
             <TopBarControls>
               {openBatch && (
-                <button onClick={() => go('diagnose')} className="text-xs text-[#5E5B53] hover:text-[#1B1B18]">
-                  Viewing run <span className="font-mono text-[#33322D]">{openBatch}</span> · show latest
+                <button onClick={() => go('diagnose')} className="text-xs text-[var(--ink-2)] hover:text-[var(--ink)]">
+                  Viewing run <span className="font-mono text-[var(--ink-1)]">{openBatch}</span> · show latest
                 </button>
               )}
               <PackSwitcher
