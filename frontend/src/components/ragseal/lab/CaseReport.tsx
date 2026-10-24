@@ -63,10 +63,10 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
               </>
             )}
           </div>
-          <h1 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.025em] text-white">{result.query}</h1>
+          <h1 className="mt-2 text-[22px] font-semibold leading-tight tracking-[-0.025em] text-white 2xl:text-[26px]">{result.query}</h1>
         </div>
         {result.ground_truth && (
-          <div className="max-w-[40%] shrink-0 text-right">
+          <div className="max-w-[34%] shrink-0 text-right">
             <div className="text-[11px] text-[#8A9099]">Known answer</div>
             <div className="mt-0.5 text-[15px] text-[#E8EAED]">{result.ground_truth}</div>
           </div>
@@ -75,7 +75,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
 
       {/* Verdict + pipeline trace */}
       <section
-        className="lab-fade-up flex flex-wrap items-center gap-8 rounded-[18px] border px-6 py-5"
+        className="lab-fade-up flex flex-wrap items-center gap-6 rounded-[18px] border px-6 py-5 2xl:gap-8"
         style={{
           animationDelay: '60ms',
           borderColor: tint(v.color, 0.28),
@@ -83,18 +83,18 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
           boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04), 0 30px 60px -30px ${tint(v.color, 0.2)}`,
         }}
       >
-        <div className="min-w-0 flex-[1_1_300px]">
+        <div className="min-w-0 flex-[1_1_240px]">
           <div className="text-xs font-medium" style={{ color: tint(v.color, 0.75) }}>
             Root cause
           </div>
-          <div className="mt-1.5 text-[40px] font-semibold leading-none tracking-[-0.035em]" style={{ color: v.color }}>
+          <div className="mt-1.5 text-[34px] font-semibold leading-none tracking-[-0.035em] 2xl:text-[40px]" style={{ color: v.color }}>
             {v.label}
           </div>
           <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-[#B4B9C0]">{result.root_cause?.summary ?? v.blame}</p>
           {result.error && <p className="mt-2 text-xs text-[#F47783]">{result.error}</p>}
         </div>
 
-        <div className="flex min-w-0 flex-[1.4_1_460px] items-stretch">
+        <div className="flex min-w-0 flex-[1.4_1_420px] items-stretch">
           <Stage
             name="Retriever"
             state={v.stages.retriever}
@@ -189,10 +189,10 @@ const Stage: React.FC<{
         <span className="font-medium text-[#E8EAED]">{name}</span>
         <span style={{ color }}>{label ?? (fault ? 'fault' : state === 'ok' ? 'ok' : 'unclear')}</span>
       </div>
-      <div className="mt-2 truncate text-[26px] font-semibold tabular-nums tracking-[-0.02em]" style={{ color }}>
+      <div className="mt-2 truncate text-[21px] font-semibold tabular-nums tracking-[-0.02em] 2xl:text-[26px]" style={{ color }}>
         {value}
       </div>
-      <div className="mt-0.5 truncate text-[11px] text-[#8A9099]">{sub}</div>
+      <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-[#8A9099]">{sub}</div>
     </div>
   );
 };

@@ -98,6 +98,12 @@ export function tint(hex: string, alpha: number): string {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
+/** Green when a score clears its threshold, red when it doesn't, grey when there is no score. */
+export function scoreColor(score: number | null | undefined, threshold: number): string {
+  if (score == null) return GREY;
+  return score >= threshold ? PASS : RED;
+}
+
 export function pct(score: number | null | undefined): string {
   return score == null ? '—' : `${Math.round(score * 100)}%`;
 }

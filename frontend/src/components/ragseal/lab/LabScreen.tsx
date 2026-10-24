@@ -10,6 +10,8 @@ import { AMBER, pct, tint, VERDICT_ORDER, VERDICTS, verdictStyle } from './verdi
 interface LabScreenProps {
   packId: PackId;
   token: string | null;
+  /** Open this run instead of the pack's latest one. */
+  batchId?: string | null;
 }
 
 const AD_HOC = '__ad_hoc__';
@@ -24,8 +26,8 @@ const PACK_NAME: Record<string, string> = {
  * Single-screen Lab: pick a test question on the left, read the diagnosis on the
  * right. Everything shown comes from the backend; nothing is mocked.
  */
-export const LabScreen: React.FC<LabScreenProps> = ({ packId, token }) => {
-  const lab = useLabData(packId, token);
+export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) => {
+  const lab = useLabData(packId, token, batchId);
   const [selected, setSelected] = useState<string | null>(null);
   const [userPicked, setUserPicked] = useState(false);
   const pick = (id: string) => {
@@ -33,7 +35,7 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token }) => {
     setSelected(id);
   };
 
-  useEffect(() => setUserPicked(false), [packId]);
+  useEffect(() => setUserPicked(false), [packId, batchId]);
 
   // Failures first, then review, then passes; questions without results last.
   const sorted = useMemo(
@@ -67,7 +69,7 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token }) => {
   }
 
   return (
-    <div className="relative grid h-full min-h-0 grid-cols-[310px_1fr] gap-5">
+    <div className="relative grid h-full min-h-0 grid-cols-[290px_1fr] gap-5 2xl:grid-cols-[310px_1fr]">
       {/* Verdict-tinted light from above the report */}
       {glow && (
         <div
