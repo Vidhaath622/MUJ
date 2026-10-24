@@ -23,14 +23,15 @@ _ABSTAIN_PATTERNS = [
 
 GENERATOR_SYSTEM = (
     "You answer questions using ONLY the numbered context passages. "
-    "Cite the passages you used with their numbers in square brackets, like [1] or [2][3]. "
-    "Be concise: one to three sentences. "
+    "Write the answer as one to three full sentences, and put the numbers of the passages you used in square brackets "
+    "at the end of each sentence, for example: Sick leave is 10 days per year [2]. "
     f"If the passages do not contain the answer, reply exactly: {ABSTAIN_ANSWER}"
 )
 
 
 def is_abstention(answer: str) -> bool:
-    text = answer.strip().lower()
+    # A reply that is only citation markers ("[1]") gives no answer at all.
+    text = strip_citations(answer).strip(" .").lower()
     if not text:
         return True
     return any(re.search(p, text) for p in _ABSTAIN_PATTERNS)
