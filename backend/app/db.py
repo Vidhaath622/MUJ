@@ -146,11 +146,17 @@ class Database:
     def list_runs(self, user_id: str) -> list[dict]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate, status FROM runs"
-                " WHERE user_id = ? ORDER BY created_at DESC, rowid DESC",
+                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate, status,"
+                " json_extract(json, '$.overall_score') AS overall_score, json_extract(json, '$.timing') AS timing"
+                " FROM runs WHERE user_id = ? ORDER BY created_at DESC, rowid DESC",
                 (user_id,),
             ).fetchall()
-        return [dict(r) for r in rows]
+        out = []
+        for row in rows:
+            item = dict(row)
+            item["timing"] = json.loads(item["timing"]) if item["timing"] else None
+            out.append(item)
+        return out
 
     def get_run(self, user_id: str, batch_id: str) -> dict | None:
         with self._connect() as conn:

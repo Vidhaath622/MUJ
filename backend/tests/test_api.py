@@ -118,7 +118,7 @@ def test_batch_saves_run_and_lists_it(client, alice, bob):
 
     runs = client.get("/api/runs", headers=alice).json()
     assert [r["batch_id"] for r in runs] == [second["batch_id"], first["batch_id"]]
-    assert set(runs[0]) == {"batch_id", "pack_id", "created_at", "total_evaluated", "pass_rate", "status"}
+    assert set(runs[0]) == {"batch_id", "pack_id", "created_at", "total_evaluated", "pass_rate", "status", "overall_score", "timing"}
     assert runs[0]["status"] == "done"
     assert runs[0]["total_evaluated"] == 1
     assert runs[0]["pass_rate"] == 1.0
