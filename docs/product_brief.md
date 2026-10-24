@@ -53,10 +53,16 @@ For unanswerable questions the correct behaviour is to abstain; making something
 
 Each pack: about 5 documents, 10-15 test cases with gold chunk IDs, including at least one stale-version, one unanswerable and one distractor case. Members 3 and 4 own pack content in `/docs/packs` or hand it to the engine owner.
 
-## Models (all local by default)
-- Generator under test: `llama3.2:3b` (small on purpose, so failures are visible)
-- Judge: `qwen3:8b` locally; optional Groq `llama-3.3-70b-versatile` if a `GROQ_API_KEY` is set
-- Embeddings: `nomic-embed-text`
+## Models (Local & NVIDIA NIM Hosted Options)
+- **Hosted / Cloud Preview via NVIDIA NIM** (Recommended for fast demo & sub-second judging without laptop thermal throttling; see `docs/nvidia_nim_apis.md`):
+  - Generator under test: `meta/llama-3.2-3b-instruct` (or `meta/llama-3.1-8b-instruct`) via `https://integrate.api.nvidia.com/v1`
+  - Judge / Reasoner: `meta/llama-3.3-70b-instruct` or `deepseek-ai/deepseek-r1`
+  - NeMo Retriever Embeddings: `nvidia/nv-embedqa-e5-v5`
+  - Reranker: `nvidia/nemotron-3.5-rerank-8b`
+- **Local Fallback (Ollama)**:
+  - Generator under test: `llama3.2:3b` (small on purpose, so failures are visible)
+  - Judge: `qwen3:8b` locally; optional Groq `llama-3.3-70b-versatile` if `GROQ_API_KEY` is set
+  - Embeddings: `nomic-embed-text`
 - Every judge call is cached so reruns are instant.
 
 ## Login and saved work

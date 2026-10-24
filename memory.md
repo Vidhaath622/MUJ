@@ -109,6 +109,7 @@
 | `2026-10-24 17:13` | Sync with Sarthak | Merged `origin/sarthak/docs-brief` incorporating `docs/product_brief.md` (RAGSeal product brief, ATS demo domain, honesty rules, frontend deliverables). |
 | `2026-10-24 17:26` | RAGSeal Dashboard Complete | Built full production RAGSeal frontend matching all 4 official deliverables + extensions: Single-Screen Trace Inspector, Color-Coded Scorecards, Decoupled Root-Cause Panel, Side-by-Side Trace with inline hallucination highlights, Recharts failure distribution, Corpus Vault, and Synthetic Question Generator. Built cleanly with zero TypeScript errors. |
 | `2026-10-24 17:31` | Component Library Strict Enforcement | Refactored dashboard to strictly utilize the component library primitives directly (`PromptBox`, `MetricCard`, `DiffViewer`, `EvaluationTable`, `DiagnosticBadge`, `FileDropzone`). Purged redundant ad-hoc elements. |
+| `2026-10-24 17:34` | NVIDIA NIM APIs Configured | Catalogs, integration guides (`docs/nvidia_nim_apis.md`), `.env.example`, and Python engine client (`engine/nvidia_client.py`) created for Sarthak's Claude from `build.nvidia.com/models`. Enables sub-second hosted inference for target generator (`meta/llama-3.2-3b-instruct`), evaluation judge (`meta/llama-3.3-70b-instruct` / `deepseek-ai/deepseek-r1`), and NeMo Retriever embeddings (`nvidia/nv-embedqa-e5-v5`). |
 
 ---
 
