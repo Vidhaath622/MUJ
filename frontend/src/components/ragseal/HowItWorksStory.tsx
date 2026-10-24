@@ -1,8 +1,4 @@
 import React, { useState } from 'react';
-import { Card } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
-import { DiagnosticBadge } from '../domain/diagnostic-badge';
 import { 
   FileText, 
   Bot, 
@@ -21,6 +17,9 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { HealthResponse, checkBackendHealth } from '../../lib/api';
+import { Panel, GhostButton } from './shared/ui';
+import { RagFigure } from './shared/RagFigure';
+import { DiagnosticBadge } from '../domain/diagnostic-badge';
 
 interface HowItWorksStoryProps {
   backendHealth?: HealthResponse | null;
@@ -53,35 +52,35 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
   const steps = [
     {
       step: 1,
-      title: '1. Corpus & Gold Triples Generation',
+      title: 'Corpus & Gold Triples',
       subtitle: 'Synthetic Question-Answer-Context triples',
       icon: FileText,
       badge: 'GROUND TRUTH SEEDING',
       description:
         'Documents are ingested, parsed into semantic passages, and an automated generator synthesizes grounded question-answer pairs linked to exact canonical gold chunk IDs.',
       details: [
-        'Document chunking with metadata preservation (page, section, document title)',
+        'Document chunking with metadata preservation (filename, chunk offset, headings)',
         'Synthetic test generation creates (Question, Gold Context, Canonical Answer) triples',
         'Injects deliberate trap archetypes: stale policy versions, unanswerable queries, and distractor noise',
       ],
     },
     {
       step: 2,
-      title: '2. Standard RAG Pipeline Execution',
+      title: 'Standard RAG Execution',
       subtitle: 'Retriever and Generator run sequentially',
       icon: Bot,
       badge: 'OBSERVED RUN',
       description:
         'The query is processed by the retriever to fetch top-k passages, which are passed to the generator to produce the candidate answer.',
       details: [
-        'Retriever executes dense + sparse BM25 search across corpus chunks',
-        'Generator (llama3.2:3b locally or NVIDIA NIM meta/llama-3.2-3b) synthesizes response',
-        'Pipeline logs exact retrieved chunk IDs, similarity scores, and answer text',
+        'Retriever executes dense vector search using nomic-embed-text',
+        'Generator (llama3.2:3b locally or hosted provider) synthesizes grounded response',
+        'Pipeline logs exact retrieved chunk IDs, similarity scores, and citations',
       ],
     },
     {
       step: 3,
-      title: '3. Component-Decoupled Scoring',
+      title: 'Decoupled Scoring',
       subtitle: 'Measuring retriever vs generator independently',
       icon: Scale,
       badge: 'TRIPLE METRICS',
@@ -95,7 +94,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
     },
     {
       step: 4,
-      title: '4. The Causal Replay Experiment (Hero Technique)',
+      title: 'Causal Replay Experiment',
       subtitle: 'Running the controlled experiment to prove root cause',
       icon: FlaskConical,
       badge: 'HERO MOMENT',
@@ -110,15 +109,15 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
     },
     {
       step: 5,
-      title: '5. Evaluator Health & Human Agreement',
+      title: 'Evaluator Calibration',
       subtitle: 'Calibrating the AI judge against human-labelled ground truth',
       icon: Users,
       badge: 'JUDGE HONESTY',
       description:
-        'Judges probe whether the evaluator itself is hallucinating. RAGSeal benchmarks its judge against 30-50 hand-labelled human gold answers.',
+        'Judges probe whether the evaluator itself is hallucinating. RAGSeal benchmarks its judge against hand-labelled human gold answers.',
       details: [
-        'Measures Judge Agreement % (e.g. 86% across 30 cases)',
-        'Tracks False Passes and False Fails explicitly',
+        'Measures Judge Agreement % (e.g. 64.3% across 28 real cases)',
+        'Tracks False Passes (0 in benchmark) and False Fails explicitly',
         'Enforces Release Gate decisions: SHIP, REVIEW, or BLOCK',
       ],
     },
@@ -161,40 +160,38 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <Card variant="glass" className="p-6 border-neutral-800 bg-[#0c1017]/95 space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div className="mx-auto flex max-w-[1240px] flex-col gap-6 py-2">
+      {/* Top Header Panel */}
+      <Panel className="p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-wider text-teal-400 font-semibold">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--teal)] font-semibold">
                 Architecture &amp; Methodology
               </span>
-              <Badge variant="neon" size="sm">
-                Tab 2 Storytelling
-              </Badge>
+              <span className="rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[10px] font-mono text-[var(--ink-2)]">
+                System Proof
+              </span>
             </div>
-            <h2 className="text-xl font-bold text-white tracking-tight mt-1">
+            <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight mt-1.5">
               How RAGSeal Proves Why a RAG Answer Failed
-            </h2>
-            <p className="text-xs text-neutral-400 font-mono mt-1">
-              Decoupled scoring combined with controlled gold-context replay experiments.
+            </h1>
+            <p className="text-xs text-[var(--ink-2)] font-mono mt-1">
+              Component-decoupled scoring combined with controlled gold-context replay experiments.
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <GhostButton
             onClick={handleCopyPitchDiagram}
-            className="text-xs font-mono border-purple-800 text-purple-300 hover:bg-purple-950/40 gap-1.5"
+            className="text-xs font-mono text-[var(--violet)] hover:text-[var(--ink)] border border-[var(--violet-tint-2)] bg-[var(--violet-tint-2)] hover:bg-[var(--violet-tint-2)]"
           >
-            {copiedDiagram ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copiedDiagram ? <Check className="w-3.5 h-3.5 text-[var(--ok)]" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copiedDiagram ? 'Diagram Copied!' : 'Copy Pitch Deck Diagram'}</span>
-          </Button>
+          </GhostButton>
         </div>
 
         {/* Step Scrubber Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-5">
           {steps.map((s) => {
             const isSelected = activeStep === s.step;
             const Icon = s.icon;
@@ -202,282 +199,243 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
               <button
                 key={s.step}
                 onClick={() => setActiveStep(s.step)}
-                className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                   isSelected
-                    ? 'bg-purple-950/40 border-purple-500 text-white shadow-lg shadow-purple-950/40'
-                    : 'bg-neutral-900/40 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                    ? 'bg-[var(--violet-tint-2)] border-[color:color-mix(in_srgb,var(--violet)_40%,transparent)] text-[var(--ink)] shadow-lg shadow-[color:color-mix(in_srgb,var(--violet)_10%,transparent)]'
+                    : 'bg-[var(--panel)] border-[var(--panel-2)] text-[var(--ink-2)] hover:border-[var(--rule-2)] hover:text-[var(--ink)]'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] font-mono font-bold text-purple-400">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono font-bold text-[var(--violet)]">
                     STEP 0{s.step}
                   </span>
-                  <Icon className="w-3.5 h-3.5 opacity-80" />
+                  <Icon className="w-4 h-4 opacity-80 text-[var(--violet)]" />
                 </div>
-                <div className="text-xs font-bold truncate">{s.title.split('. ')[1]}</div>
+                <div className="text-xs font-semibold truncate text-[var(--ink)]">{s.title}</div>
               </button>
             );
           })}
         </div>
-      </Card>
+      </Panel>
 
-      {/* Live Backend Connection & Pipeline API Contract Card */}
-      <Card variant="glass" className="p-5 border-teal-900/40 bg-[#080d14]/90 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-800/80 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-teal-950 border border-teal-800/60 flex items-center justify-center">
-              <Server className="w-4 h-4 text-teal-400" />
+      {/* Fig. 1: the RAG pipeline and where RAGSeal checks it */}
+      <Panel className="p-6">
+        <RagFigure />
+      </Panel>
+
+      {/* Live Engine Diagnostics Strip */}
+      <Panel
+        title={
+          <div className="flex items-center gap-2">
+            <Server className="w-4 h-4 text-[var(--teal)]" />
+            <span>Live Engine Connection</span>
+          </div>
+        }
+        note={
+          <span className="font-mono">localhost:8000</span>
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className={`inline-block h-2 w-2 rounded-full ${activeHealth ? 'bg-[var(--ok)] shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-[var(--retr)]'}`} />
+              <span className="text-xs font-mono text-[var(--ink)]">
+                {activeHealth ? 'FastAPI Engine Active (200 OK)' : 'Engine Disconnected (Check Local Server)'}
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
-                  Live Engine Connection: localhost:8000
-                </h3>
-                {activeHealth ? (
-                  <Badge variant="neon" size="sm" className="bg-emerald-950/80 text-emerald-300 border-emerald-600">
-                    ONLINE (200 OK)
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" size="sm" className="bg-amber-950/40 text-amber-300 border-amber-800">
-                    DISCONNECTED
-                  </Badge>
-                )}
+
+            <div className="flex items-center gap-2">
+              <GhostButton
+                onClick={handlePingBackend}
+                disabled={isPinging}
+                className="text-xs font-mono"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin' : ''}`} />
+                <span>{isPinging ? 'Pinging...' : 'Ping /api/health'}</span>
+              </GhostButton>
+              <GhostButton
+                onClick={() => setShowHealthJson(!showHealthJson)}
+                className="text-xs font-mono"
+              >
+                <span>JSON</span>
+                {showHealthJson ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </GhostButton>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1">
+              <span className="text-[10px] text-[var(--ink-2)] uppercase block">Roundtrip Latency</span>
+              <div className="text-[var(--ok)] font-bold text-sm flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" />
+                <span>{activeHealth?.latencyMs !== undefined ? `${activeHealth.latencyMs} ms` : 'Local Host'}</span>
               </div>
-              <p className="text-[11px] text-neutral-400 font-mono mt-0.5">
-                FastAPI backend service running at port 8000, powering all 5 pipeline stages.
+            </div>
+
+            <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1">
+              <span className="text-[10px] text-[var(--ink-2)] uppercase block">Evaluation Mode</span>
+              <div className="text-[var(--ink)] font-bold text-sm capitalize">
+                {activeHealth?.evaluation_mode || 'Local Ollama'}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1">
+              <span className="text-[10px] text-[var(--ink-2)] uppercase block">Generator</span>
+              <div className="text-[var(--accent)] font-bold text-sm truncate flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <span>{activeHealth?.generator_model || 'llama3.2:3b'}</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1">
+              <span className="text-[10px] text-[var(--ink-2)] uppercase block">Judge Model</span>
+              <div className="text-[var(--violet)] font-bold text-sm truncate flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-[var(--violet)]" />
+                <span>{activeHealth?.judge_model || 'llama3.2:3b'}</span>
+              </div>
+            </div>
+          </div>
+
+          {showHealthJson && activeHealth && (
+            <div className="p-3.5 rounded-xl bg-[var(--paper)] border border-[var(--panel-2)] font-mono text-[11px] text-[var(--ok)] overflow-x-auto">
+              <div className="text-[var(--ink-2)] text-[10px] mb-1">// GET http://localhost:8000/api/health</div>
+              <pre>{JSON.stringify(activeHealth, null, 2)}</pre>
+            </div>
+          )}
+        </div>
+      </Panel>
+
+      {/* Hero Visual Pipeline Diagram Panel */}
+      <Panel
+        title={
+          <div className="flex items-center gap-2">
+            <GitBranch className="w-4 h-4 text-[var(--violet)]" />
+            <span>Controlled Causal Replay Architecture</span>
+          </div>
+        }
+        note="Hero Pitch Mechanism"
+      >
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs font-mono">
+            <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1.5">
+              <span className="text-[10px] text-[var(--ink-2)] uppercase block font-semibold">Stage 1 · Evidence Seed</span>
+              <div className="font-bold text-[var(--teal)] text-sm">Corpus &amp; Canonical Truth</div>
+              <p className="text-[11px] text-[var(--ink-2)] font-sans leading-relaxed pt-1">
+                Documents are chunked into vector storage. Test cases include immutable canonical gold chunk IDs (<code className="text-[var(--teal)]">chk_gold</code>).
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1.5">
+              <span className="text-[10px] text-[var(--ink-2)] uppercase block font-semibold">Stage 2 · Standard RAG</span>
+              <div className="font-bold text-[var(--accent)] text-sm">Retriever &rarr; Generator</div>
+              <p className="text-[11px] text-[var(--ink-2)] font-sans leading-relaxed pt-1">
+                Top-k chunks retrieved. If retriever omits the gold chunk or catches a distractor/stale chunk, the candidate answer is corrupted.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[var(--violet-tint-2)] border border-[color:color-mix(in_srgb,var(--violet)_40%,transparent)] space-y-1.5 shadow-sm shadow-[color:color-mix(in_srgb,var(--violet)_10%,transparent)]">
+              <span className="text-[10px] text-[var(--violet)] uppercase block font-bold">Stage 3 · Causal Replay</span>
+              <div className="font-bold text-[var(--violet)] text-sm">Forced Gold Injection</div>
+              <p className="text-[11px] text-[var(--violet)] font-sans leading-relaxed pt-1">
+                RAGSeal isolates the components: re-runs the same query with <strong className="text-[var(--ink)]">only the gold chunk</strong> injected. Proves causality!
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePingBackend}
-              disabled={isPinging}
-              className="text-xs font-mono border-teal-800/80 bg-teal-950/30 text-teal-300 hover:bg-teal-900/50 gap-1.5"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin' : ''}`} />
-              <span>{isPinging ? 'Pinging...' : 'Ping Engine (/api/health)'}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowHealthJson(!showHealthJson)}
-              className="text-xs font-mono text-neutral-400 hover:text-white gap-1"
-            >
-              <span>JSON</span>
-              {showHealthJson ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </Button>
-          </div>
-        </div>
+          {/* Verdict Truth Table */}
+          <div className="rounded-xl border border-[var(--panel-2)] bg-[var(--panel)] p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono uppercase tracking-wider text-[var(--ink)] font-semibold">
+                Scientific Verdict Decision Table
+              </span>
+              <span className="text-[11px] font-mono text-[var(--ink-2)]">Proven Decoupling Logic</span>
+            </div>
 
-        {/* Live Diagnostics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-          <div className="p-3 rounded-lg bg-neutral-900/50 border border-neutral-800 space-y-1">
-            <span className="text-[10px] text-neutral-400 uppercase block">Roundtrip Latency</span>
-            <div className="text-emerald-400 font-bold text-sm flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5" />
-              <span>{activeHealth?.latencyMs !== undefined ? `${activeHealth.latencyMs} ms` : 'Offline'}</span>
-            </div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-neutral-900/50 border border-neutral-800 space-y-1">
-            <span className="text-[10px] text-neutral-400 uppercase block">Evaluation Mode</span>
-            <div className="text-white font-bold text-sm capitalize">
-              {activeHealth?.evaluation_mode || 'Local'}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-neutral-900/50 border border-neutral-800 space-y-1">
-            <span className="text-[10px] text-neutral-400 uppercase block">Active Generator</span>
-            <div className="text-sky-300 font-bold text-sm truncate flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-sky-400" />
-              <span>{activeHealth?.generator_model || 'llama3.2:3b'}</span>
-            </div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-neutral-900/50 border border-neutral-800 space-y-1">
-            <span className="text-[10px] text-neutral-400 uppercase block">Active Judge</span>
-            <div className="text-purple-300 font-bold text-sm truncate flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-purple-400" />
-              <span>{activeHealth?.judge_model || 'qwen3:8b'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Collapsible Health JSON Inspector */}
-        {showHealthJson && activeHealth && (
-          <div className="p-3 rounded-lg bg-black/80 border border-neutral-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
-            <div className="text-neutral-500 text-[10px] mb-1">// GET http://localhost:8000/api/health</div>
-            <pre>{JSON.stringify(activeHealth, null, 2)}</pre>
-          </div>
-        )}
-
-        {/* Pipeline Stage Endpoints Mapping */}
-        <div className="pt-2 border-t border-neutral-800/60">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 block mb-2 font-semibold">
-            Section 4 API Contract Routes Mapped to Pipeline Stages:
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-[11px] font-mono">
-            <div className="p-2 rounded bg-neutral-900/40 border border-neutral-800">
-              <span className="text-teal-400 font-bold block">Stage 1: Ingest</span>
-              <span className="text-neutral-400 text-[10px]">POST /api/documents/upload</span>
-            </div>
-            <div className="p-2 rounded bg-neutral-900/40 border border-neutral-800">
-              <span className="text-sky-400 font-bold block">Stage 2: RAG Ask</span>
-              <span className="text-neutral-400 text-[10px]">POST /api/rag/ask</span>
-            </div>
-            <div className="p-2 rounded bg-neutral-900/40 border border-neutral-800">
-              <span className="text-amber-400 font-bold block">Stage 3: Score</span>
-              <span className="text-neutral-400 text-[10px]">POST /api/evaluate/query</span>
-            </div>
-            <div className="p-2 rounded bg-purple-950/40 border border-purple-800/80">
-              <span className="text-purple-300 font-bold block">Stage 4: Replay Hero</span>
-              <span className="text-purple-400 text-[10px]">res.replay (engine)</span>
-            </div>
-            <div className="p-2 rounded bg-neutral-900/40 border border-neutral-800">
-              <span className="text-indigo-400 font-bold block">Stage 5: Calibration</span>
-              <span className="text-neutral-400 text-[10px]">GET /api/packs &amp; runs</span>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-[var(--panel)] text-[var(--ink-2)] uppercase text-[10px] border-b border-[var(--panel-2)]">
+                  <tr>
+                    <th className="py-2.5 px-3">Gold Chunk Retrieved?</th>
+                    <th className="py-2.5 px-3">Answer Faithful?</th>
+                    <th className="py-2.5 px-3">Replay with Gold Chunk</th>
+                    <th className="py-2.5 px-3">Proven Causal Verdict</th>
+                    <th className="py-2.5 px-3">Engineering Remediation</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--panel-2)] text-[11px]">
+                  <tr>
+                    <td className="py-3 px-3 text-[var(--ok)]">Yes (Retrieved)</td>
+                    <td className="py-3 px-3 text-[var(--ok)]">Yes, Faithful</td>
+                    <td className="py-3 px-3 text-[var(--muted)]">Not needed</td>
+                    <td className="py-3 px-3"><DiagnosticBadge category="CLEAN_PASS" size="sm" /></td>
+                    <td className="py-3 px-3 text-[var(--ink-2)] font-sans">None. System healthy and ready to ship.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-3 text-[var(--gen)] font-bold">No (Omitted)</td>
+                    <td className="py-3 px-3 text-[var(--ink-2)]">n/a</td>
+                    <td className="py-3 px-3 text-[var(--ok)] font-bold">Fixed &amp; Correct!</td>
+                    <td className="py-3 px-3"><DiagnosticBadge category="RETRIEVAL_FAILURE" size="sm" /></td>
+                    <td className="py-3 px-3 text-[var(--ink-2)] font-sans">Improve retrieval: raise top-k, fix chunk boundaries, or rerank.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-3 text-[var(--ok)]">Yes (Retrieved)</td>
+                    <td className="py-3 px-3 text-[var(--gen)] font-bold">No (Fabricated)</td>
+                    <td className="py-3 px-3 text-[var(--gen)] font-bold">Still Hallucinates</td>
+                    <td className="py-3 px-3"><DiagnosticBadge category="GENERATION_HALLUCINATION" size="sm" /></td>
+                    <td className="py-3 px-3 text-[var(--ink-2)] font-sans">Lower temperature to 0.0, inject negative abstention constraint.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-3 text-[var(--gen)] font-bold">No (Omitted)</td>
+                    <td className="py-3 px-3 text-[var(--gen)] font-bold">No (Fabricated)</td>
+                    <td className="py-3 px-3 text-[var(--gen)]">Still Wrong</td>
+                    <td className="py-3 px-3"><DiagnosticBadge category="COMPOUND_FAILURE" size="sm" /></td>
+                    <td className="py-3 px-3 text-[var(--ink-2)] font-sans">Re-index corpus and enforce strict system prompt.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-3 text-[var(--ok)]">Yes</td>
+                    <td className="py-3 px-3 text-[var(--ok)]">Yes</td>
+                    <td className="py-3 px-3 text-[var(--retr)]">Answer wrong</td>
+                    <td className="py-3 px-3"><DiagnosticBadge category="NEEDS_REVIEW" size="sm" /></td>
+                    <td className="py-3 px-3 text-[var(--ink-2)] font-sans">Check human ground-truth label for annotation error.</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      </Card>
+      </Panel>
 
-      {/* Hero Visual Pipeline Diagram Card */}
-      <Card variant="glass" className="p-6 border-purple-900/60 bg-gradient-to-b from-[#0e0c1a] via-[#090d16] to-[#07090e] space-y-6">
-        <div className="flex items-center justify-between border-b border-neutral-800/80 pb-3">
-          <div className="flex items-center gap-2">
-            <GitBranch className="w-5 h-5 text-purple-400" />
-            <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
-              Visual Pipeline Flow: Standard RAG vs. Causal Replay Branch
-            </h3>
-          </div>
-          <Badge variant="outline" size="sm" className="font-mono text-[10px] text-purple-300 border-purple-800">
-            HERO PITCH ARTIFACT
-          </Badge>
-        </div>
-
-        {/* Flow Blocks */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
-          {/* Stage 1 */}
-          <div className="p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 space-y-2">
-            <span className="text-[10px] text-neutral-400 uppercase block">Stage 1: Ground Truth</span>
-            <div className="font-bold text-teal-400 text-sm">Corpus &amp; Gold Passages</div>
-            <p className="text-[11px] text-neutral-400 font-sans leading-relaxed">
-              Documents are indexed. Synthetic generator links questions to canonical gold chunk IDs (`chk_gold`).
-            </p>
-          </div>
-
-          {/* Stage 2 */}
-          <div className="p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 space-y-2">
-            <span className="text-[10px] text-neutral-400 uppercase block">Stage 2: Standard RAG</span>
-            <div className="font-bold text-sky-400 text-sm">Retriever &rarr; Generator</div>
-            <p className="text-[11px] text-neutral-400 font-sans leading-relaxed">
-              Standard RAG retrieves top-k chunks. If retriever omits gold chunk or fetches noise, answer fails.
-            </p>
-          </div>
-
-          {/* Stage 3 */}
-          <div className="p-4 rounded-xl bg-purple-950/40 border border-purple-700/80 space-y-2">
-            <span className="text-[10px] text-purple-300 uppercase block font-bold">Stage 3: Causal Replay</span>
-            <div className="font-bold text-purple-200 text-sm">Forced Gold Injection</div>
-            <p className="text-[11px] text-purple-300/90 font-sans leading-relaxed">
-              RAGSeal isolates generator: re-runs query with ONLY the gold chunk. Confirms if error was retriever or LLM!
-            </p>
-          </div>
-        </div>
-
-        {/* Causal Verdict Matrix Table */}
-        <div className="p-4 rounded-xl bg-neutral-950/90 border border-neutral-800 space-y-3">
-          <span className="text-xs font-mono uppercase tracking-wider text-neutral-300 font-bold block">
-            Automated Verdict Decision Table:
-          </span>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-neutral-900 text-neutral-400 uppercase text-[10px] border-b border-neutral-800">
-                <tr>
-                  <th className="py-2.5 px-3">Gold Chunk Retrieved?</th>
-                  <th className="py-2.5 px-3">Answer Faithful?</th>
-                  <th className="py-2.5 px-3">Replay with Gold Chunk</th>
-                  <th className="py-2.5 px-3">Proven Causal Verdict</th>
-                  <th className="py-2.5 px-3">Remediation Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-800/80 text-[11px]">
-                <tr>
-                  <td className="py-2.5 px-3 text-emerald-400">Yes (Retrieved)</td>
-                  <td className="py-2.5 px-3 text-emerald-400">Yes, Faithful</td>
-                  <td className="py-2.5 px-3 text-neutral-500">Not needed</td>
-                  <td className="py-2.5 px-3"><DiagnosticBadge category="CLEAN_PASS" size="sm" /></td>
-                  <td className="py-2.5 px-3 text-neutral-400 font-sans">None. System healthy.</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 text-rose-400 font-bold">No (Omitted)</td>
-                  <td className="py-2.5 px-3 text-neutral-400">n/a</td>
-                  <td className="py-2.5 px-3 text-emerald-400 font-bold">Fixed &amp; Correct!</td>
-                  <td className="py-2.5 px-3"><DiagnosticBadge category="RETRIEVAL_FAILURE" size="sm" /></td>
-                  <td className="py-2.5 px-3 text-neutral-400 font-sans">Tune top-k, BM25 weighting, or embeddings.</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 text-emerald-400">Yes (Retrieved)</td>
-                  <td className="py-2.5 px-3 text-rose-400 font-bold">No (Fabricated)</td>
-                  <td className="py-2.5 px-3 text-rose-400">Still Hallucinates</td>
-                  <td className="py-2.5 px-3"><DiagnosticBadge category="GENERATION_HALLUCINATION" size="sm" /></td>
-                  <td className="py-2.5 px-3 text-neutral-400 font-sans">Lower temperature to 0.0, inject negative constraints.</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 text-rose-400 font-bold">No (Omitted)</td>
-                  <td className="py-2.5 px-3 text-rose-400 font-bold">No (Fabricated)</td>
-                  <td className="py-2.5 px-3 text-rose-400">Still Wrong</td>
-                  <td className="py-2.5 px-3"><DiagnosticBadge category="COMPOUND_FAILURE" size="sm" /></td>
-                  <td className="py-2.5 px-3 text-neutral-400 font-sans">Re-index corpus and enforce strict abstention prompt.</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 text-emerald-400">Yes</td>
-                  <td className="py-2.5 px-3 text-emerald-400">Yes</td>
-                  <td className="py-2.5 px-3 text-amber-400">Answer wrong</td>
-                  <td className="py-2.5 px-3"><DiagnosticBadge category="NEEDS_REVIEW" size="sm" /></td>
-                  <td className="py-2.5 px-3 text-neutral-400 font-sans">Check human ground-truth label for error.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </Card>
-
-      {/* Active Step Details */}
+      {/* Deep Dive Panel */}
       {steps[activeStep - 1] && (
-        <Card variant="glass" className="p-6 border-neutral-800 bg-[#0c1017]/90 space-y-4">
-          <div className="flex items-center justify-between">
+        <Panel
+          title={
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-purple-400 font-bold">Deep Dive:</span>
-              <h3 className="text-base font-bold text-white">{steps[activeStep - 1].title}</h3>
+              <span className="text-[var(--violet)] font-mono text-xs">Step 0{activeStep}</span>
+              <span>{steps[activeStep - 1].title}</span>
             </div>
-            <Badge variant="neon" size="sm">
-              {steps[activeStep - 1].badge}
-            </Badge>
-          </div>
+          }
+          note={steps[activeStep - 1].badge}
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-[var(--ink)] font-sans leading-relaxed">
+              {steps[activeStep - 1].description}
+            </p>
 
-          <p className="text-sm text-neutral-200 font-sans leading-relaxed">
-            {steps[activeStep - 1].description}
-          </p>
-
-          <div className="space-y-2 pt-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 block font-semibold">
-              Implementation Guarantees:
-            </span>
-            <ul className="space-y-1.5 text-xs text-neutral-300 font-mono">
-              {steps[activeStep - 1].details.map((detail, idx) => (
-                <li key={idx} className="flex items-start gap-2 bg-neutral-900/60 p-2.5 rounded-lg border border-neutral-800">
-                  <CheckCircle2 className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{detail}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-2 pt-1">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)] block font-semibold">
+                Technical Guarantees &amp; Method:
+              </span>
+              <ul className="space-y-2 text-xs text-[var(--ink-1)] font-mono">
+                {steps[activeStep - 1].details.map((detail, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 bg-[var(--panel)] p-3 rounded-xl border border-[var(--panel-2)]">
+                    <CheckCircle2 className="w-4 h-4 text-[var(--teal)] flex-shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{detail}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </Card>
+        </Panel>
       )}
     </div>
   );

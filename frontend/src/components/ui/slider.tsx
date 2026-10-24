@@ -20,9 +20,9 @@ export const Slider: React.FC<SliderProps> = ({
     <div className="w-full space-y-1.5 font-sans">
       {(label || valueDisplay !== undefined) && (
         <div className="flex justify-between items-center text-xs">
-          {label && <span className="text-neutral-400 font-medium">{label}</span>}
+          {label && <span className="text-[var(--ink-2)] font-medium">{label}</span>}
           {valueDisplay !== undefined && (
-            <span className="font-mono font-bold text-sky-400 text-xs">
+            <span className="font-mono font-bold text-[var(--accent)] text-xs">
               {valueDisplay}
             </span>
           )}
@@ -35,7 +35,7 @@ export const Slider: React.FC<SliderProps> = ({
         step={step}
         value={value}
         className={cn(
-          'w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-sky-500 focus:outline-none',
+          'w-full h-1.5 bg-[var(--panel)] rounded-lg appearance-none cursor-pointer accent-[var(--accent)] focus:outline-none',
           className
         )}
         {...props}

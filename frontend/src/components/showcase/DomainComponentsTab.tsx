@@ -10,11 +10,11 @@ export const DomainComponentsTab: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* 1. Diagnostic Badges */}
-      <Card className="p-6 bg-neutral-900/90 border-neutral-800 space-y-4">
+      <Card className="p-6 bg-[var(--panel)] border-[var(--rule)] space-y-4">
         <div>
-          <span className="text-xs font-mono uppercase text-sky-400">01 / Categorization</span>
+          <span className="text-xs font-mono uppercase text-[var(--accent)]">01 / Categorization</span>
           <CardTitle className="text-lg mt-1">AI Root-Cause Diagnostic Badges</CardTitle>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-[var(--ink-2)]">
             Automated triage classifications based on decoupled retriever vs generator scores.
           </p>
         </div>
@@ -31,8 +31,8 @@ export const DomainComponentsTab: React.FC = () => {
       {/* 2. Metric Scorecards */}
       <div className="space-y-3">
         <div>
-          <span className="text-xs font-mono uppercase text-emerald-400">02 / Scorecards</span>
-          <h3 className="text-lg font-bold text-white mt-1">Metric Cards with Radial Gauges</h3>
+          <span className="text-xs font-mono uppercase text-[var(--ok)]">02 / Scorecards</span>
+          <h3 className="text-lg font-bold text-[var(--ink)] mt-1">Metric Cards with Radial Gauges</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -63,8 +63,8 @@ export const DomainComponentsTab: React.FC = () => {
       {/* 3. Query Tester Box */}
       <div className="space-y-3">
         <div>
-          <span className="text-xs font-mono uppercase text-purple-400">03 / Interaction</span>
-          <h3 className="text-lg font-bold text-white mt-1">Interactive Query Tester</h3>
+          <span className="text-xs font-mono uppercase text-[var(--violet)]">03 / Interaction</span>
+          <h3 className="text-lg font-bold text-[var(--ink)] mt-1">Interactive Query Tester</h3>
         </div>
         <PromptBox />
       </div>
@@ -72,8 +72,8 @@ export const DomainComponentsTab: React.FC = () => {
       {/* 4. Document Dropzone */}
       <div className="space-y-3">
         <div>
-          <span className="text-xs font-mono uppercase text-amber-400">04 / Ingestion</span>
-          <h3 className="text-lg font-bold text-white mt-1">Document Dropzone &amp; Chunker</h3>
+          <span className="text-xs font-mono uppercase text-[var(--retr)]">04 / Ingestion</span>
+          <h3 className="text-lg font-bold text-[var(--ink)] mt-1">Document Dropzone &amp; Chunker</h3>
         </div>
         <FileDropzone />
       </div>
@@ -81,8 +81,8 @@ export const DomainComponentsTab: React.FC = () => {
       {/* 5. Diff Viewer */}
       <div className="space-y-3">
         <div>
-          <span className="text-xs font-mono uppercase text-rose-400">05 / Inspection</span>
-          <h3 className="text-lg font-bold text-white mt-1">Side-by-Side Context vs. Claim Highlight</h3>
+          <span className="text-xs font-mono uppercase text-[var(--gen)]">05 / Inspection</span>
+          <h3 className="text-lg font-bold text-[var(--ink)] mt-1">Side-by-Side Context vs. Claim Highlight</h3>
         </div>
         <DiffViewer
           query="What is the employee annual leave limit?"

@@ -19,41 +19,41 @@ export const MagicEffectsTab: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Live Marquee Ticker */}
-      <Card className="bg-neutral-900/90 border-neutral-800 overflow-hidden p-2">
-        <div className="px-3 py-1 text-[11px] font-mono text-neutral-400 uppercase tracking-wider flex items-center justify-between border-b border-neutral-800/80 mb-1">
-          <span className="flex items-center gap-1.5 text-sky-400">
+      <Card className="bg-[var(--panel)] border-[var(--rule)] overflow-hidden p-2">
+        <div className="px-3 py-1 text-[11px] font-mono text-[var(--ink-2)] uppercase tracking-wider flex items-center justify-between border-b border-[var(--rule)] mb-1">
+          <span className="flex items-center gap-1.5 text-[var(--accent)]">
             <Activity className="w-3.5 h-3.5" />
             Live Event Stream (Magic UI Marquee)
           </span>
           <span>AUTONOMOUS HARNESS</span>
         </div>
         <Marquee pauseOnHover>
-          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="text-neutral-300">TC-01: Context Relevance 94% [PASS]</span>
+          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-[var(--panel)] border border-[var(--rule)] text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-[var(--ok)]" />
+            <span className="text-[var(--ink-1)]">TC-01: Context Relevance 94% [PASS]</span>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-rose-400" />
-            <span className="text-neutral-300">TC-02: Faithfulness 32% [GENERATION_HALLUCINATION]</span>
+          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-[var(--panel)] border border-[var(--rule)] text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-[var(--gen)]" />
+            <span className="text-[var(--ink-1)]">TC-02: Faithfulness 32% [GENERATION_HALLUCINATION]</span>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="text-neutral-300">TC-03: Chunk Missing [RETRIEVAL_FAILURE]</span>
+          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-[var(--panel)] border border-[var(--rule)] text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-[var(--retr)]" />
+            <span className="text-[var(--ink-1)]">TC-03: Chunk Missing [RETRIEVAL_FAILURE]</span>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="text-neutral-300">TC-04: Ground Truth Aligned [PASS]</span>
+          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-[var(--panel)] border border-[var(--rule)] text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-[var(--ok)]" />
+            <span className="text-[var(--ink-1)]">TC-04: Ground Truth Aligned [PASS]</span>
           </div>
         </Marquee>
       </Card>
 
       {/* Animated Number Counters */}
-      <Card className="p-6 bg-neutral-900/90 border-neutral-800 space-y-4">
+      <Card className="p-6 bg-[var(--panel)] border-[var(--rule)] space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-xs font-mono uppercase text-sky-400">02 / Motion</span>
-            <h3 className="text-lg font-bold text-white mt-0.5">Smooth Animated Counters</h3>
-            <p className="text-xs text-neutral-400">
+            <span className="text-xs font-mono uppercase text-[var(--accent)]">02 / Motion</span>
+            <h3 className="text-lg font-bold text-[var(--ink)] mt-0.5">Smooth Animated Counters</h3>
+            <p className="text-xs text-[var(--ink-2)]">
               Interpolates numbers with ease-out quad on data updates.
             </p>
           </div>
@@ -64,34 +64,34 @@ export const MagicEffectsTab: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2 font-mono">
-          <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
-            <span className="text-[11px] text-neutral-500 uppercase block">Total Queries Evaluated</span>
+          <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)]">
+            <span className="text-[11px] text-[var(--muted)] uppercase block">Total Queries Evaluated</span>
             <AnimatedCounter
               value={evalCount}
-              className="text-3xl text-white font-bold"
+              className="text-3xl text-[var(--ink)] font-bold"
             />
-            <span className="text-xs text-emerald-400 block mt-1">+12.4% vs last run</span>
+            <span className="text-xs text-[var(--ok)] block mt-1">+12.4% vs last run</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
-            <span className="text-[11px] text-neutral-500 uppercase block">Mean Groundedness</span>
+          <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)]">
+            <span className="text-[11px] text-[var(--muted)] uppercase block">Mean Groundedness</span>
             <AnimatedCounter
               value={testScore}
               suffix="%"
-              className="text-3xl text-sky-400 font-bold"
+              className="text-3xl text-[var(--accent)] font-bold"
             />
-            <span className="text-xs text-neutral-400 block mt-1">Target &ge; 75%</span>
+            <span className="text-xs text-[var(--ink-2)] block mt-1">Target &ge; 75%</span>
           </div>
 
-          <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
-            <span className="text-[11px] text-neutral-500 uppercase block">Mean Latency</span>
+          <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)]">
+            <span className="text-[11px] text-[var(--muted)] uppercase block">Mean Latency</span>
             <AnimatedCounter
               value={18.4}
               precision={1}
               suffix=" ms"
-              className="text-3xl text-purple-400 font-bold"
+              className="text-3xl text-[var(--violet)] font-bold"
             />
-            <span className="text-xs text-neutral-400 block mt-1">Local NLI Model</span>
+            <span className="text-xs text-[var(--ink-2)] block mt-1">Local NLI Model</span>
           </div>
         </div>
       </Card>
@@ -99,9 +99,9 @@ export const MagicEffectsTab: React.FC = () => {
       {/* Bento Grid Layout (Magic UI / 21st.dev style) */}
       <div className="space-y-4">
         <div>
-          <span className="text-xs font-mono uppercase text-purple-400">03 / Layouts</span>
-          <h3 className="text-lg font-bold text-white mt-0.5">Modular Bento Grid System</h3>
-          <p className="text-xs text-neutral-400">
+          <span className="text-xs font-mono uppercase text-[var(--violet)]">03 / Layouts</span>
+          <h3 className="text-lg font-bold text-[var(--ink)] mt-0.5">Modular Bento Grid System</h3>
+          <p className="text-xs text-[var(--ink-2)]">
             High-density dashboard cards inspired by Magic UI and Bento Grids.
           </p>
         </div>
@@ -113,7 +113,7 @@ export const MagicEffectsTab: React.FC = () => {
             description="Vector search + lexical BM25 indexing running in isolated memory space."
             className="md:col-span-2"
           >
-            <div className="p-3 bg-neutral-950 rounded-lg border border-neutral-800 font-mono text-xs text-neutral-300">
+            <div className="p-3 bg-[var(--panel)] rounded-lg border border-[var(--rule)] font-mono text-xs text-[var(--ink-1)]">
               Index: HNSW • Dimensions: 1536 • Top-K: 5 • Similarity: Cosine
             </div>
           </BentoCard>
@@ -133,7 +133,7 @@ export const MagicEffectsTab: React.FC = () => {
             title="Synthetic Q&A Generator"
             description="Generates question-answer-context triples directly from uploaded documents."
           >
-            <div className="text-xs font-mono text-sky-400">Auto-Generates 5 Test Triples / Chunk</div>
+            <div className="text-xs font-mono text-[var(--accent)]">Auto-Generates 5 Test Triples / Chunk</div>
           </BentoCard>
 
           <BentoCard

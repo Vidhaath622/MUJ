@@ -28,8 +28,8 @@ export const Switch: React.FC<SwitchProps> = ({
         />
         <div
           className={cn(
-            'w-10 h-6 bg-neutral-800 rounded-full transition-colors',
-            checked && 'bg-sky-600'
+            'w-10 h-6 bg-[var(--panel)] rounded-full transition-colors',
+            checked && 'bg-[var(--accent)]'
           )}
         />
         <div
@@ -41,8 +41,8 @@ export const Switch: React.FC<SwitchProps> = ({
       </div>
       {(label || description) && (
         <div className="flex flex-col text-xs">
-          {label && <span className="font-medium text-neutral-200">{label}</span>}
-          {description && <span className="text-neutral-400">{description}</span>}
+          {label && <span className="font-medium text-[var(--ink)]">{label}</span>}
+          {description && <span className="text-[var(--ink-2)]">{description}</span>}
         </div>
       )}
     </label>

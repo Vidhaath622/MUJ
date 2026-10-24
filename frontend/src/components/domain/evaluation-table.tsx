@@ -44,11 +44,11 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
   });
 
   return (
-    <Card className={cn('bg-neutral-900/90 border-neutral-800 overflow-hidden shadow-xl space-y-2', className)}>
-      <div className="p-4 border-b border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+    <Card className={cn('bg-[var(--panel)] border-[var(--rule)] overflow-hidden shadow-xl space-y-2', className)}>
+      <div className="p-4 border-b border-[var(--rule)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
-          <ListFilter className="w-4 h-4 text-teal-400" />
-          <span className="font-bold text-white font-mono uppercase tracking-wider">
+          <ListFilter className="w-4 h-4 text-[var(--teal)]" />
+          <span className="font-bold text-[var(--ink)] font-mono uppercase tracking-wider">
             Evaluation Batch Test Suite ({items.length} Cases)
           </span>
         </div>
@@ -61,8 +61,8 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
               onClick={() => setSelectedFilter(f)}
               className={`px-2 py-0.5 rounded text-[10px] font-mono transition border ${
                 selectedFilter === f
-                  ? 'bg-sky-500/20 text-sky-300 border-sky-500/60 font-semibold'
-                  : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-white'
+                  ? 'bg-[var(--accent)] text-[var(--accent)] border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] font-semibold'
+                  : 'bg-[var(--panel)] text-[var(--ink-2)] border-[var(--rule)] hover:text-[var(--ink)]'
               }`}
             >
               {f}
@@ -73,7 +73,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs font-sans">
-          <thead className="bg-neutral-950/80 font-mono uppercase text-neutral-400 text-[10px] border-b border-neutral-800 tracking-wider">
+          <thead className="bg-[var(--panel)] font-mono uppercase text-[var(--ink-2)] text-[10px] border-b border-[var(--rule)] tracking-wider">
             <tr>
               <th className="py-3 px-4">Test ID / Query</th>
               <th className="py-3 px-3 text-center">Retriever</th>
@@ -84,7 +84,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
               <th className="py-3 px-3 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-800/80 bg-black/40">
+          <tbody className="divide-y divide-[color:color-mix(in_srgb,var(--rule)_80%,transparent)] bg-[var(--paper)]">
             {filteredItems.map((item) => {
               const isSelected = selectedId === item.id;
               const retPass = item.retrieverScore >= 0.7;
@@ -96,43 +96,43 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
                   key={item.id}
                   onClick={() => onSelectRow?.(item)}
                   className={cn(
-                    'hover:bg-neutral-800/60 transition cursor-pointer group',
-                    isSelected && 'bg-sky-950/40 border-l-2 border-l-sky-500'
+                    'hover:bg-[var(--panel)] transition cursor-pointer group',
+                    isSelected && 'bg-[var(--accent-tint)] border-l-2 border-l-sky-500'
                   )}
                 >
-                  <td className="py-3.5 px-4 font-medium text-neutral-200 max-w-xs">
+                  <td className="py-3.5 px-4 font-medium text-[var(--ink)] max-w-xs">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] text-sky-400 font-bold bg-sky-950/60 px-1.5 py-0.5 rounded border border-sky-800/40">
+                      <span className="font-mono text-[10px] text-[var(--accent)] font-bold bg-[var(--accent-tint)] px-1.5 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)]">
                         {item.id}
                       </span>
                       <span className="truncate" title={item.query}>{item.query}</span>
                     </div>
                     {item.summaryNote && (
-                      <div className="text-[11px] text-neutral-400 truncate pl-1 mt-0.5">
+                      <div className="text-[11px] text-[var(--ink-2)] truncate pl-1 mt-0.5">
                         {item.summaryNote}
                       </div>
                     )}
                   </td>
 
                   <td className="py-3.5 px-3 text-center font-mono">
-                    <span className={cn('font-bold', retPass ? 'text-emerald-400' : 'text-rose-400')}>
+                    <span className={cn('font-bold', retPass ? 'text-[var(--ok)]' : 'text-[var(--gen)]')}>
                       {(item.retrieverScore * 100).toFixed(0)}%
                     </span>
                   </td>
 
                   <td className="py-3.5 px-3 text-center font-mono">
-                    <span className={cn('font-bold', faithPass ? 'text-emerald-400' : 'text-rose-400')}>
+                    <span className={cn('font-bold', faithPass ? 'text-[var(--ok)]' : 'text-[var(--gen)]')}>
                       {(item.faithfulnessScore * 100).toFixed(0)}%
                     </span>
                   </td>
 
                   <td className="py-3.5 px-3 text-center font-mono">
                     {item.accuracyScore === null ? (
-                      <span className="text-amber-400 font-medium text-[11px] bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-900/60">
+                      <span className="text-[var(--retr)] font-medium text-[11px] bg-[var(--retr-tint)] px-1.5 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--retr)_40%,transparent)]">
                         REVIEW (No GT)
                       </span>
                     ) : (
-                      <span className={cn('font-bold', accPass ? 'text-emerald-400' : 'text-rose-400')}>
+                      <span className={cn('font-bold', accPass ? 'text-[var(--ok)]' : 'text-[var(--gen)]')}>
                         {(item.accuracyScore * 100).toFixed(0)}%
                       </span>
                     )}
@@ -157,7 +157,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
                     <Button
                       variant="ghost"
                       size="iconSm"
-                      className="group-hover:text-sky-400 group-hover:bg-neutral-800"
+                      className="group-hover:text-[var(--accent)] group-hover:bg-[var(--panel)]"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>

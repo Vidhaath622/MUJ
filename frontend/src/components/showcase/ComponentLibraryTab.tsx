@@ -33,9 +33,9 @@ export const ComponentLibraryTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Reference Strip */}
-      <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800/80 space-y-2">
+      <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)] space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono text-neutral-400 uppercase tracking-wider font-semibold">
+          <span className="text-[11px] font-mono text-[var(--ink-2)] uppercase tracking-wider font-semibold">
             19 Curated Free UI/UX Inspiration Foundations:
           </span>
           <Badge variant="neon" size="sm">
@@ -49,7 +49,7 @@ export const ComponentLibraryTab: React.FC = () => {
               href={src.url}
               target="_blank"
               rel="noreferrer"
-              className="px-2 py-0.5 rounded-md bg-neutral-950 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 transition text-[11px] font-mono flex items-center gap-1"
+              className="px-2 py-0.5 rounded-md bg-[var(--panel)] hover:bg-[var(--panel)] text-[var(--ink-1)] hover:text-[var(--ink)] border border-[var(--rule)] transition text-[11px] font-mono flex items-center gap-1"
             >
               <span>{src.name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-60" />
@@ -59,13 +59,13 @@ export const ComponentLibraryTab: React.FC = () => {
       </div>
 
       {/* Sub Tabs */}
-      <div className="flex items-center gap-2 border-b border-neutral-800 pb-3">
+      <div className="flex items-center gap-2 border-b border-[var(--rule)] pb-3">
         <button
           onClick={() => setActiveSubTab('domain')}
           className={`px-3 py-1.5 rounded-lg text-xs font-mono transition flex items-center gap-2 border ${
             activeSubTab === 'domain'
-              ? 'bg-purple-950/60 text-purple-300 border-purple-700/80 font-bold'
-              : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
+              ? 'bg-[var(--violet-tint)] text-[var(--violet)] border-[color:color-mix(in_srgb,var(--violet)_40%,transparent)] font-bold'
+              : 'bg-[var(--panel)] text-[var(--ink-2)] border-[var(--rule)] hover:text-[var(--ink)]'
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
@@ -76,8 +76,8 @@ export const ComponentLibraryTab: React.FC = () => {
           onClick={() => setActiveSubTab('primitives')}
           className={`px-3 py-1.5 rounded-lg text-xs font-mono transition flex items-center gap-2 border ${
             activeSubTab === 'primitives'
-              ? 'bg-sky-950/60 text-sky-300 border-sky-700/80 font-bold'
-              : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
+              ? 'bg-[var(--accent-tint)] text-[var(--accent)] border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] font-bold'
+              : 'bg-[var(--panel)] text-[var(--ink-2)] border-[var(--rule)] hover:text-[var(--ink)]'
           }`}
         >
           <Boxes className="w-3.5 h-3.5" />
@@ -88,8 +88,8 @@ export const ComponentLibraryTab: React.FC = () => {
           onClick={() => setActiveSubTab('magic')}
           className={`px-3 py-1.5 rounded-lg text-xs font-mono transition flex items-center gap-2 border ${
             activeSubTab === 'magic'
-              ? 'bg-teal-950/60 text-teal-300 border-teal-700/80 font-bold'
-              : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
+              ? 'bg-[var(--teal-tint)] text-[var(--teal)] border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)] font-bold'
+              : 'bg-[var(--panel)] text-[var(--ink-2)] border-[var(--rule)] hover:text-[var(--ink)]'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />

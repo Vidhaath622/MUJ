@@ -65,31 +65,31 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         className={cn(
           'relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3',
           isDragging
-            ? 'border-sky-400 bg-sky-950/20 scale-[1.01]'
-            : 'border-neutral-800 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-900/70',
-          selectedFile && 'border-emerald-600/60 bg-emerald-950/10'
+            ? 'border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] bg-[var(--accent-tint)] scale-[1.01]'
+            : 'border-[var(--rule)] bg-[var(--panel)] hover:border-[var(--rule)] hover:bg-[var(--panel)]',
+          selectedFile && 'border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] bg-[var(--ok-tint)]'
         )}
       >
-        <div className="w-12 h-12 rounded-2xl bg-neutral-800/80 border border-neutral-700 flex items-center justify-center text-sky-400 shadow-inner">
+        <div className="w-12 h-12 rounded-2xl bg-[var(--panel)] border border-[var(--rule)] flex items-center justify-center text-[var(--accent)] shadow-inner">
           <UploadCloud className="w-6 h-6" />
         </div>
 
         {selectedFile ? (
           <div className="space-y-1">
-            <div className="flex items-center justify-center gap-2 text-sm font-semibold text-white">
-              <FileText className="w-4 h-4 text-emerald-400" />
+            <div className="flex items-center justify-center gap-2 text-sm font-semibold text-[var(--ink)]">
+              <FileText className="w-4 h-4 text-[var(--ok)]" />
               <span>{selectedFile.name}</span>
             </div>
-            <p className="text-xs text-neutral-400 font-mono">
+            <p className="text-xs text-[var(--ink-2)] font-mono">
               {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for chunking
             </p>
           </div>
         ) : (
           <div className="space-y-1">
-            <h4 className="text-sm font-semibold text-white">
+            <h4 className="text-sm font-semibold text-[var(--ink)]">
               Click to upload or drag &amp; drop document
             </h4>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-[var(--ink-2)]">
               Supports {acceptedFormats.join(', ')} up to {maxSizeMb}MB
             </p>
           </div>

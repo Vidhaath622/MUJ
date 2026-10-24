@@ -16,11 +16,11 @@ export const PrimitivesTab: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* 1. Buttons & Variants */}
-      <Card className="p-6 bg-neutral-900/90 border-neutral-800 space-y-4">
+      <Card className="p-6 bg-[var(--panel)] border-[var(--rule)] space-y-4">
         <div>
-          <span className="text-xs font-mono uppercase text-sky-400">01 / Actions</span>
+          <span className="text-xs font-mono uppercase text-[var(--accent)]">01 / Actions</span>
           <CardTitle className="text-lg mt-1">Button Tokens &amp; Variants</CardTitle>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-[var(--ink-2)]">
             Inspired by Shadcn UI, AlignUI, and Magic UI (Shine &amp; Glow variants).
           </p>
         </div>
@@ -51,11 +51,11 @@ export const PrimitivesTab: React.FC = () => {
       </Card>
 
       {/* 2. Badges & Pulsing Status Indicators */}
-      <Card className="p-6 bg-neutral-900/90 border-neutral-800 space-y-4">
+      <Card className="p-6 bg-[var(--panel)] border-[var(--rule)] space-y-4">
         <div>
-          <span className="text-xs font-mono uppercase text-emerald-400">02 / Feedback</span>
+          <span className="text-xs font-mono uppercase text-[var(--ok)]">02 / Feedback</span>
           <CardTitle className="text-lg mt-1">Status Badges &amp; Live Dots</CardTitle>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-[var(--ink-2)]">
             Inspired by Untitled UI, HeroUI, and Base UI.
           </p>
         </div>
@@ -86,11 +86,11 @@ export const PrimitivesTab: React.FC = () => {
       </Card>
 
       {/* 3. Progress Bars (Linear & Circular Gauges) */}
-      <Card className="p-6 bg-neutral-900/90 border-neutral-800 space-y-6">
+      <Card className="p-6 bg-[var(--panel)] border-[var(--rule)] space-y-6">
         <div>
-          <span className="text-xs font-mono uppercase text-amber-400">03 / Progress</span>
+          <span className="text-xs font-mono uppercase text-[var(--retr)]">03 / Progress</span>
           <CardTitle className="text-lg mt-1">Linear &amp; Circular Progress Gauges</CardTitle>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-[var(--ink-2)]">
             Adaptive color shifts: Green (&ge; 70%), Amber (50-69%), Red (&lt; 50%).
           </p>
         </div>
@@ -98,15 +98,15 @@ export const PrimitivesTab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-4">
             <div>
-              <span className="text-xs font-mono text-neutral-400 block mb-1">Context Relevance (94%)</span>
+              <span className="text-xs font-mono text-[var(--ink-2)] block mb-1">Context Relevance (94%)</span>
               <Progress value={94} thresholdPass={70} />
             </div>
             <div>
-              <span className="text-xs font-mono text-neutral-400 block mb-1">Faithfulness (32% - Fail)</span>
+              <span className="text-xs font-mono text-[var(--ink-2)] block mb-1">Faithfulness (32% - Fail)</span>
               <Progress value={32} thresholdPass={75} />
             </div>
             <div>
-              <span className="text-xs font-mono text-neutral-400 block mb-1">Semantic Accuracy (62% - Warn)</span>
+              <span className="text-xs font-mono text-[var(--ink-2)] block mb-1">Semantic Accuracy (62% - Warn)</span>
               <Progress value={62} thresholdPass={70} thresholdWarn={50} />
             </div>
           </div>
@@ -120,15 +120,15 @@ export const PrimitivesTab: React.FC = () => {
       </Card>
 
       {/* 4. Inputs, Sliders, and Switches */}
-      <Card className="p-6 bg-neutral-900/90 border-neutral-800 space-y-6">
+      <Card className="p-6 bg-[var(--panel)] border-[var(--rule)] space-y-6">
         <div>
-          <span className="text-xs font-mono uppercase text-sky-400">04 / Form Controls</span>
+          <span className="text-xs font-mono uppercase text-[var(--accent)]">04 / Form Controls</span>
           <CardTitle className="text-lg mt-1">Inputs, Threshold Sliders &amp; Switches</CardTitle>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
-            <label className="text-xs font-mono text-neutral-400">Search Input with Shortcut</label>
+            <label className="text-xs font-mono text-[var(--ink-2)]">Search Input with Shortcut</label>
             <Input
               icon={<Search className="w-4 h-4" />}
               shortcut="⌘K"

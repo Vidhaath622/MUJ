@@ -1,6 +1,7 @@
 import { EvaluationResult, BatchSummary, PackId, AuthUser } from '../types/ragseal';
 
-export const API_BASE_URL = 'http://localhost:8000/api';
+// Relative so the app also works when opened from another laptop on the LAN; vite proxies /api to the backend.
+export const API_BASE_URL = '/api';
 
 export class ApiError extends Error {
   status: number;
@@ -385,4 +386,355 @@ export async function generateSynthetic(
     throw new ApiError(res.status, detail);
   }
   return await res.json();
+}
+
+/** A 404 means "the backend doesn't have this endpoint yet": pages show an empty state. */
+export class NotAvailable extends Error {
+  constructor(path: string) {
+    super(`Backend endpoint not available yet: ${path}`);
+    this.name = 'NotAvailable';
+  }
+}
+
+export function errorText(err: unknown): string {
+  if (err instanceof ApiError) return err.detail;
+  if (err instanceof Error) return err.message;
+  return 'Something went wrong talking to the backend.';
+}
+
+async function callEndpoint<T>(path: string, token: string | null, init: RequestInit = {}): Promise<{ status: number; body: T }> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init.headers ?? {}),
+    },
+  });
+  if (res.status === 404 || res.status === 405) {
+    let detail: string | null = null;
+    try {
+      const data = await res.json();
+      if (typeof data?.detail === 'string' && data.detail !== 'Not Found') detail = data.detail;
+    } catch {
+      // no body
+    }
+    if (detail) throw new ApiError(res.status, detail);
+    throw new NotAvailable(path.split('?')[0]);
+  }
+  if (!res.ok) {
+    let detail = `${res.status} ${res.statusText}`;
+    try {
+      const data = await res.json();
+      if (typeof data?.detail === 'string') detail = data.detail;
+      else if (Array.isArray(data?.detail)) detail = data.detail.map((d: { msg?: string }) => d.msg).join(', ');
+    } catch {
+      // keep status text
+    }
+    throw new ApiError(res.status, detail);
+  }
+  return { status: res.status, body: (await res.json()) as T };
+}
+
+// ---------- Runs (P1) ----------
+
+export interface RunTiming {
+  wall_ms?: number;
+  per_case_ms_avg?: number;
+  cases_per_min?: number;
+  judge_calls?: number;
+  judge_cache_hits?: number;
+  rule_shortcuts?: number;
+  concurrency?: number;
+}
+
+export interface RunListItem {
+  batch_id: string;
+  pack_id?: string;
+  created_at: string;
+  status?: 'running' | 'done' | 'failed';
+  total_evaluated?: number;
+  pass_rate?: number | null;
+  overall_score?: number | null;
+  timing?: RunTiming;
+}
+
+export interface RunProgress {
+  batch_id: string;
+  status: 'running' | 'done' | 'failed';
+  done?: number;
+  total?: number;
+  failed?: number;
+  elapsed_ms?: number;
+  eta_ms?: number | null;
+  cases_per_min?: number | null;
+  error?: string | null;
+}
+
+export interface RunSummary {
+  batch_id: string;
+  pack_id?: string;
+  created_at?: string;
+  status?: string;
+  total_evaluated?: number;
+  failed_cases?: number;
+  aggregates?: {
+    avg_context_relevance?: number | null;
+    avg_faithfulness?: number | null;
+    avg_answer_accuracy?: number | null;
+    pass_rate?: number | null;
+  };
+  root_cause_breakdown?: Record<string, number>;
+  gold_retrieval_rate?: number | null;
+  judge_model?: string;
+  generator_model?: string;
+  duration_ms?: number;
+  timing?: RunTiming;
+  results?: unknown[];
+}
+
+export async function listRuns(token: string): Promise<RunListItem[]> {
+  const { body } = await callEndpoint<RunListItem[] | { runs: RunListItem[] }>('/runs', token);
+  return Array.isArray(body) ? body : body.runs ?? [];
+}
+
+export async function getRun(batchId: string, token: string): Promise<RunSummary | RunProgress> {
+  const { body } = await callEndpoint<RunSummary | RunProgress>(`/runs/${batchId}`, token);
+  return body;
+}
+
+export async function startRun(
+  packId: string,
+  token: string
+): Promise<{ batch_id: string; status: string; total?: number; summary?: RunSummary }> {
+  const { status, body } = await callEndpoint<RunSummary & { status?: string; total?: number }>('/evaluate/batch', token, {
+    method: 'POST',
+    body: JSON.stringify({ pack_id: packId, async: true }),
+  });
+  if (status === 202 || body.status === 'running') return { batch_id: body.batch_id, status: 'running', total: body.total };
+  return { batch_id: body.batch_id, status: 'done', summary: body };
+}
+
+export async function getProgress(batchId: string, token: string): Promise<RunProgress> {
+  const { body } = await callEndpoint<RunProgress>(`/runs/${batchId}/progress`, token);
+  return body;
+}
+
+// ---------- Labels + agreement (P3) ----------
+
+export interface LabelChunk {
+  chunk_id: string;
+  document_id?: string;
+  document_name?: string;
+  filename?: string;
+  text: string;
+}
+
+export interface LabelItem {
+  test_id: string;
+  batch_id?: string;
+  pack_id?: string;
+  question: string;
+  ground_truth?: string | null;
+  ground_truth_answer?: string | null;
+  generated_answer?: string;
+  retrieved_chunks?: LabelChunk[];
+  labeled?: boolean;
+}
+
+export interface LabelQueue {
+  items: LabelItem[];
+  labeled?: number;
+  total?: number;
+}
+
+export async function getLabelQueue(packId: string, labeler: string, token: string): Promise<LabelQueue> {
+  const qs = new URLSearchParams({ pack_id: packId, labeler });
+  const { body } = await callEndpoint<LabelQueue | LabelItem[]>(`/labels/queue?${qs}`, token);
+  return Array.isArray(body) ? { items: body } : body;
+}
+
+export interface LabelInput {
+  test_id: string;
+  batch_id?: string;
+  labeler: string;
+  correct: boolean;
+  failure_type: string | null;
+  note?: string;
+}
+
+export async function postLabel(label: LabelInput, token: string): Promise<void> {
+  await callEndpoint('/labels', token, { method: 'POST', body: JSON.stringify(label) });
+}
+
+export interface Agreement {
+  n_double_labeled?: number;
+  human_human?: { agreement?: number | null; cohen_kappa?: number | null };
+  pipeline_vs_consensus?: {
+    agreement?: number | null;
+    kappa?: number | null;
+    false_pass?: number;
+    false_fail?: number;
+    n?: number;
+  };
+  disagreements?: { test_id: string; question?: string; humans?: string; pipeline?: string; note?: string }[];
+}
+
+export async function getAgreement(token: string, packId?: string): Promise<Agreement> {
+  const qs = packId ? `?pack_id=${packId}` : '';
+  const { body } = await callEndpoint<Agreement>(`/trust/agreement${qs}`, token);
+  return body;
+}
+
+// ---------- Failure taxonomy + confusion matrix (P4) ----------
+
+export interface Confusion {
+  run_id?: string;
+  labels: string[];
+  matrix: number[][];
+  per_class?: Record<string, { precision?: number | null; recall?: number | null; support?: number }>;
+  accuracy?: number | null;
+  n?: number;
+}
+
+export async function startInjectionRun(token: string, nPerType = 5, packId?: string): Promise<{ run_id: string; status?: string }> {
+  const { body } = await callEndpoint<{ run_id?: string; batch_id?: string; status?: string }>('/trust/injection-run', token, {
+    method: 'POST',
+    body: JSON.stringify({ pack_id: packId ?? null, n_per_type: nPerType }),
+  });
+  return { run_id: body.run_id ?? body.batch_id ?? '', status: body.status };
+}
+
+export async function getConfusion(token: string, runId?: string): Promise<Confusion> {
+  const qs = runId ? `?run_id=${runId}` : '';
+  const { body } = await callEndpoint<Confusion>(`/trust/confusion${qs}`, token);
+  return body;
+}
+
+// ---------- Stability (P5) ----------
+
+export interface Stability {
+  batch_id?: string;
+  judges?: string[];
+  judge_swap?: {
+    correlation?: Record<string, number | null>;
+    verdict_kappa?: number | null;
+    verdict_agreement?: number | null;
+  };
+  shuffle?: {
+    runs?: number;
+    max_delta?: number | null;
+    mean_delta?: number | null;
+    unstable_cases?: number;
+    stable?: boolean;
+    threshold?: number;
+  };
+  stable?: boolean;
+}
+
+export async function runStability(
+  batchId: string,
+  judges: string[],
+  token: string,
+  shuffles = 3
+): Promise<Stability> {
+  const { body } = await callEndpoint<Stability>('/trust/stability', token, {
+    method: 'POST',
+    body: JSON.stringify({ batch_id: batchId, judges, shuffles }),
+  });
+  return body;
+}
+
+// ---------- Version compare (P6) ----------
+
+export interface RagProfile {
+  id: string;
+  name?: string;
+  description?: string;
+  params?: Record<string, unknown>;
+}
+
+export async function listProfiles(token: string): Promise<RagProfile[]> {
+  const { body } = await callEndpoint<RagProfile[] | { profiles: RagProfile[] }>('/rag/profiles', token);
+  return Array.isArray(body) ? body : body.profiles ?? [];
+}
+
+export interface CompareFlip {
+  test_id: string;
+  question?: string;
+  pack_id?: string;
+  base_verdict?: string;
+  candidate_verdict?: string;
+  direction: 'pass_to_fail' | 'fail_to_pass';
+  base_accuracy?: number | null;
+  candidate_accuracy?: number | null;
+}
+
+export interface CompareResult {
+  compare_id?: string;
+  status?: string;
+  base?: string;
+  candidate?: string;
+  n?: number;
+  base_pass_rate?: number | null;
+  candidate_pass_rate?: number | null;
+  accuracy_delta?: number | null;
+  ci?: [number, number] | null;
+  mcnemar_p?: number | null;
+  meaningful?: boolean;
+  verdict?: string;
+  flips?: CompareFlip[];
+  progress?: RunProgress;
+}
+
+export async function startCompare(
+  base: string,
+  candidate: string,
+  packIds: string[],
+  token: string
+): Promise<CompareResult> {
+  const { body } = await callEndpoint<CompareResult>('/compare', token, {
+    method: 'POST',
+    body: JSON.stringify({ base, candidate, pack_ids: packIds }),
+  });
+  return body;
+}
+
+export async function getCompare(compareId: string, token: string): Promise<CompareResult> {
+  const { body } = await callEndpoint<CompareResult>(`/compare/${compareId}`, token);
+  return body;
+}
+
+// ---------- Test sets (synthetic questions from uploaded documents) ----------
+
+export interface GeneratedCase {
+  test_id: string;
+  question: string;
+  ground_truth_answer?: string;
+  source_chunk_id?: string;
+  gold_chunk_ids?: string[];
+  context_snippet?: string;
+  type?: string;
+}
+
+export async function evaluateTestSet(
+  documentIds: string[],
+  testCases: GeneratedCase[],
+  token: string,
+  onProgress?: (p: RunProgress) => void
+): Promise<RunSummary> {
+  const { status, body } = await callEndpoint<RunSummary & { status?: string; total?: number }>('/evaluate/batch', token, {
+    method: 'POST',
+    body: JSON.stringify({ document_ids: documentIds, test_cases: testCases, async: true }),
+  });
+  if (status !== 202 && body.status !== 'running') return body;
+  const batchId = body.batch_id;
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const p = await getProgress(batchId, token);
+    onProgress?.(p);
+    if (p.status === 'failed') throw new ApiError(500, p.error ?? 'The run failed.');
+    if (p.status === 'done') break;
+  }
+  return (await getRun(batchId, token)) as RunSummary;
 }

@@ -17,8 +17,8 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
           isGlass
             ? 'glass-panel shadow-2xl'
             : variant === 'subtle'
-            ? 'bg-neutral-900/50 border-neutral-800/80 text-neutral-100 shadow-sm'
-            : 'bg-neutral-900/90 border-neutral-800 text-neutral-100 shadow-md',
+            ? 'bg-[var(--panel)] border-[var(--rule)] text-[var(--ink)] shadow-sm'
+            : 'bg-[var(--panel)] border-[var(--rule)] text-[var(--ink)] shadow-md',
           className
         )}
         {...props}
@@ -46,7 +46,7 @@ export const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn('text-base md:text-lg font-bold leading-none tracking-tight text-white', className)}
+    className={cn('text-base md:text-lg font-bold leading-none tracking-tight text-[var(--ink)]', className)}
     {...props}
   />
 ));
@@ -58,7 +58,7 @@ export const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-xs md:text-sm text-neutral-400 leading-relaxed', className)}
+    className={cn('text-xs md:text-sm text-[var(--ink-2)] leading-relaxed', className)}
     {...props}
   />
 ));
@@ -78,7 +78,7 @@ export const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex items-center p-5 md:p-6 pt-0 border-t border-neutral-800/80 mt-4', className)}
+    className={cn('flex items-center p-5 md:p-6 pt-0 border-t border-[var(--rule)] mt-4', className)}
     {...props}
   />
 ));

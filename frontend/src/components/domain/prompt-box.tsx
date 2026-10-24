@@ -63,19 +63,19 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   };
 
   return (
-    <Card className={cn('bg-neutral-900/90 border-neutral-800 p-5 shadow-xl space-y-4', className)}>
+    <Card className={cn('bg-[var(--panel)] border-[var(--rule)] p-5 shadow-xl space-y-4', className)}>
       {/* Top Document Selection & Scenarios Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-neutral-800/80 text-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[var(--rule)] text-xs">
         <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-sky-400" />
-          <span className="font-mono font-semibold text-neutral-300 uppercase">
+          <FileText className="w-4 h-4 text-[var(--accent)]" />
+          <span className="font-mono font-semibold text-[var(--ink-1)] uppercase">
             Corpus Document:
           </span>
           {documents && documents.length > 0 ? (
             <select
               value={selectedDocId}
               onChange={(e) => onSelectDoc?.(e.target.value)}
-              className="bg-neutral-950 text-neutral-200 text-xs font-mono px-2.5 py-1.5 rounded-lg border border-neutral-700 focus:outline-none focus:border-sky-500"
+              className="bg-[var(--panel)] text-[var(--ink)] text-xs font-mono px-2.5 py-1.5 rounded-lg border border-[var(--rule)] focus:outline-none focus:border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)]"
             >
               {documents.map((d) => (
                 <option key={d.document_id} value={d.document_id}>
@@ -84,7 +84,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
               ))}
             </select>
           ) : (
-            <span className="text-neutral-400 font-mono">Default Corpus</span>
+            <span className="text-[var(--ink-2)] font-mono">Default Corpus</span>
           )}
         </div>
 
@@ -93,7 +93,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
             variant="outline"
             size="xs"
             onClick={() => setShowGroundTruth(!showGroundTruth)}
-            className={showGroundTruth ? 'border-sky-500 text-sky-400' : ''}
+            className={showGroundTruth ? 'border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] text-[var(--accent)]' : ''}
           >
             <BookOpen className="w-3 h-3 mr-1" />
             {showGroundTruth ? 'Ground Truth: ON' : '+ Ground Truth'}
@@ -104,7 +104,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
       {/* Starter Question Quick Picks */}
       {starterQuestions && starterQuestions.length > 0 && (
         <div className="space-y-1.5">
-          <span className="text-[11px] font-mono text-neutral-400">
+          <span className="text-[11px] font-mono text-[var(--ink-2)]">
             Click any benchmark question to test retriever vs generator failure:
           </span>
           <div className="flex flex-wrap gap-1.5">
@@ -118,11 +118,11 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                   className={cn(
                     'px-2.5 py-1 rounded-lg text-xs font-sans transition text-left flex items-center gap-1.5 border',
                     isSelected
-                      ? 'bg-teal-950/70 text-teal-200 border-teal-500/80 shadow-sm'
-                      : 'bg-neutral-950/60 text-neutral-400 border-neutral-800/80 hover:text-neutral-200 hover:border-neutral-700'
+                      ? 'bg-[var(--teal-tint)] text-[var(--teal)] border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)] shadow-sm'
+                      : 'bg-[var(--panel)] text-[var(--ink-2)] border-[var(--rule)] hover:text-[var(--ink)] hover:border-[var(--rule)]'
                   )}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--teal)]"></span>
                   <span>{sq.question}</span>
                 </button>
               );
@@ -139,13 +139,13 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
           onKeyDown={handleKeyDown}
           placeholder="Enter evaluation probe (e.g. 'What is the required experience threshold in the currently approved job description?')..."
           rows={2}
-          className="w-full bg-black/60 border border-neutral-800 rounded-xl p-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:border-sky-500 resize-none font-sans"
+          className="w-full bg-[var(--paper)] border border-[var(--rule)] rounded-xl p-3 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] resize-none font-sans"
         />
       </div>
 
       {showGroundTruth && (
         <div className="space-y-1">
-          <span className="text-[11px] font-mono text-emerald-400 uppercase font-semibold">
+          <span className="text-[11px] font-mono text-[var(--ok)] uppercase font-semibold">
             Optional Ground Truth Reference Answer:
           </span>
           <textarea
@@ -153,14 +153,14 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
             onChange={(e) => setGroundTruth(e.target.value)}
             placeholder="Canonical expected answer for measuring semantic accuracy..."
             rows={2}
-            className="w-full bg-black/60 border border-emerald-900/50 rounded-xl p-3 text-xs text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-emerald-500 resize-none font-sans"
+            className="w-full bg-[var(--paper)] border border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] rounded-xl p-3 text-xs text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] resize-none font-sans"
           />
         </div>
       )}
 
       <div className="flex items-center justify-between pt-1">
-        <span className="text-[11px] font-mono text-neutral-500 hidden sm:inline">
-          Pro-tip: Press <kbd className="bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-300">⌘</kbd> + <kbd className="bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-300">Enter</kbd> to run diagnostics
+        <span className="text-[11px] font-mono text-[var(--muted)] hidden sm:inline">
+          Pro-tip: Press <kbd className="bg-[var(--panel)] px-1.5 py-0.5 rounded text-[var(--ink-1)]">⌘</kbd> + <kbd className="bg-[var(--panel)] px-1.5 py-0.5 rounded text-[var(--ink-1)]">Enter</kbd> to run diagnostics
         </span>
 
         <Button
@@ -169,7 +169,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
           isLoading={isLoading}
           disabled={!query.trim()}
           onClick={handleTriggerSubmit}
-          className="ml-auto flex items-center gap-2 bg-gradient-to-r from-teal-500 to-sky-600 hover:from-teal-600 hover:to-sky-700 text-white font-mono text-xs shadow-lg shadow-teal-500/20"
+          className="ml-auto flex items-center gap-2 bg-gradient-to-r from-[var(--teal)] to-[var(--accent)] hover:from-[var(--teal)] hover:to-[var(--accent)] text-[var(--ink)] font-mono text-xs shadow-lg shadow-[color:color-mix(in_srgb,var(--teal)_10%,transparent)]"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
           <span>Run RAG Diagnostics</span>
