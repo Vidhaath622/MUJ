@@ -77,3 +77,13 @@ def test_abstention_detection():
     assert is_abstention("The hours are not explicitly stated. However, [2] does not specify the hours.")
     assert not is_abstention("Audits are carried out every 2 weeks [1]. I don't know based on the provided documents.")
     assert not is_abstention("Sick leave is 10 days per year [1].")
+
+
+def test_citation_ranges():
+    from engine.ingest import Chunk
+    from engine.rag import is_abstention, parse_citations, strip_citations
+
+    chunks = [Chunk(f"c{i}", "d", i, "t", None) for i in range(4)]
+    assert parse_citations("Fee is $25 [2][1-3].", chunks) == ["c1", "c0", "c2"]
+    assert strip_citations("x [1-4].") == "x."
+    assert is_abstention("I don't know based on the provided documents. [1-4]")

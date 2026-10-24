@@ -10,6 +10,10 @@ from .ingest import Chunk
 from .llm import ChatModel, EmbedModel
 from .store import ScoredChunk, VectorStore
 
+# Citation markers: [1], [2, 3], [1-4], [1–4].
+_CITATION_BODY = r"[\d,\s\-\u2013]+"
+_CITATION = r"\[(" + _CITATION_BODY + r")\]"
+
 ABSTAIN_ANSWER = "I don't know based on the provided documents."
 
 _ABSTAIN_PATTERNS = [
@@ -70,9 +74,12 @@ def build_prompt(query: str, chunks: list[Chunk]) -> str:
 
 def parse_citations(answer: str, chunks: list[Chunk]) -> list[str]:
     cited: list[str] = []
-    for group in re.findall(r"\[([\d,\s]+)\]", answer):
-        for number in re.findall(r"\d+", group):
-            idx = int(number) - 1
+    for group in re.findall(_CITATION, answer):
+        numbers: list[int] = []
+        for start, end in re.findall(r"(\d+)\s*(?:[-\u2013]\s*(\d+))?", group):
+            numbers.extend(range(int(start), int(end or start) + 1))
+        for number in numbers:
+            idx = number - 1
             if 0 <= idx < len(chunks) and chunks[idx].chunk_id not in cited:
                 cited.append(chunks[idx].chunk_id)
     return cited
@@ -124,4 +131,4 @@ class RagSystem:
 
 
 def strip_citations(answer: str) -> str:
-    return re.sub(r"\s*\[[\d,\s]+\]", "", answer).strip()
+    return re.sub(r"\s*\[" + _CITATION_BODY + r"\]", "", answer).strip()
