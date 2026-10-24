@@ -28,10 +28,19 @@ IMPACT_SCHEMA = {
 
 _NUMBER = re.compile(r"\$?\d[\d,]*(?:\.\d+)?%?")
 _YEAR = re.compile(r"^(19|20)\d\d$")
+# Numbers that label rather than state a fact: parts of IDs like IR-2025-128 or Notice-2026-10, and days in dates.
+_ID_OR_DATE = re.compile(
+    r"(?:[A-Za-z]+-\d+(?:-\d+)*)|(?:\b\d{4}-\d+\b)|(?:\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.? \d{1,2}\b)"
+)
 
 
 def numbers(text: str) -> list[str]:
     return [n.replace(",", "").strip("$%") for n in _NUMBER.findall(text)]
+
+
+def fact_numbers(text: str) -> list[str]:
+    """Numbers that state facts: IDs and calendar days are left out."""
+    return numbers(_ID_OR_DATE.sub(" ", text))
 
 
 def sentences(chunks: list[Chunk]) -> list[tuple[str, str]]:
@@ -93,13 +102,43 @@ def diff(old_chunks: list[Chunk], new_chunks: list[Chunk], threshold: float = 0.
         if i not in used:
             changes.append({"kind": "removed", "old": sentence, "new": None, "numbers_changed": [],
                             "old_chunk_id": chunk_id, "new_chunk_id": None})
-    return changes, unchanged
+    return _pair_rewrites(changes), unchanged
+
+
+def _opening(text: str, words: int = 4) -> str:
+    return " ".join(re.findall(r"[a-z]+", text.lower())[:words])
+
+
+def _pair_rewrites(changes: list[dict], threshold: float = 0.4) -> list[dict]:
+    """Second pass: a removed and an added sentence that open the same way are one rewritten fact."""
+    removed = [c for c in changes if c["kind"] == "removed"]
+    added = [c for c in changes if c["kind"] == "added"]
+    paired: set[int] = set()
+    for old in removed:
+        best, best_ratio = None, 0.0
+        for new in added:
+            if id(new) in paired or _opening(new["new"]) != _opening(old["old"]):
+                continue
+            ratio = difflib.SequenceMatcher(None, _norm(old["old"]), _norm(new["new"]), autojunk=False).ratio()
+            if ratio > best_ratio:
+                best, best_ratio = new, ratio
+        if best is not None and best_ratio >= threshold:
+            paired.add(id(best))
+            old_nums, new_nums = numbers(old["old"]), numbers(best["new"])
+            pairs = [{"old": a, "new": b} for a, b in zip(old_nums, new_nums) if a != b]
+            pairs += [{"old": None, "new": b} for b in new_nums[len(old_nums):]]
+            pairs += [{"old": a, "new": None} for a in old_nums[len(new_nums):]]
+            best.update(kind="changed", old=old["old"], old_chunk_id=old["old_chunk_id"], numbers_changed=pairs,
+                        similarity=round(best_ratio, 3))
+            old["kind"] = "_merged"
+    return [c for c in changes if c["kind"] != "_merged"]
 
 
 def priority(change: dict) -> tuple:
-    """Numeric changes that are not just a year first, then other edits, most different first."""
-    non_year = [p for p in change["numbers_changed"] if not (_YEAR.match(p["old"] or "") and _YEAR.match(p["new"] or ""))]
-    return (not non_year, not change["numbers_changed"], change.get("similarity", 1.0))
+    """Changed facts with a changed number first (IDs, dates and years do not count), then other edits."""
+    old, new = fact_numbers(change["old"] or ""), fact_numbers(change["new"] or "")
+    fact_change = [n for n in set(old) ^ set(new) if not _YEAR.match(n)]
+    return (not fact_change, not change["numbers_changed"], len(change["new"] or "") < 40, change.get("similarity", 1.0))
 
 
 def quotes_old_value(answer: str, change: dict) -> bool:
