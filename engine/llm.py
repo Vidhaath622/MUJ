@@ -137,7 +137,7 @@ class OllamaClient:
         return out
 
 
-def _retry_wait(resp: httpx.Response, attempt: int) -> float:
+def _retry_wait(resp: httpx.Response, attempt: int, cap: float = 60.0) -> float:
     """Seconds to wait before retrying: retry-after if given, else Groq's token-window reset, else backoff."""
     for header in ("retry-after", "x-ratelimit-reset-tokens"):
         value = resp.headers.get(header)
@@ -154,7 +154,7 @@ def _retry_wait(resp: httpx.Response, attempt: int) -> float:
                 seconds = float(value)
         except ValueError:
             continue
-        return min(max(seconds, 1.0), 60.0)
+        return min(max(seconds, 1.0), cap)
     return float(min(2**attempt, 30))
 
 
@@ -204,7 +204,9 @@ class OpenAICompatClient:
                 last_error = f"HTTP {resp.status_code}" + (" (rate limited)" if resp.status_code == 429 else "")
                 if resp.status_code == 429 and not patient:
                     # The judge pool routes around the limit instead of sleeping on it.
-                    raise RateLimited(f"{self.name} rate limited", _retry_wait(resp, attempt))
+                    # A daily token cap asks for minutes or hours: the pool must see the real wait to
+                    # route around that key instead of retrying it every minute.
+                    raise RateLimited(f"{self.name} rate limited", _retry_wait(resp, attempt, cap=6 * 3600))
                 time.sleep(_retry_wait(resp, attempt))
                 continue
             if resp.status_code in (401, 403):
