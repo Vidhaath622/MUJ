@@ -208,6 +208,13 @@ class Database:
             ).fetchone()
         return json.loads(row["json"]) if row else None
 
+    def latest_done_run_any_user(self, pack_id: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT json FROM runs WHERE pack_id = ? AND status = 'done' ORDER BY created_at DESC, rowid DESC LIMIT 1", (pack_id,)
+            ).fetchone()
+        return json.loads(row["json"]) if row else None
+
     def run_by_id(self, batch_id: str) -> dict | None:
         """Any user's finished run: labels and agreement are shared across the labelling team."""
         with self._connect() as conn:

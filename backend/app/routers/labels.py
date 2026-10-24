@@ -40,7 +40,8 @@ class LabelIn(BaseModel):
 def _labelling_run(db: Database, user: User, pack_id: str) -> dict | None:
     batch_id = db.labelling_batch(pack_id)
     run = db.run_by_id(batch_id) if batch_id else None
-    return run or db.latest_done_run(user.id, pack_id)
+    # Labellers may use their own accounts: fall back to the latest run of the pack by anyone.
+    return run or db.latest_done_run(user.id, pack_id) or db.latest_done_run_any_user(pack_id)
 
 
 @router.get("/queue")
