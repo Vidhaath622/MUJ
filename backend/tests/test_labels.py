@@ -160,3 +160,18 @@ def test_queue_waits_for_full_size_run_and_locks(client, alice, fake_engine):
 def test_latest_analyses_without_any(client, alice):
     assert client.get("/api/trust/stability/latest", headers=alice).json() == {"stability_id": None, "status": "none"}
     assert client.get("/api/compare/latest", headers=alice).json() == {"compare_id": None, "status": "none"}
+
+
+def test_rejudge_in_place(client, alice, fake_engine):
+    import time
+
+    run = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"}).json()
+    resp = client.post(f"/api/runs/{run['batch_id']}/rejudge", headers=alice)
+    assert resp.status_code == 202, resp.text
+    for _ in range(100):
+        if client.get(f"/api/runs/{run['batch_id']}/rejudge", headers=alice).json()["status"] != "running":
+            break
+        time.sleep(0.05)
+    after = client.get(f"/api/runs/{run['batch_id']}", headers=alice).json()
+    assert after["batch_id"] == run["batch_id"] and after["rejudged"]["judge"] == "groq:openai/gpt-oss-120b"
+    assert client.post("/api/runs/batch_nope/rejudge", headers=alice).status_code == 404

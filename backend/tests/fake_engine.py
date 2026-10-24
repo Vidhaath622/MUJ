@@ -188,3 +188,8 @@ class FakeEngine:
         if pack_id != "banking":
             raise NotFound(f"pack {pack_id} not found")
         return {"pack_id": pack_id, "test_case_count": 1, "filenames": {}}
+
+    def rejudge(self, owner_id, batch, progress=None):
+        if progress:
+            progress(1, 1, 0)
+        return {**batch, "rejudged": {"judge": "groq:openai/gpt-oss-120b"}}
