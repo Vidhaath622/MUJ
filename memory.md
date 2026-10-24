@@ -54,9 +54,10 @@
 
 | Member | Focus Area | Tools / AI Setup | Dedicated Workspace / Directory | Git Branch |
 | :--- | :--- | :--- | :--- | :--- |
-| **Member 1 (Vidhaath)** | Frontend UI & Interactive Visuals | **Antigravity** | `/frontend` | `vidhaath/ui-frontend` |
+| **Member 1 (Vidhaath)** | API Client, Data Wiring & Integration | **Antigravity** | `/frontend/src/lib/api.ts` & integration | `vidhaath/ui-frontend` |
 | **Member 2 (Sarthak) - Track A** | Backend API, Routing & Storage | **Claude Agent 1** | `/backend` | `sarthak/backend-api` |
-| **Member 2 (Sarthak) - Track B** | Core Engine, ML Logic & Algorithms | **Claude Agent 2** | `/engine` (or `/core`) | `sarthak/core-engine` |
+| **Member 2 (Sarthak) - Track B** | Core Engine, ML Logic & Algorithms | **Claude Agent 2** | `/engine` | `sarthak/core-engine` |
+| **Member 2 (Sarthak) - Track C** | Frontend UI Polish, Styling & Layout | **Claude Agent 3** | `/frontend/src/components` & styles | `sarthak/frontend-polish` |
 | **Member 3 & 4** | PPT Pitch Deck, Datasets, QA & Pitch | Slides, Docs, Postman | `/docs` | `team/presentation-docs` |
 
 ### Why This Setup Maximizes Hackathon Speed:
