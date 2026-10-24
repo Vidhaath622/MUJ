@@ -10,12 +10,16 @@ from .ingest import Chunk
 from .llm import ChatModel, EmbedModel
 from .store import ScoredChunk, VectorStore
 
+# Citation markers: [1], [2, 3], [1-4], [1–4].
+_CITATION_BODY = r"[\d,\s\-\u2013]+"
+_CITATION = r"\[(" + _CITATION_BODY + r")\]"
+
 ABSTAIN_ANSWER = "I don't know based on the provided documents."
 
 _ABSTAIN_PATTERNS = [
     r"\bi (?:do not|don't|cannot|can't) (?:know|find|answer|determine|say)\b",
-    r"\b(?:not|no(?:thing)?) (?:mentioned|stated|specified|provided|found|available|covered|included)\b",
-    r"\b(?:does not|doesn't|do not|don't) (?:mention|say|state|specify|contain|provide|include|cover)\b",
+    r"\b(?:not|no(?:thing)?) (?:\w+ly )?(?:mentioned|stated|specified|provided|found|available|covered|included)\b",
+    r"\b(?:does not|doesn't|do not|don't) (?:\w+ly )?(?:mention|say|state|specify|contain|provide|include|cover)\b",
     r"\bno (?:information|mention|details?|data)\b",
     r"\binsufficient (?:information|context)\b",
     r"\bnot enough (?:information|context)\b",
@@ -29,12 +33,26 @@ GENERATOR_SYSTEM = (
 )
 
 
-def is_abstention(answer: str) -> bool:
-    # A reply that is only citation markers ("[1]") gives no answer at all.
-    text = strip_citations(answer).strip(" .").lower()
-    if not text:
-        return True
+def _sentences(text: str) -> list[str]:
+    return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if re.search(r"[A-Za-z0-9]", s)]
+
+
+def _is_hedge(sentence: str) -> bool:
+    text = sentence.lower().strip(" .")
     return any(re.search(p, text) for p in _ABSTAIN_PATTERNS)
+
+
+def without_hedges(answer: str) -> str:
+    """The answer minus "I don't know" / "not stated" sentences, which make no factual claim."""
+    return " ".join(s for s in _sentences(strip_citations(answer)) if not _is_hedge(s))
+
+
+def is_abstention(answer: str) -> bool:
+    """True when the reply gives no answer: empty, only citation markers, or only "not stated" sentences.
+
+    A real answer with a hedge tacked on ("... every 2 weeks [1]. I don't know ...") is not an abstention.
+    """
+    return not without_hedges(answer)
 
 
 @dataclass
@@ -56,9 +74,12 @@ def build_prompt(query: str, chunks: list[Chunk]) -> str:
 
 def parse_citations(answer: str, chunks: list[Chunk]) -> list[str]:
     cited: list[str] = []
-    for group in re.findall(r"\[([\d,\s]+)\]", answer):
-        for number in re.findall(r"\d+", group):
-            idx = int(number) - 1
+    for group in re.findall(_CITATION, answer):
+        numbers: list[int] = []
+        for start, end in re.findall(r"(\d+)\s*(?:[-\u2013]\s*(\d+))?", group):
+            numbers.extend(range(int(start), int(end or start) + 1))
+        for number in numbers:
+            idx = number - 1
             if 0 <= idx < len(chunks) and chunks[idx].chunk_id not in cited:
                 cited.append(chunks[idx].chunk_id)
     return cited
@@ -110,4 +131,4 @@ class RagSystem:
 
 
 def strip_citations(answer: str) -> str:
-    return re.sub(r"\s*\[[\d,\s]+\]", "", answer).strip()
+    return re.sub(r"\s*\[" + _CITATION_BODY + r"\]", "", answer).strip()

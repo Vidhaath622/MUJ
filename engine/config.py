@@ -48,7 +48,8 @@ class Settings:
         default_factory=lambda: _env("OLLAMA_HOST_URL", _env("OLLAMA_BASE_URL", "http://localhost:11434"))
     )
     groq_api_key: str = field(default_factory=lambda: _env("GROQ_API_KEY", ""))
-    nvidia_api_key: str = field(default_factory=lambda: _env("NVIDIA_API_KEY", ""))
+    # NVIDIA_API_KEY_2 (a newer build.nvidia.com account) wins over the old key, which most models reject.
+    nvidia_api_key: str = field(default_factory=lambda: _env("NVIDIA_API_KEY_2", _env("NVIDIA_API_KEY", "")))
     nvidia_base_url: str = field(default_factory=lambda: _env("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"))
     data_dir: Path = field(default_factory=lambda: Path(_env("RAGSEAL_DATA_DIR", str(ENGINE_DIR / ".data"))))
     packs_dirs: tuple[Path, ...] = field(
@@ -65,6 +66,17 @@ class Settings:
     chunk_chars: int = field(default_factory=lambda: int(_env("RAGSEAL_CHUNK_CHARS", "700")))
     seed: int = 42
     request_timeout_s: float = field(default_factory=lambda: float(_env("RAGSEAL_TIMEOUT_S", "180")))
+    batch_concurrency: int = field(default_factory=lambda: int(_env("RAGSEAL_BATCH_CONCURRENCY", "6")))
+    # Extra Groq keys (GROQ_API_KEY_2, _3, _4) from other accounts: each has its own rate limit.
+    groq_extra_keys: tuple[str, ...] = field(
+        default_factory=lambda: tuple(k for k in (_env(f"GROQ_API_KEY_{i}", "") for i in range(2, 5)) if k)
+    )
+    # How long the primary judge may be waited for before a call overflows to another model.
+    # 0 means overflow as soon as the primary is rate-limited.
+    judge_overflow_wait_s: float = field(default_factory=lambda: float(_env("RAGSEAL_JUDGE_OVERFLOW_WAIT_S", "12")))
+    # Optional separate judge model for interactive calls (live questions, synthetic), on the same
+    # provider as the batch judge; empty means the batch judge serves both.
+    live_judge_model: str = field(default_factory=lambda: _env("RAGSEAL_LIVE_JUDGE_MODEL", ""))
 
     def _has_key(self, provider: str) -> bool:
         return {"nvidia": bool(self.nvidia_api_key), "groq": bool(self.groq_api_key), "ollama": True}[provider]
@@ -76,6 +88,36 @@ class Settings:
         if choice not in PROVIDERS or (role, choice) not in MODEL_DEFAULTS:
             raise ValueError(f"{PROVIDER_ENV[role]}={choice!r} is not supported for the {role}")
         return choice
+
+    def judge_fallback_provider(self, primary: str) -> str | None:
+        """RAGSEAL_JUDGE_FALLBACK_PROVIDER: auto (local Ollama behind a hosted judge) | none | a provider name."""
+        choice = _env("RAGSEAL_JUDGE_FALLBACK_PROVIDER", "auto").lower()
+        if choice == "none":
+            return None
+        if choice == "auto":
+            return "ollama" if primary != "ollama" else None
+        if choice not in PROVIDERS:
+            raise ValueError(f"RAGSEAL_JUDGE_FALLBACK_PROVIDER={choice!r} is not a provider")
+        return choice if choice != primary else None
+
+    def judge_overflow(self, primary: str) -> list[tuple[str, str]]:
+        """RAGSEAL_JUDGE_OVERFLOW: comma-separated provider:model pairs tried when the primary judge is rate-limited.
+
+        Default: the other Groq models behind a Groq primary (each Groq model has its own per-minute limit).
+        "none" disables overflow. Pairs whose provider has no key are skipped.
+        """
+        # gpt-oss-20b is left out: Groq's JSON validation rejects its replies to the judge prompt.
+        default = "groq:qwen/qwen3.8-27b" if primary == "groq" else "none"
+        raw = _env("RAGSEAL_JUDGE_OVERFLOW", default)
+        if raw.lower() == "none":
+            return []
+        pairs = []
+        for item in raw.split(","):
+            provider, _, model = item.strip().partition(":")
+            if provider in PROVIDERS and model and self._has_key(provider):
+                pairs.append((provider, model))
+        primary_model = self.model_for("judge", primary)
+        return [p for p in pairs if p != (primary, primary_model)]
 
     def model_for(self, role: str, provider: str) -> str:
         env_name, default = MODEL_DEFAULTS[(role, provider)]

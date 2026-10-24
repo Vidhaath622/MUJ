@@ -13,10 +13,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 import sqlite3
 import threading
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -26,8 +28,19 @@ import httpx
 from .config import Settings
 
 
+log = logging.getLogger("ragseal.judge")
+
+
 class ModelUnavailable(RuntimeError):
     """The model server is down, a key is missing, or the model has not been pulled."""
+
+
+class RateLimited(ModelUnavailable):
+    """A hosted provider said "too many requests"; `wait` is how long its window needs."""
+
+    def __init__(self, message: str, wait: float):
+        super().__init__(message)
+        self.wait = wait
 
 
 class JudgeError(RuntimeError):
@@ -97,7 +110,9 @@ class OllamaClient:
             raise ModelUnavailable(f"Ollama error {resp.status_code}: {resp.text[:300]}")
         return resp.json()
 
-    def chat(self, model: str, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512) -> Generation:
+    def chat(
+        self, model: str, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512, patient: bool = True
+    ) -> Generation:
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -122,7 +137,7 @@ class OllamaClient:
         return out
 
 
-def _retry_wait(resp: httpx.Response, attempt: int) -> float:
+def _retry_wait(resp: httpx.Response, attempt: int, cap: float = 60.0) -> float:
     """Seconds to wait before retrying: retry-after if given, else Groq's token-window reset, else backoff."""
     for header in ("retry-after", "x-ratelimit-reset-tokens"):
         value = resp.headers.get(header)
@@ -139,7 +154,7 @@ def _retry_wait(resp: httpx.Response, attempt: int) -> float:
                 seconds = float(value)
         except ValueError:
             continue
-        return min(max(seconds, 1.0), 60.0)
+        return min(max(seconds, 1.0), cap)
     return float(min(2**attempt, 30))
 
 
@@ -147,6 +162,7 @@ class OpenAICompatClient:
     """NVIDIA NIM and Groq both speak the OpenAI chat-completions protocol."""
 
     hosted = True
+    _count: dict[str, int] = {}
 
     def __init__(self, name: str, base_url: str, api_key: str, settings: Settings, json_mode: bool):
         self.name = name
@@ -155,6 +171,10 @@ class OpenAICompatClient:
         self._api_key = api_key
         self._http = httpx.Client(base_url=base_url.rstrip("/"), timeout=settings.request_timeout_s)
         self._catalog: tuple[float, set[str]] | None = None
+        OpenAICompatClient._count[name] = OpenAICompatClient._count.get(name, 0) + 1
+        self.label = f"{name}#{OpenAICompatClient._count[name]}"
+        self.usage: dict[str, int] = {}
+        self.daily_caps: dict[str, dict] = {}
 
     def list_models(self) -> set[str]:
         """The provider's live catalog, cached for five minutes. Hosted catalogs retire models without notice."""
@@ -175,9 +195,15 @@ class OpenAICompatClient:
     def has_model(self, model: str) -> bool:
         return model in self.list_models()
 
-    def _post(self, path: str, payload: dict) -> dict:
+    def _note_daily_cap(self, model: str | None, body: str) -> None:
+        """Groq states the per-day token cap and usage only in the text of a 429."""
+        match = re.search(r"tokens per day \(TPD\): Limit (\d+), Used (\d+)", body)
+        if model and match:
+            self.daily_caps[model] = {"limit": int(match.group(1)), "used": int(match.group(2)), "seen_at": time.strftime("%H:%M:%S")}
+
+    def _post(self, path: str, payload: dict, patient: bool = True) -> dict:
         last_error = "no attempt made"
-        for attempt in range(8):
+        for attempt in range(8 if patient else 3):
             try:
                 resp = self._http.post(path, json=payload, headers={"Authorization": f"Bearer {self._api_key}"})
             except httpx.HTTPError as exc:
@@ -187,16 +213,28 @@ class OpenAICompatClient:
             if resp.status_code in (429, 500, 502, 503, 504):
                 # Free tiers rate-limit per minute; retry-after says how long to wait.
                 last_error = f"HTTP {resp.status_code}" + (" (rate limited)" if resp.status_code == 429 else "")
+                if resp.status_code == 429:
+                    self._note_daily_cap(payload.get("model"), resp.text)
+                if resp.status_code == 429 and not patient:
+                    # The judge pool routes around the limit instead of sleeping on it.
+                    # A daily token cap asks for minutes or hours: the pool must see the real wait to
+                    # route around that key instead of retrying it every minute.
+                    raise RateLimited(f"{self.name} rate limited", _retry_wait(resp, attempt, cap=6 * 3600))
                 time.sleep(_retry_wait(resp, attempt))
                 continue
             if resp.status_code in (401, 403):
                 raise ModelUnavailable(f"{self.name} rejected the API key (HTTP {resp.status_code})")
+            if resp.status_code == 400 and ("json_validate_failed" in resp.text or "failed_generation" in resp.text):
+                # The model answered, just not with valid JSON: a bad reply, not a provider outage.
+                raise JudgeError(f"{self.name} returned invalid JSON (HTTP 400)")
             if resp.status_code >= 400:
                 raise ModelUnavailable(f"{self.name} error {resp.status_code}: {resp.text[:300]}")
             return resp.json()
         raise ModelUnavailable(f"{self.name} request failed after retries: {last_error}")
 
-    def chat(self, model: str, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512) -> Generation:
+    def chat(
+        self, model: str, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512, patient: bool = True
+    ) -> Generation:
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -210,8 +248,9 @@ class OpenAICompatClient:
             # Grading needs little reasoning; low effort keeps calls fast and inside per-minute token limits.
             payload["reasoning_effort"] = "low"
         start = time.perf_counter()
-        data = self._post("/chat/completions", payload)
+        data = self._post("/chat/completions", payload, patient)
         latency = int((time.perf_counter() - start) * 1000)
+        self.usage[model] = self.usage.get(model, 0) + int((data.get("usage") or {}).get("total_tokens", 0))
         text = data["choices"][0]["message"].get("content") or ""
         return Generation(text=_strip_thinking(text), model=model, latency_ms=latency)
 
@@ -245,8 +284,8 @@ class ChatModel:
     def hosted(self) -> bool:
         return self.client.hosted
 
-    def chat(self, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512) -> Generation:
-        return self.client.chat(self.model, messages, schema=schema, num_predict=num_predict)
+    def chat(self, messages: list[dict], *, schema: dict | None = None, num_predict: int = 512, patient: bool = True) -> Generation:
+        return self.client.chat(self.model, messages, schema=schema, num_predict=num_predict, patient=patient)
 
     def ready(self) -> tuple[bool, str | None]:
         if isinstance(self.client, UnavailableClient):
@@ -299,13 +338,44 @@ class JudgeCache:
 
 
 class Judge:
-    """JSON-returning judge with a disk cache, on whichever provider the settings choose."""
+    """JSON-returning judge with a disk cache and a small pool of models.
 
-    def __init__(self, chat_model: ChatModel, cache_path: Path):
+    The primary model (gpt-oss-120b by default) judges everything it can. When it is
+    rate-limited for longer than `max_wait_s`, a call overflows to the next pool member
+    (other hosted models, then local Ollama as the last resort). The cache is keyed by
+    model, and every call records which model answered, so each result says exactly who
+    judged it and batches can report how often overflow happened.
+    """
+
+    def __init__(
+        self,
+        chat_model: ChatModel,
+        cache_path: Path,
+        fallback: ChatModel | None = None,
+        overflow: tuple[ChatModel, ...] = (),
+        max_inflight: int = 3,
+        max_wait_s: float = 12.0,
+        replicas: tuple[ChatModel, ...] = (),
+    ):
+        """`replicas` are the primary model under extra API keys: the same judge, more rate limit."""
         self.chat_model = chat_model
+        self.fallback = fallback
+        self.primary = [chat_model, *replicas]
+        self.members = [*self.primary, *overflow, *([fallback] if fallback is not None else [])]
         self.cache = JudgeCache(cache_path)
+        self.max_wait_s = max_wait_s
+        self._lock = threading.Lock()
+        self._slots = {id(m): threading.BoundedSemaphore(max_inflight if m.hosted else 1) for m in self.members}
+        # Batch calls may not take the last slot of a hosted model: it is kept for interactive calls.
+        self._batch_slots = {id(m): threading.BoundedSemaphore(max(1, max_inflight - 1) if m.hosted else 1) for m in self.members}
+        self._interactive_waiting = 0
+        self._cooldown: dict[int, float] = {}
+        self._ready: dict[int, tuple[float, bool]] = {}
+        self._local = threading.local()
         self.calls = 0
         self.cache_hits = 0
+        self.fallback_calls = 0
+        self.rate_limited = 0
 
     @property
     def mode(self) -> str:
@@ -319,30 +389,189 @@ class Judge:
     def provider(self) -> str:
         return self.chat_model.provider
 
-    def ask(self, system: str, user: str, schema: dict) -> dict:
-        key = JudgeCache.key(self.provider, self.model, system, user, json.dumps(schema, sort_keys=True))
-        cached = self.cache.get(key)
-        if cached is not None:
-            self.cache_hits += 1
-            return cached
-        self.calls += 1
+    # ---------------------------------------------------- per-case tracking
+
+    def start_tracking(self) -> None:
+        self._local.used = []
+
+    @contextmanager
+    def interactive(self):
+        """Mark this thread's judge calls as interactive (a person is waiting): batch calls yield to them."""
+        previous = getattr(self._local, "interactive", False)
+        self._local.interactive = True
+        try:
+            yield
+        finally:
+            self._local.interactive = previous
+
+    def used(self) -> dict:
+        """Who judged since start_tracking() on this thread."""
+        members = getattr(self._local, "used", []) or [self.chat_model]
+        # One entry per (provider, model): extra API keys for the same model are the same judge.
+        models = list({(m.provider, m.model): m for m in members}.values())
+        return {
+            "judge_model": " + ".join(m.model for m in models),
+            "evaluation_mode": "hosted" if any(m.hosted for m in models) else "local",
+            "judge_models_used": [f"{m.provider}:{m.model}" for m in models],
+            "judge_fallback_used": any(not self._is_primary(m) for m in members),
+        }
+
+    def _is_primary(self, member: ChatModel) -> bool:
+        return any(member is p for p in self.primary)
+
+    def _record(self, member: ChatModel) -> None:
+        if not hasattr(self._local, "used"):
+            self._local.used = []
+        self._local.used.append(member)
+
+    # ------------------------------------------------------------ calling
+
+    @staticmethod
+    def _key(member: ChatModel, system: str, user: str, schema: dict) -> str:
+        return JudgeCache.key(member.provider, member.model, system, user, json.dumps(schema, sort_keys=True))
+
+    def _member_ready(self, member: ChatModel) -> bool:
+        if self._is_primary(member):
+            return True
+        now = time.time()
+        cached = self._ready.get(id(member))
+        if cached and now - cached[0] < 60:
+            return cached[1]
+        ok = member.ready()[0]
+        self._ready[id(member)] = (now, ok)
+        return ok
+
+    def _call(self, member: ChatModel, system: str, user: str, schema: dict) -> dict:
+        terse = "" if member.hosted else "\nKeep every reason under 8 words."  # a local model's time is mostly output tokens
         messages = [
-            {"role": "system", "content": system + "\nRespond with one JSON object only, matching this JSON schema: " + json.dumps(schema)},
+            {"role": "system", "content": system + terse + "\nRespond with one JSON object only, matching this JSON schema: " + json.dumps(schema)},
             {"role": "user", "content": user},
         ]
         last_error: Exception | None = None
         for _ in range(2):
-            raw = self.chat_model.chat(messages, schema=schema, num_predict=800).text
             try:
+                raw = member.chat(messages, schema=schema, num_predict=800 if member.hosted else 500, patient=False).text
+                with self._lock:
+                    self.calls += 1
                 result = _parse_json(raw)
             except JudgeError as exc:
                 last_error = exc
                 continue
+            required = schema.get("required") or []
+            if isinstance(result, list) and len(required) == 1:
+                # Some models answer a one-field schema with the bare list itself.
+                result = {required[0]: result}
             if isinstance(result, dict):
-                self.cache.put(key, result)
                 return result
             last_error = JudgeError(f"judge returned {type(result).__name__}, expected an object")
         raise last_error or JudgeError("judge failed")
+
+    def ask(self, system: str, user: str, schema: dict) -> dict:
+        # A cached verdict from the primary first; overflow members' cache only if the primary never judged it.
+        # The cache key has no API key in it, so every replica of the primary shares one entry.
+        for member in [self.chat_model, *self.members[len(self.primary):]]:
+            cached = self.cache.get(self._key(member, system, user, schema))
+            if cached is not None:
+                with self._lock:
+                    self.cache_hits += 1
+                self._record(member)
+                return cached
+
+        interactive = getattr(self._local, "interactive", False)
+        if interactive:
+            with self._lock:
+                self._interactive_waiting += 1
+        try:
+            return self._ask_live(system, user, schema, interactive)
+        finally:
+            if interactive:
+                with self._lock:
+                    self._interactive_waiting -= 1
+
+    def _ask_live(self, system: str, user: str, schema: dict, interactive: bool) -> dict:
+        max_wait = min(self.max_wait_s, 3.0) if interactive else self.max_wait_s
+        deadline = time.time() + 300
+        last_error: Exception | None = None
+        broken: set[int] = set()  # members that failed for a reason other than a rate limit
+        while time.time() < deadline:
+            if not interactive and self._interactive_waiting:
+                time.sleep(0.2)  # someone is waiting on a live answer: let their call go first
+                continue
+            now = time.time()
+            usable = [m for m in self.members if id(m) not in broken and self._member_ready(m)]
+            if not usable:
+                raise last_error or ModelUnavailable("no judge model is available")
+            primaries = [m for m in usable if self._is_primary(m)]
+            open_primaries = [m for m in primaries if self._cooldown.get(id(m), 0) <= now]
+            primary_wait = min((self._cooldown.get(id(m), 0) - now for m in primaries), default=float("inf"))
+            if open_primaries:
+                candidates = open_primaries
+            elif primary_wait <= max_wait:
+                time.sleep(max(0.05, primary_wait))  # a short wait beats switching judges
+                continue
+            else:
+                # A rate limit overflows to other hosted models only. The local model is the last
+                # resort for when every hosted judge is down: it is slow and shares the GPU with the
+                # generator under test.
+                hosted_usable = [m for m in usable if m.hosted]
+                pool = [m for m in (hosted_usable or usable) if not self._is_primary(m)]
+                candidates = [m for m in pool if self._cooldown.get(id(m), 0) <= now]
+                if not candidates:
+                    reopen = min(self._cooldown.get(id(m), now) for m in (hosted_usable or usable))
+                    local = [m for m in usable if not m.hosted]
+                    # Every hosted judge is rate-limited (a daily cap can mean hours). A person waiting
+                    # gets the local judge at once; a batch only once the wait is over ten minutes.
+                    if local and reopen - now > (max_wait if interactive else 600):
+                        candidates = local
+                    else:
+                        time.sleep(min(2.0, max(0.1, reopen - now)))
+                        continue
+            member = None
+            for m in candidates:
+                if not interactive and not self._batch_slots[id(m)].acquire(blocking=False):
+                    continue
+                if self._slots[id(m)].acquire(blocking=False):
+                    member = m
+                    break
+                if not interactive:
+                    self._batch_slots[id(m)].release()
+            if member is None:
+                time.sleep(0.1)  # every open member already has its maximum calls in flight
+                continue
+            slot = self._slots[id(member)]
+            batch_slot = None if interactive else self._batch_slots[id(member)]
+            try:
+                result = self._call(member, system, user, schema)
+            except RateLimited as exc:
+                with self._lock:
+                    self._cooldown[id(member)] = time.time() + exc.wait
+                    self.rate_limited += 1
+                last_error = exc
+                continue
+            except ModelUnavailable as exc:
+                log.warning("judge %s:%s unavailable for this call: %s", member.provider, member.model, exc)
+                broken.add(id(member))
+                last_error = exc
+                continue
+            except JudgeError as exc:
+                # Two unreadable replies from this member: let another model try before giving up.
+                log.warning("judge %s:%s gave unreadable output: %s", member.provider, member.model, exc)
+                broken.add(id(member))
+                last_error = exc
+                if not any(id(m) not in broken for m in self.members):
+                    raise
+                continue
+            finally:
+                slot.release()
+                if batch_slot is not None:
+                    batch_slot.release()
+            self.cache.put(self._key(member, system, user, schema), result)
+            if not self._is_primary(member):
+                with self._lock:
+                    self.fallback_calls += 1
+            self._record(member)
+            return result
+        raise ModelUnavailable(f"no judge available within 300 s: {last_error}")
 
 
 # ------------------------------------------------------------------ factory
@@ -386,6 +615,11 @@ class Models:
     generator: ChatModel
     judge: ChatModel
     embedder: EmbedModel
+    judge_fallback: ChatModel | None = None
+    judge_overflow: tuple[ChatModel, ...] = ()
+    judge_replicas: tuple[ChatModel, ...] = ()
+    live_judge: ChatModel | None = None
+    live_replicas: tuple[ChatModel, ...] = ()
 
 
 def build_models(settings: Settings) -> Models:
@@ -397,11 +631,29 @@ def build_models(settings: Settings) -> Models:
             clients[provider] = _client(provider, settings, ollama)
         return clients[provider]
 
+    extra_groq = [
+        OpenAICompatClient("groq", "https://api.groq.com/openai/v1", key, settings, json_mode=True) for key in settings.groq_extra_keys
+    ]
     gen_provider = settings.provider_for("generator")
     judge_provider = settings.provider_for("judge")
     embed_provider = settings.provider_for("embeddings")
+    fallback_provider = settings.judge_fallback_provider(judge_provider)
     return Models(
         generator=ChatModel(client(gen_provider), settings.model_for("generator", gen_provider)),
         judge=ChatModel(client(judge_provider), settings.model_for("judge", judge_provider)),
         embedder=EmbedModel(client(embed_provider), settings.model_for("embeddings", embed_provider)),
+        judge_fallback=(
+            ChatModel(client(fallback_provider), settings.model_for("judge", fallback_provider)) if fallback_provider else None
+        ),
+        judge_overflow=tuple(
+            ChatModel(c, model)
+            for provider, model in settings.judge_overflow(judge_provider)
+            for c in [client(provider), *(extra_groq if provider == "groq" else [])]
+        ),
+        judge_replicas=tuple(ChatModel(c, settings.model_for("judge", "groq")) for c in extra_groq) if judge_provider == "groq" else (),
+        live_judge=ChatModel(client(judge_provider), settings.live_judge_model) if settings.live_judge_model else None,
+        live_replicas=(
+            tuple(ChatModel(c, settings.live_judge_model) for c in extra_groq)
+            if settings.live_judge_model and judge_provider == "groq" else ()
+        ),
     )

@@ -64,6 +64,7 @@ def test_retrieval_failure_proven_by_replay(make_engine):
     assert result["root_cause"]["category"] == "RETRIEVAL_FAILURE"
     assert result["replay"]["answer"] == "Primary caregivers get 16 weeks."
     assert result["replay"]["answer_accuracy"] == 1.0
+    assert result["stale_chunk_ids"] == []
     assert "retriever is at fault" in result["replay"]["verdict_effect"]
     roles = {e["role"] for e in result["root_cause"]["evidence"]}
     assert {"gold_missing", "retrieved_instead"} <= roles
@@ -154,3 +155,16 @@ def test_batch_aggregates(make_engine):
     assert set(batch["root_cause_breakdown"]) == {
         "CLEAN_PASS", "RETRIEVAL_FAILURE", "GENERATION_HALLUCINATION", "COMPOUND_FAILURE", "NEEDS_REVIEW", "UNRESOLVED",
     }
+
+
+def test_rejudge_keeps_answers_and_batch_id(make_engine):
+    q = "How many days paid leave per calendar year?"
+    engine = make_engine({q: "Employees receive 20 days paid leave [1]."})
+    doc_id, chunk_ids = ingest(engine)
+    batch = engine.evaluate_batch("usr_a", [doc_id], [{"test_id": "t1", "question": q, "ground_truth_answer": "20 days",
+                                                         "gold_chunk_ids": [chunk_ids[0]]}])
+    engine.rag.generator.answers[q] = "a different answer would show up if generation ran again"
+    again = engine.rejudge("usr_a", batch)
+    assert again["batch_id"] == batch["batch_id"] and again["rejudged"]["judge"].endswith("fake-judge")
+    assert again["results"][0]["generated_answer"] == batch["results"][0]["generated_answer"]
+    assert again["results"][0]["category"] == "CLEAN_PASS"

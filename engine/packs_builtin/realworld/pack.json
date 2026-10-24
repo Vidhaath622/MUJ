@@ -1,0 +1,390 @@
+{
+  "pack_id": "realworld",
+  "name": "Real documents (IRS)",
+  "description": "Four real, public IRS news releases: standard mileage rates for 2025 and 2026, and retirement plan limits for 2025 and 2026. The 2026 releases supersede the 2025 ones.",
+  "demo_data": false,
+  "license": "U.S. federal government works, public domain in the United States (17 U.S.C. 105). Text extracted verbatim from the release body.",
+  "snapshot_note": "Snapshot of the four releases as fetched on 2026-10-24. Later IRS changes (for example any mid-2026 mileage revision) are not in this corpus, so ground truths are as of these documents.",
+  "documents": [
+    {
+      "file": "irs_mileage_rates_2026_IR-2025-128.md",
+      "source_url": "https://www.irs.gov/newsroom/irs-sets-2026-business-standard-mileage-rate-at-725-cents-per-mile-up-25-cents",
+      "published": "2025-12-29",
+      "accessed": "2026-10-24"
+    },
+    {
+      "file": "irs_mileage_rates_2025_IR-2024-312.md",
+      "superseded_by": "irs_mileage_rates_2026_IR-2025-128.md",
+      "source_url": "https://www.irs.gov/newsroom/irs-increases-the-standard-mileage-rate-for-business-use-in-2025-key-rate-increases-3-cents-to-70-cents-per-mile",
+      "published": "2024-12-19",
+      "accessed": "2026-10-24"
+    },
+    {
+      "file": "irs_retirement_limits_2026_IR-2025-111.md",
+      "source_url": "https://www.irs.gov/newsroom/401k-limit-increases-to-24500-for-2026-ira-limit-increases-to-7500",
+      "published": "2025-11-13",
+      "accessed": "2026-10-24"
+    },
+    {
+      "file": "irs_retirement_limits_2025_IR-2024-285.md",
+      "superseded_by": "irs_retirement_limits_2026_IR-2025-111.md",
+      "source_url": "https://www.irs.gov/newsroom/401k-limit-increases-to-23500-for-2025-ira-limit-remains-7000",
+      "published": "2024-11-01",
+      "accessed": "2026-10-24"
+    }
+  ],
+  "risk_rules": [
+    "Quote the current year's IRS figure; a superseded release's value is wrong even though it is real.",
+    "Do not state limits the releases do not give; abstain instead."
+  ],
+  "test_cases": [
+    {
+      "test_id": "real_01",
+      "question": "What is the IRS standard mileage rate for business use of a car?",
+      "ground_truth_answer": "72.5 cents per mile",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "72.5 cents per mile driven for business use, up 2.5 cents from 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "70 cents per mile driven for business use, up 3 cents from 2024."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_02",
+      "question": "What is the IRS standard mileage rate for medical purposes?",
+      "ground_truth_answer": "20.5 cents per mile",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "20.5 cents per mile driven for medical purposes, down a half cent from 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "21 cents per mile driven for medical purposes, the same as in 2024."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_03",
+      "question": "How much can an employee contribute to a 401(k) plan in a year?",
+      "ground_truth_answer": "$24,500",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The annual contribution limit for employees who participate in 401(k), 403(b), governmental 457 plans, and the federal government’s Thrift Savings Plan is increased to $24,500, up from $23,500 for 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The annual contribution limit for employees who participate in 401(k), 403(b), governmental 457 plans, and the federal government’s Thrift Savings Plan is increased to $23,500, up from $23,000."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_04",
+      "question": "What is the annual contribution limit for an IRA?",
+      "ground_truth_answer": "$7,500",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The limit on annual contributions to an IRA is increased to $7,500 from $7,000."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The limit on annual contributions to an IRA remains $7,000."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_05",
+      "question": "What is the catch-up contribution limit for 401(k) participants aged 50 and over?",
+      "ground_truth_answer": "$8,000",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The catch-up contribution limit that generally applies for employees aged 50 and over who participate in most 401(k), 403(b), governmental 457 plans, and the federal government’s Thrift Savings Plan is increased to $8,000, up from $7,500 for 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The catch-up contribution limit that generally applies for employees aged 50 and over who participate in most 401(k), 403(b), governmental 457 plans, and the federal government’s Thrift Savings Plan remains $7,500 for 2025."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_06",
+      "question": "What is the IRA deduction phase-out range for a single taxpayer covered by a workplace retirement plan?",
+      "ground_truth_answer": "Between $81,000 and $91,000",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "For single taxpayers covered by a workplace retirement plan, the phase-out range is increased to between $81,000 and $91,000, up from between $79,000 and $89,000 for 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "For single taxpayers covered by a workplace retirement plan, the phase-out range is increased to between $79,000 and $89,000, up from between $77,000 and $87,000."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_07",
+      "question": "What is the Roth IRA income phase-out range for singles and heads of household?",
+      "ground_truth_answer": "Between $153,000 and $168,000",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The income phase-out range for taxpayers making contributions to a Roth IRA is increased to between $153,000 and $168,000 for singles and heads of household, up from between $150,000 and $165,000 for 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The income phase-out range for taxpayers making contributions to a Roth IRA is increased to between $150,000 and $165,000 for singles and heads of household, up from between $146,000 and $161,000."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_08",
+      "question": "How much can individuals generally contribute to a SIMPLE retirement account?",
+      "ground_truth_answer": "$17,000",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The amount individuals can generally contribute to their SIMPLE retirement accounts is increased to $17,000, up from $16,500 for 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The amount individuals can generally contribute to their SIMPLE retirement accounts is increased to $16,500, up from $16,000."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_09",
+      "question": "What is the IRA catch-up contribution limit for people aged 50 and over?",
+      "ground_truth_answer": "$1,100",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The IRA catch‑up contribution limit for individuals aged 50 and over was amended under the SECURE 2.0 Act of 2022 (SECURE 2.0) to include an annual cost‑of‑living adjustment is increased to $1,100, up from $1,000 for 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The IRA catch‑up contribution limit for individuals aged 50 and over was amended under the SECURE 2.0 Act of 2022 (SECURE 2.0) to include an annual cost‑of‑living adjustment but remains $1,000 for 2025."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_10",
+      "question": "What is the Saver's Credit income limit for married couples filing jointly?",
+      "ground_truth_answer": "$80,500",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The income limit for the Saver’s Credit (also known as the Retirement Savings Contributions Credit) for low- and moderate-income workers is $80,500 for married couples filing jointly, up from $79,000 for 2025; $60,375 for heads of household, up from $59,250 for 2025; and $40,250 for singles and married individuals filing separately, up from $39,500 for 2025."
+        }
+      ],
+      "stale": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The income limit for the Saver’s Credit (also known as the Retirement Savings Contributions Credit) for low- and moderate-income workers is $79,000 for married couples filing jointly, up from $76,500; $59,250 for heads of household, up from $57,375; and $39,500 for singles and married individuals filing separately, up from $38,250."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_11",
+      "question": "What is the standard mileage rate for driving in service of charitable organizations?",
+      "ground_truth_answer": "14 cents per mile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "14 cents per mile driven in service of charitable organizations, equal to the rate in 2025."
+        },
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "14 cents per mile driven in service of charitable organizations, equal to the rate in 2024."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_12",
+      "question": "Do the IRS standard mileage rates apply to electric and hybrid vehicles?",
+      "ground_truth_answer": "Yes: they apply to fully-electric and hybrid automobiles as well as gasoline and diesel-powered vehicles",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "The rates apply to fully-electric and hybrid automobiles, as well as gasoline and diesel-powered vehicles."
+        },
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "The rates apply to fully-electric and hybrid automobiles, as well as gasoline and diesel-powered vehicles."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_13",
+      "question": "If a taxpayer uses the standard mileage rate for a leased vehicle, for how long must they keep using that method?",
+      "ground_truth_answer": "For the entire lease period, including renewals",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "For a leased vehicle, taxpayers using the standard mileage rate must employ that method for the entire lease period, including renewals."
+        },
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "For a leased vehicle, taxpayers using the standard mileage rate must employ that method for the entire lease period, including renewals."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_14",
+      "question": "What is the business standard mileage rate based on?",
+      "ground_truth_answer": "An annual study of the fixed and variable costs of operating an automobile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "While the mileage rate for charitable use is set by statute, the mileage rate for business use is based on an annual study of the fixed and variable costs of operating an automobile."
+        },
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "While the mileage rate for charitable use is set by statute, the mileage rate for business use is based on an annual study of the fixed and variable costs of operating an automobile."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_15",
+      "question": "When must a taxpayer who owns a vehicle choose to use the standard mileage rate for it?",
+      "ground_truth_answer": "In the first year the automobile is available for business use",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "Taxpayers using the standard mileage rate for a vehicle they own and use for business must choose to use the rate in the first year the automobile is available for business use."
+        },
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "Taxpayers using the standard mileage rate for a vehicle they own and use for business must choose to use the rate in the first year the automobile is available for business use."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_16",
+      "question": "Which IRS notice contains the optional 2026 standard mileage rates?",
+      "ground_truth_answer": "Notice 2026-10",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "Notice-2026-10 PDF contains the optional 2026 standard mileage rates, as well as the maximum automobile cost used to calculate mileage reimbursement allowances under a fixed-and variable rate plan."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_17",
+      "question": "Which IRS notice gives the technical guidance on 2026 retirement plan cost-of-living adjustments?",
+      "ground_truth_answer": "Notice 2025-67",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The IRS today also issued technical guidance regarding all cost‑of‑living adjustments affecting dollar limitations for pension plans and other retirement-related items for tax year 2026 in Notice 2025-67 PDF, posted today on IRS.gov."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_18",
+      "question": "Including the catch-up, up to how much can 401(k) participants aged 50 and older generally contribute each year starting in 2026?",
+      "ground_truth_answer": "$32,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "Therefore, participants in most 401(k), 403(b), governmental 457 plans and the federal government’s Thrift Savings Plan who are 50 and older generally can contribute up to $32,500 each year, starting in 2026."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_19",
+      "question": "What is the IRS standard mileage rate for motorcycles?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "note": "The releases cover cars, vans, pickups and panel trucks only.",
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_20",
+      "question": "What is the maximum fair market value of an employer-provided automobile for 2026?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "note": "The 2026 release says Notice 2026-10 provides it but does not state the number: a tempting trap.",
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_21",
+      "question": "What is the 2026 contribution limit for a health savings account (HSA)?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "hand"
+    },
+    {
+      "test_id": "real_22",
+      "question": "What will the business standard mileage rate be in 2027?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "hand"
+    }
+  ]
+}

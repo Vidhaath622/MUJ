@@ -12,14 +12,9 @@ from dataclasses import dataclass, field
 from .ingest import Chunk
 from .llm import Judge, JudgeError, ModelUnavailable
 from .rag import RagSystem, is_abstention
-from .scoring import (
-    MetricResult,
-    score_answer_accuracy,
-    score_context_relevance,
-    score_faithfulness,
-)
-from .store import VectorStore
-from .verdict import Facts, decide, needs_replay
+from .scoring import MetricResult, score_case
+from .store import ScoredChunk, VectorStore
+from .verdict import FAILURE_TYPE_TEXT, Facts, classify_failure, decide, needs_replay
 
 SUPPORT_SYSTEM = (
     "Decide whether the passage states the ground-truth answer to the question. "
@@ -41,17 +36,16 @@ class TestCase:
     stale_chunk_ids: list[str] = field(default_factory=list)
     type: str = "factoid"  # factoid | unanswerable | stale | distractor
     manual_answer: str | None = None
+    distractor_document_ids: list[str] = field(default_factory=list)
+    # Fault injection: use exactly these chunks as the retrieved context instead of searching.
+    forced_chunk_ids: list[str] | None = None
+    true_failure_type: str | None = None  # the injected fault, for the confusion matrix
+    # Re-judging a finished result: reuse its retrieval, answer and replay answer; only the judge runs.
+    stored: dict | None = None
 
     @property
     def unanswerable(self) -> bool:
         return self.type == "unanswerable"
-
-
-def _safe(fn, *args, **kwargs) -> MetricResult | None:
-    try:
-        return fn(*args, **kwargs)
-    except JudgeError:
-        return None
 
 
 class Evaluator:
@@ -82,10 +76,17 @@ class Evaluator:
 
     # -------------------------------------------------------------- replay
 
-    def replay(self, case: TestCase, gold_chunks: list[Chunk]) -> dict:
-        answer, citations, latency = self.rag.generate(case.question, gold_chunks)
-        faith = score_faithfulness(self.judge, answer, gold_chunks)
-        acc = score_answer_accuracy(self.judge, case.question, answer, case.ground_truth, case.unanswerable)
+    def replay(self, case: TestCase, gold_chunks: list[Chunk], counter: dict | None = None) -> dict:
+        stored = (case.stored or {}).get("replay")
+        if stored and stored.get("context_chunk_ids") == [c.chunk_id for c in gold_chunks]:
+            answer, citations, latency = stored["answer"], stored.get("citations", []), stored.get("latency_ms", 0)
+        else:
+            answer, citations, latency = self.rag.generate(case.question, gold_chunks)
+        scores = score_case(self.judge, case.question, answer, gold_chunks, case.ground_truth, case.unanswerable, with_relevance=False)
+        faith, acc = scores.faithfulness, scores.accuracy
+        if counter is not None:
+            counter["judge_calls"] += scores.judge_calls
+            counter["rule_shortcuts"] += scores.rule_shortcuts
         return {
             "answer": answer,
             "answer_accuracy": acc.score,
@@ -99,20 +100,40 @@ class Evaluator:
 
     # ------------------------------------------------------------ evaluate
 
-    def evaluate(self, owner_id: str, case: TestCase, document_ids: list[str]) -> dict:
+    def evaluate(self, owner_id: str, case: TestCase, document_ids: list[str], top_k: int | None = None) -> dict:
         started = time.perf_counter()
-        if case.manual_answer:
-            retrieved = self.rag.retrieve(owner_id, case.question, document_ids)
+        self.judge.start_tracking()
+        counter = {"judge_calls": 0, "rule_shortcuts": 0}
+        if case.stored is not None:
+            similarity = {c["chunk_id"]: c.get("similarity", 0.0) for c in case.stored.get("retrieved_chunks", [])}
+            chunk_ids = case.stored["retrieved_chunk_ids"]
+            retrieved = [ScoredChunk(c, similarity.get(c.chunk_id, 0.0)) for c in self.store.get_chunks(owner_id, chunk_ids)]
+            answer, citations, gen_ms = case.stored["generated_answer"], case.stored.get("citations", []), case.stored.get("generation_ms", 0)
+        elif case.forced_chunk_ids is not None:
+            retrieved = [ScoredChunk(c, 0.0) for c in self.store.get_chunks(owner_id, case.forced_chunk_ids)]
+            if case.manual_answer:
+                answer, citations, gen_ms = case.manual_answer, [], 0
+            else:
+                answer, citations, gen_ms = self.rag.generate(case.question, [s.chunk for s in retrieved])
+        elif case.manual_answer:
+            retrieved = self.rag.retrieve(owner_id, case.question, document_ids, top_k)
             answer, citations, gen_ms = case.manual_answer, [], 0
         else:
-            rag = self.rag.ask(owner_id, case.question, document_ids)
+            rag = self.rag.ask(owner_id, case.question, document_ids, top_k)
             retrieved, answer, citations, gen_ms = rag.retrieved, rag.answer, rag.citations, rag.generation_ms
         chunks = [s.chunk for s in retrieved]
         retrieved_ids = [c.chunk_id for c in chunks]
 
-        relevance, per_chunk = score_context_relevance(self.judge, case.question, chunks)
-        faith = _safe(score_faithfulness, self.judge, answer, chunks)
-        acc = _safe(score_answer_accuracy, self.judge, case.question, answer, case.ground_truth, case.unanswerable)
+        judge_started = time.perf_counter()
+        try:
+            scores = score_case(self.judge, case.question, answer, chunks, case.ground_truth, case.unanswerable)
+            relevance, per_chunk, faith, acc = scores.relevance, scores.per_chunk, scores.faithfulness, scores.accuracy
+            counter["judge_calls"] += scores.judge_calls
+            counter["rule_shortcuts"] += scores.rule_shortcuts
+        except JudgeError:
+            relevance, per_chunk, faith, acc = None, [], None, None
+        if relevance is None:
+            relevance = MetricResult("context_relevance", None, "The judge returned an unreadable result.", "model")
         if faith is None:
             faith = MetricResult("faithfulness", None, "The judge returned an unreadable result.", "model", {"claims": [], "hallucinated_claims": []})
         if acc is None:
@@ -139,18 +160,21 @@ class Evaluator:
             faithful=None if faith.score is None else faith.passed,
             correct=None if acc.score is None else acc.passed,
             stale_retrieved=bool(stale_retrieved),
+            contradicted_claims=any(c["verdict"] == "contradicted" for c in faith.extra.get("claims", [])),
+            distractor_retrieved=bool(chunks) and chunks[0].document_id in case.distractor_document_ids,
         )
 
         replay = None
         if needs_replay(facts):
             try:
-                replay = self.replay(case, gold_chunks)
+                replay = self.replay(case, gold_chunks, counter)
                 facts.replay_ran = True
                 facts.replay_correct = replay["passed"]
                 facts.replay_failed = replay["answer_accuracy"] is None
             except JudgeError:
                 facts.replay_failed = True
         verdict = decide(facts)
+        failure_type, stage = classify_failure(facts, verdict.category)
         if replay is not None:
             replay["verdict_effect"] = verdict.verdict_effect or (
                 "Replay with the gold chunk answered correctly." if replay["passed"] else "Replay with the gold chunk was still wrong."
@@ -158,6 +182,7 @@ class Evaluator:
             replay.pop("passed")
 
         relevance_by_id = {c["chunk_id"]: c for c in per_chunk}
+        filenames = {d.document_id: d.filename for d in self.store.list_documents(owner_id)}
         retrieved_out = []
         for scored in retrieved:
             graded = relevance_by_id.get(scored.chunk.chunk_id, {})
@@ -165,6 +190,7 @@ class Evaluator:
                 {
                     "chunk_id": scored.chunk.chunk_id,
                     "document_id": scored.chunk.document_id,
+                    "filename": filenames.get(scored.chunk.document_id),
                     "text": scored.chunk.text,
                     "page": scored.chunk.page,
                     "relevance_score": graded.get("relevance_score", 0.0),
@@ -185,6 +211,7 @@ class Evaluator:
             "case_type": case.type,
             "query": case.question,
             "generated_answer": answer,
+            **({"true_failure_type": case.true_failure_type, "injected": True} if case.true_failure_type else {}),
             "ground_truth": case.ground_truth if not case.unanswerable else None,
             "expected_abstain": case.unanswerable,
             "retrieved_chunks": retrieved_out,
@@ -199,17 +226,26 @@ class Evaluator:
                 "summary": verdict.summary,
                 "recommended_action": verdict.recommended_action,
                 "evidence": evidence,
+                "failure_type": failure_type,
+                "stage": stage,
+                "failure_type_text": FAILURE_TYPE_TEXT[failure_type],
             },
             "gold_chunk_ids": gold_ids,
+            "stale_chunk_ids": list(case.stale_chunk_ids),
             "gold_source": gold_source,
             "retrieved_chunk_ids": retrieved_ids,
             "gold_retrieved": gold_retrieved,
             "replay": replay,
-            "evaluation_mode": self.judge.mode,
-            "judge_model": self.judge.model,
+            **self.judge.used(),
             "generator_model": self.rag.generator_model,
             "generation_ms": gen_ms,
             "duration_ms": int((time.perf_counter() - started) * 1000),
+            "timing": {
+                "generation_ms": gen_ms,
+                "judge_ms": int((time.perf_counter() - judge_started) * 1000),
+                "total_ms": int((time.perf_counter() - started) * 1000),
+                **counter,
+            },
         }
 
     def _evidence(self, gold_chunks, retrieved_ids, retrieved_out, faith, stale_retrieved, owner_id, gold_source) -> list[dict]:
@@ -254,8 +290,12 @@ def failed_result(case: TestCase, error: Exception, judge: Judge, generator_mode
             "summary": f"This case could not be evaluated ({error}).",
             "recommended_action": "Re-run the batch; judge calls already made are cached.",
             "evidence": [],
+            "failure_type": "UNRESOLVED",
+            "stage": "unknown",
+            "failure_type_text": FAILURE_TYPE_TEXT["UNRESOLVED"],
         },
         "gold_chunk_ids": list(case.gold_chunk_ids),
+        "stale_chunk_ids": list(case.stale_chunk_ids),
         "gold_source": "test_case" if case.gold_chunk_ids else None,
         "retrieved_chunk_ids": [],
         "gold_retrieved": False,
@@ -271,7 +311,7 @@ def failed_result(case: TestCase, error: Exception, judge: Judge, generator_mode
 
 def summarize_batch(results: list[dict]) -> dict:
     """Aggregates for /api/evaluate/batch. Averages skip unmeasured (null) scores and report n."""
-    from .verdict import CATEGORIES
+    from .verdict import CATEGORIES, FAILURE_TYPES
 
     def avg(metric: str) -> tuple[float | None, int]:
         values = [r["metrics"][metric]["score"] for r in results if r["metrics"][metric]["score"] is not None]
@@ -298,6 +338,9 @@ def summarize_batch(results: list[dict]) -> dict:
             "n_answer_accuracy": acc_n,
         },
         "root_cause_breakdown": breakdown,
+        "failure_type_breakdown": {
+            t: sum(r["root_cause"].get("failure_type") == t for r in results) for t in FAILURE_TYPES
+        },
         "replays_run": sum(r["replay"] is not None for r in results),
         "gold_retrieval_rate": (
             round(sum(r["gold_retrieved"] for r in results if r["gold_chunk_ids"] and not r.get("error")) / n, 3)

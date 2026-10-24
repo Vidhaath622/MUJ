@@ -6,12 +6,13 @@ deterministic rule produced the score, so the UI can label it honestly.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from .config import REVIEW_BAND, THRESHOLDS
 from .ingest import Chunk
 from .llm import Judge
-from .rag import is_abstention, strip_citations
+from .rag import is_abstention, strip_citations, without_hedges
 
 
 @dataclass
@@ -94,7 +95,19 @@ def score_context_relevance(judge: Judge, query: str, chunks: list[Chunk]) -> tu
     if not chunks:
         return MetricResult("context_relevance", 0.0, "Nothing was retrieved.", "rule"), []
     result = judge.ask(RELEVANCE_SYSTEM, f"Question: {query}\n\nPassages:\n\n{_passages(chunks)}", RELEVANCE_SCHEMA)
-    graded = {int(p.get("passage", 0)): p for p in result.get("passages", []) if isinstance(p, dict)}
+    return _parse_relevance(result.get("passages"), chunks)
+
+
+def _parse_relevance(passages, chunks: list[Chunk]) -> tuple[MetricResult, list[dict]]:
+    if not chunks:
+        return MetricResult("context_relevance", 0.0, "Nothing was retrieved.", "rule"), []
+    graded = {}
+    for p in passages if isinstance(passages, list) else []:
+        if isinstance(p, dict):
+            try:
+                graded[int(p.get("passage", 0))] = p
+            except (TypeError, ValueError):
+                continue
     per_chunk = []
     for i, chunk in enumerate(chunks, start=1):
         entry = graded.get(i, {})
@@ -130,11 +143,14 @@ def score_context_relevance(judge: Judge, query: str, chunks: list[Chunk]) -> tu
 FAITHFULNESS_SYSTEM = (
     "You check an AI answer for hallucinations.\n"
     "Step 1: split the ANSWER into short, self-contained factual claims (ignore citation markers like [1] and polite filler).\n"
-    "Step 2: for each claim, decide against the numbered CONTEXT passages only:\n"
-    "  supported = the context states it or it follows directly\n"
-    "  contradicted = the context states something different\n"
-    "  unsupported = the context does not say it\n"
-    "Give the passage number used as evidence, or 0 if none. Do not use outside knowledge."
+    "Step 2: for each claim, read EVERY numbered CONTEXT passage, then decide:\n"
+    "  supported = at least one passage states it or it follows directly from one passage\n"
+    "  contradicted = no passage supports it and a passage states something different\n"
+    "  unsupported = no passage says it\n"
+    "Passages can disagree with each other (for example an old and a new version of a policy). "
+    "A claim that matches ANY one passage is supported, even if another passage says something else.\n"
+    "Give the number of the passage that supports the claim (or that contradicts it), or 0 if none. "
+    "Do not use outside knowledge."
 )
 
 FAITHFULNESS_SCHEMA = {
@@ -157,7 +173,8 @@ FAITHFULNESS_SCHEMA = {
 }
 
 
-def score_faithfulness(judge: Judge, answer: str, chunks: list[Chunk]) -> MetricResult:
+def faithfulness_rule(answer: str, chunks: list[Chunk]) -> MetricResult | None:
+    """Faithfulness when no model is needed (abstention, or claims with no context); None otherwise."""
     if is_abstention(answer):
         return MetricResult(
             "faithfulness", 1.0, "The answer abstains, so it makes no claims to check.", "rule",
@@ -168,11 +185,22 @@ def score_faithfulness(judge: Judge, answer: str, chunks: list[Chunk]) -> Metric
             "faithfulness", 0.0, "The answer makes claims but no context was retrieved.", "rule",
             {"claims": [], "hallucinated_claims": [strip_citations(answer)]},
         )
+    return None
+
+
+def score_faithfulness(judge: Judge, answer: str, chunks: list[Chunk]) -> MetricResult:
+    rule = faithfulness_rule(answer, chunks)
+    if rule is not None:
+        return rule
     result = judge.ask(
-        FAITHFULNESS_SYSTEM, f"CONTEXT:\n\n{_passages(chunks)}\n\nANSWER: {strip_citations(answer)}", FAITHFULNESS_SCHEMA
+        FAITHFULNESS_SYSTEM, f"CONTEXT:\n\n{_passages(chunks)}\n\nANSWER: {without_hedges(answer)}", FAITHFULNESS_SCHEMA
     )
+    return _parse_faithfulness(result.get("claims"), chunks)
+
+
+def _parse_faithfulness(items, chunks: list[Chunk]) -> MetricResult:
     claims = []
-    for item in result.get("claims", []):
+    for item in items if isinstance(items, list) else []:
         if not isinstance(item, dict) or not str(item.get("claim", "")).strip():
             continue
         verdict = str(item.get("verdict", "unsupported")).lower()
@@ -222,7 +250,16 @@ ACCURACY_SCHEMA = {
 }
 
 
-def score_answer_accuracy(judge: Judge, query: str, answer: str, ground_truth: str | None, unanswerable: bool = False) -> MetricResult:
+def _numbers(text: str) -> set[str]:
+    return {n.replace(",", "").rstrip(".") for n in re.findall(r"\d[\d,]*(?:\.\d+)?", text)}
+
+
+def accuracy_rule(answer: str, ground_truth: str | None, unanswerable: bool = False) -> MetricResult | None:
+    """Accuracy when no model is needed; None otherwise.
+
+    The numeric shortcut only ever passes an answer: when the ground truth hinges on numbers and the
+    answer states exactly those numbers and no others. Anything less clear goes to the judge.
+    """
     abstained = is_abstention(answer)
     if unanswerable:
         if abstained:
@@ -234,10 +271,104 @@ def score_answer_accuracy(judge: Judge, query: str, answer: str, ground_truth: s
         return MetricResult("answer_accuracy", None, "No ground truth was given, so accuracy was not measured.", "rule")
     if abstained:
         return MetricResult("answer_accuracy", 0.0, "The model abstained, but the ground truth has an answer.", "rule")
+    want, got = _numbers(ground_truth), _numbers(without_hedges(answer))
+    if want and got == want and len(without_hedges(answer)) <= 400:
+        return MetricResult(
+            "answer_accuracy", 1.0, f"Numeric match: the answer states exactly the ground-truth values ({', '.join(sorted(want))}).", "rule"
+        )
+    return None
+
+
+def score_answer_accuracy(judge: Judge, query: str, answer: str, ground_truth: str | None, unanswerable: bool = False) -> MetricResult:
+    rule = accuracy_rule(answer, ground_truth, unanswerable)
+    if rule is not None:
+        return rule
     result = judge.ask(
         ACCURACY_SYSTEM,
         f"Question: {query}\nGround truth: {ground_truth}\nAI answer: {strip_citations(answer)}",
         ACCURACY_SCHEMA,
     )
+    return _parse_accuracy(result)
+
+
+def _parse_accuracy(result) -> MetricResult:
+    if not isinstance(result, dict) or result.get("score") is None:
+        return MetricResult("answer_accuracy", None, "The judge returned no accuracy score.", "model")
     score = _clamp(result.get("score"))
     return MetricResult("answer_accuracy", score, str(result.get("reason", "")).strip() or "No reason given.", "model")
+
+
+# ------------------------------------------------------------ merged judge call
+
+CASE_SYSTEM = (
+    "You evaluate one answer from a retrieval-augmented QA system. Do every TASK listed below and return ONE JSON "
+    "object with one key per task. Use only the given text, never outside knowledge.\n"
+)
+CASE_TASKS = {
+    "passages": (
+        "TASK passages: for each numbered PASSAGE, score how well it supports answering the QUESTION: "
+        "1.0 = contains the specific information needed, 0.5 = right topic but missing the key fact, 0.0 = unrelated. "
+        "Return a list of {passage, score, reason}."
+    ),
+    "claims": (
+        "TASK claims: split the ANSWER into short, self-contained factual claims (ignore citation markers and filler). "
+        "For each claim read EVERY passage, then decide: supported = at least one passage states it or it follows directly "
+        "from one passage; contradicted = no passage supports it and a passage states something different; unsupported = "
+        "no passage says it. Passages can disagree (for example an old and a new policy version); a claim that matches ANY "
+        "one passage is supported. Give the passage number used as evidence, or 0. Return a list of {claim, verdict, passage}."
+    ),
+    "accuracy": (
+        "TASK accuracy: compare the ANSWER with the GROUND TRUTH. score 1.0 = same meaning, all key facts (numbers, dates, "
+        "names, conditions) match, extra correct detail is fine; 0.5 = partly right; 0.0 = wrong, contradicts the ground "
+        "truth, or does not answer. Return {score, reason}."
+    ),
+}
+CASE_SCHEMA_PARTS = {
+    "passages": RELEVANCE_SCHEMA["properties"]["passages"],
+    "claims": FAITHFULNESS_SCHEMA["properties"]["claims"],
+    "accuracy": ACCURACY_SCHEMA,
+}
+
+
+@dataclass
+class CaseScores:
+    relevance: MetricResult | None
+    per_chunk: list[dict]
+    faithfulness: MetricResult
+    accuracy: MetricResult
+    judge_calls: int
+    rule_shortcuts: int
+
+
+def score_case(
+    judge: Judge,
+    query: str,
+    answer: str,
+    chunks: list[Chunk],
+    ground_truth: str | None,
+    unanswerable: bool = False,
+    with_relevance: bool = True,
+) -> CaseScores:
+    """All three metrics with at most ONE judge call: rules decide what they can, the model does the rest."""
+    faith = faithfulness_rule(answer, chunks)
+    acc = accuracy_rule(answer, ground_truth, unanswerable)
+    tasks = [t for t, needed in (("passages", with_relevance and bool(chunks)), ("claims", faith is None), ("accuracy", acc is None)) if needed]
+    shortcuts = (faith is not None) + (acc is not None)
+    relevance, per_chunk = (_parse_relevance([], chunks) if with_relevance and not chunks else (None, []))
+    if tasks:
+        parts = [f"QUESTION: {query}"]
+        if "passages" in tasks or "claims" in tasks:
+            parts.append("PASSAGES:\n\n" + _passages(chunks))
+        parts.append(f"ANSWER: {without_hedges(answer) or strip_citations(answer)}")
+        if "accuracy" in tasks:
+            parts.append(f"GROUND TRUTH: {ground_truth}")
+        schema = {"type": "object", "properties": {t: CASE_SCHEMA_PARTS[t] for t in tasks}, "required": tasks}
+        system = CASE_SYSTEM + "\n".join(CASE_TASKS[t] for t in tasks)
+        result = judge.ask(system, "\n\n".join(parts), schema)
+        if "passages" in tasks:
+            relevance, per_chunk = _parse_relevance(result.get("passages"), chunks)
+        if "claims" in tasks:
+            faith = _parse_faithfulness(result.get("claims"), chunks)
+        if "accuracy" in tasks:
+            acc = _parse_accuracy(result.get("accuracy"))
+    return CaseScores(relevance, per_chunk, faith, acc, int(bool(tasks)), shortcuts)

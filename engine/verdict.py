@@ -34,6 +34,8 @@ class Facts:
     replay_ran: bool = False
     replay_correct: bool | None = None
     replay_failed: bool = False
+    contradicted_claims: bool = False  # a claim contradicts the retrieved context
+    distractor_retrieved: bool = False  # the top retrieved chunk comes from a distractor document
 
 
 @dataclass
@@ -82,33 +84,30 @@ def decide(f: Facts) -> Verdict:
             "Review this answer by hand.",
         )
 
-    # No ground truth: heuristic verdict from the two judge scores, no replay possible.
+    # No ground truth and no gold chunk: nothing tells us whether the documents cover the question,
+    # so a weak retrieval cannot be blamed on the retriever. Only what the answer itself does is judged.
     if not f.has_ground_truth:
         note = " (No ground truth given, so this is a heuristic verdict without replay.)"
         if f.relevant_context and f.faithful:
             return Verdict("CLEAN_PASS", "Relevant context was retrieved and every claim is supported by it." + note, "Add a ground truth to also check accuracy.")
-        if f.relevant_context:
+        if not f.faithful:
             return Verdict(
                 "GENERATION_HALLUCINATION",
-                "Relevant context was retrieved, but the answer makes claims the context does not support." + note,
-                "Use a stricter extraction prompt or lower generator temperature.",
+                "The answer makes claims that no retrieved passage supports." + note,
+                "Use a stricter extraction prompt so the model abstains when the context does not say.",
             )
         if f.abstained:
             return Verdict(
-                "RETRIEVAL_FAILURE",
-                "No relevant chunk was retrieved and the model abstained." + note,
-                "Improve retrieval: check chunking, raise top-k, or add hybrid keyword search.",
-            )
-        if f.faithful:
-            return Verdict(
-                "RETRIEVAL_FAILURE",
-                "No relevant chunk was retrieved; the answer only restates the off-topic context." + note,
-                "Improve retrieval: check chunking, raise top-k, or add hybrid keyword search.",
+                "NEEDS_REVIEW",
+                "The model abstained and no retrieved passage is relevant. Either the documents do not cover this"
+                " (a correct abstention) or the retriever missed it; without a ground truth we cannot tell which." + note,
+                "Add the expected answer as ground truth to get a proven verdict.",
             )
         return Verdict(
-            "COMPOUND_FAILURE",
-            "No relevant chunk was retrieved and the answer makes unsupported claims." + note,
-            "Fix retrieval first, then tighten the generator prompt so it abstains.",
+            "NEEDS_REVIEW",
+            "No retrieved passage is relevant, and the answer only restates that off-topic text. Without a ground truth"
+            " we cannot tell whether the documents answer this question." + note,
+            "Add the expected answer as ground truth to get a proven verdict.",
         )
 
     # Ground truth but no gold chunk: fall back to relevance as the retrieval signal.
@@ -208,3 +207,71 @@ def decide(f: Facts) -> Verdict:
         "The gold chunk was missed and the answer is wrong, but the replay did not run.",
         "Re-run this case.",
     )
+
+
+# ------------------------------------------------------------------ failure taxonomy
+
+FAILURE_TYPES = (
+    "CLEAN_PASS",
+    "WRONG_CHUNK",
+    "STALE_SOURCE",
+    "DISTRACTOR_CONFUSION",
+    "IGNORED_CONTEXT",
+    "HALLUCINATION",
+    "REASONING_ERROR",
+    "UNANSWERABLE_ANSWERED",
+    "FALSE_ABSTENTION",
+    "UNRESOLVED",
+)
+
+FAILURE_TYPE_TEXT = {
+    "CLEAN_PASS": "Retriever and generator both did their job.",
+    "WRONG_CHUNK": "The retriever did not surface the passage with the answer.",
+    "STALE_SOURCE": "The retriever surfaced an outdated version of the fact and the answer followed it.",
+    "DISTRACTOR_CONFUSION": "Look-alike text from another document crowded out or misled the answer.",
+    "IGNORED_CONTEXT": "The right passage was there, but the answer contradicts it.",
+    "HALLUCINATION": "The answer adds claims that no retrieved passage supports.",
+    "REASONING_ERROR": "The answer sticks to the retrieved text but draws the wrong conclusion from it.",
+    "UNANSWERABLE_ANSWERED": "The documents do not answer this, but the model answered anyway.",
+    "FALSE_ABSTENTION": "The answer was in the retrieved context, but the model said it did not know.",
+    "UNRESOLVED": "The evidence is not enough to name one failure type.",
+}
+
+
+def classify_failure(f: Facts, category: str) -> tuple[str, str]:
+    """A finer failure type for a verdict, plus the stage at fault: retriever | generator | both | none | unknown."""
+    if category == "CLEAN_PASS":
+        return "CLEAN_PASS", "none"
+    if not f.has_ground_truth:
+        # Without a ground truth only the generator's own behaviour can be named.
+        return ("HALLUCINATION", "generator") if category == "GENERATION_HALLUCINATION" else ("UNRESOLVED", "unknown")
+    if category == "UNRESOLVED" and not f.stale_retrieved:
+        return "UNRESOLVED", "unknown"
+    if f.unanswerable:
+        return ("UNANSWERABLE_ANSWERED", "generator") if not f.abstained else ("CLEAN_PASS", "none")
+
+    def retrieval_type() -> str:
+        if f.stale_retrieved:
+            return "STALE_SOURCE"
+        if f.distractor_retrieved:
+            return "DISTRACTOR_CONFUSION"
+        return "WRONG_CHUNK"
+
+    retrieval_missed = (not f.gold_retrieved) if f.gold_known else (not f.relevant_context)
+    if category == "RETRIEVAL_FAILURE":
+        return retrieval_type(), "retriever"
+    if category == "UNRESOLVED":  # stale evidence retrieved next to the current version, replay not conclusive
+        return "STALE_SOURCE", "both"
+    if category == "COMPOUND_FAILURE":
+        return retrieval_type(), "both"
+    if f.abstained and not retrieval_missed:
+        return "FALSE_ABSTENTION", "generator"
+    if category == "GENERATION_HALLUCINATION":
+        if f.replay_ran and f.replay_correct and f.distractor_retrieved:
+            return "DISTRACTOR_CONFUSION", "both"
+        return ("IGNORED_CONTEXT" if f.contradicted_claims else "HALLUCINATION"), "generator"
+    if category == "NEEDS_REVIEW":
+        if retrieval_missed:
+            return "IGNORED_CONTEXT", "both"  # correct but unsupported: answered from memory
+        return "REASONING_ERROR", "generator"
+    return "UNRESOLVED", "unknown"
