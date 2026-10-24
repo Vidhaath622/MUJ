@@ -469,9 +469,15 @@ class Engine:
             for metric in ("context_relevance", "faithfulness", "answer_accuracy"):
                 item[metric] = ev["metrics"][metric]["score"]
             results.append(item)
+        extra = {}
+        if batch.get("kind") == "injection":
+            from .inject import confusion
+
+            extra["confusion"] = confusion(results)
         return {
             **batch,
             **summarize_batch(evaluations),
+            **extra,
             "judge_model": primary_only.model,
             "judge_models_used": sorted({m for ev in evaluations for m in ev.get("judge_models_used", [])}),
             "judge_fallback_cases": sum(bool(ev.get("judge_fallback_used")) for ev in evaluations),
