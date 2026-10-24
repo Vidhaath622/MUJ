@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
 from .agreement import judge_agreement, load_labels
 from .config import Settings, get_settings
-from .evaluate import Evaluator, TestCase, summarize_batch
+from .evaluate import Evaluator, TestCase, failed_result, summarize_batch
 from .ingest import ParsedDocument, parse_document
-from .llm import ChatModel, EmbedModel, Judge, ModelUnavailable, build_models
+from .llm import ChatModel, EmbedModel, Judge, JudgeError, ModelUnavailable, build_models
 from .packs import PackError, discover, read_document_bytes, resolve_test_cases
 from .rag import RagSystem
 from .store import VectorStore
@@ -205,16 +204,21 @@ class Engine:
 
         def run(case: TestCase) -> dict:
             nonlocal done
-            result = self.evaluator.evaluate(owner_id, case, document_ids)
+            try:
+                result = self.evaluator.evaluate(owner_id, case, document_ids)
+            except (ModelUnavailable, JudgeError) as exc:
+                result = failed_result(case, exc, self.judge, self.generator.model)
             done += 1
             if progress:
                 progress(done, len(cases))
             return result
 
-        # Local Ollama serves one request at a time; a hosted judge can take parallel calls.
-        workers = 4 if self.judge.mode == "hosted" else 1
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            evaluations = list(pool.map(run, cases))
+        # One case at a time: local Ollama serializes anyway, and hosted free tiers are
+        # rate-limited per minute, so parallel calls only add 429 retries.
+        evaluations = [run(case) for case in cases]
+        if evaluations and all(ev.get("error") for ev in evaluations):
+            # Nothing could run (provider down or out of quota): report that instead of an all-UNRESOLVED batch.
+            raise ModelUnavailable(evaluations[0]["error"])
 
         results = []
         for ev in evaluations:

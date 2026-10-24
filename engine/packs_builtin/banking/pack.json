@@ -1,0 +1,222 @@
+{
+  "pack_id": "banking",
+  "name": "Banking",
+  "description": "Fictional Harbor Ridge Bank: fee schedule v1 and v2, savings terms, an internal dispute procedure and a credit card distractor, with stale, unanswerable and distractor traps.",
+  "demo_data": true,
+  "documents": [
+    {
+      "file": "fee_schedule_v2.md"
+    },
+    {
+      "file": "fee_schedule_v1.md",
+      "superseded_by": "fee_schedule_v2.md"
+    },
+    {
+      "file": "savings_account_terms.md"
+    },
+    {
+      "file": "dispute_procedure_internal.md"
+    },
+    {
+      "file": "credit_card_promotions_distractor.md"
+    }
+  ],
+  "risk_rules": [
+    "Never quote an outdated fee or limit from a superseded fee schedule as current.",
+    "Do not state rates, fees or terms that the documents do not give; abstain instead.",
+    "Do not apply credit card terms to checking, savings or debit card accounts.",
+    "Do not reveal internal-only procedure details, such as fraud referrals, to customers."
+  ],
+  "test_cases": [
+    {
+      "test_id": "bank_01",
+      "question": "What is the overdraft fee?",
+      "ground_truth_answer": "$25 per item",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "The overdraft fee is $25 per item when the bank pays a transaction that overdraws the account."
+        }
+      ],
+      "stale": [
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "The overdraft fee is $35 per item when the bank pays a transaction that overdraws the account."
+        }
+      ],
+      "note": "v1 said $35; v2 (current) says $25."
+    },
+    {
+      "test_id": "bank_02",
+      "question": "What minimum daily balance do I need to avoid the monthly maintenance fee on Everyday Checking?",
+      "ground_truth_answer": "$1,000 for the entire statement cycle",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "The monthly maintenance fee is waived when the account keeps a minimum daily balance of $1,000 for the entire statement cycle."
+        }
+      ],
+      "stale": [
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "The monthly maintenance fee is waived when the account keeps a minimum daily balance of $1,500 for the entire statement cycle."
+        }
+      ],
+      "note": "v1 said $1,500; v2 says $1,000."
+    },
+    {
+      "test_id": "bank_03",
+      "question": "How much does it cost to withdraw cash at an out-of-network ATM?",
+      "ground_truth_answer": "$2.50 per withdrawal, plus any ATM owner fee",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "Each withdrawal at an out-of-network ATM costs $2.50, in addition to any fee charged by the ATM owner."
+        }
+      ],
+      "stale": [
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "Each withdrawal at an out-of-network ATM costs $3.00, in addition to any fee charged by the ATM owner."
+        }
+      ],
+      "note": "v1 said $3.00; v2 says $2.50."
+    },
+    {
+      "test_id": "bank_04",
+      "question": "How much does an outgoing international wire transfer cost?",
+      "ground_truth_answer": "$40 online, $50 at a branch",
+      "type": "stale",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "An outgoing international wire transfer costs $40 per transfer when sent through online banking and $50 per transfer when sent through a branch."
+        }
+      ],
+      "stale": [
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "An outgoing international wire transfer costs $45 per transfer."
+        }
+      ],
+      "note": "v1 had a flat $45; v2 splits into $40 online and $50 branch. Also overlaps with 'international' wording in the credit card distractor."
+    },
+    {
+      "test_id": "bank_05",
+      "question": "What annual percentage yield does the Everyday Savings account pay on a balance of $25,000?",
+      "ground_truth_answer": "1.25% APY",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "Balances from $10,000 to $49,999.99 earn an annual percentage yield of 1.25%."
+        }
+      ],
+      "note": "Requires picking the middle tier from three adjacent tiers."
+    },
+    {
+      "test_id": "bank_06",
+      "question": "What is the fee for each savings withdrawal beyond the monthly limit?",
+      "ground_truth_answer": "$10 per excess withdrawal (after 6 per statement cycle)",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "Each withdrawal beyond the sixth in a statement cycle incurs an excess withdrawal fee of $10."
+        }
+      ]
+    },
+    {
+      "test_id": "bank_07",
+      "question": "After how long without activity does a savings account become dormant?",
+      "ground_truth_answer": "12 consecutive months with no customer-initiated activity",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "An account becomes dormant when there is no customer-initiated activity for 12 consecutive months."
+        }
+      ]
+    },
+    {
+      "test_id": "bank_08",
+      "question": "What documents must staff collect when a customer opens a dispute?",
+      "ground_truth_answer": "A signed Dispute Affidavit (form DR-12), a copy of the account statement, and any receipts or merchant correspondence",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Staff must collect a signed Dispute Affidavit (form DR-12), a copy of the relevant account statement, and any receipts or correspondence with the merchant."
+        }
+      ]
+    },
+    {
+      "test_id": "bank_09",
+      "question": "When is an unresolved dispute escalated to the Dispute Review Team?",
+      "ground_truth_answer": "If it is not resolved within 30 calendar days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Step 2: If a case is not resolved within 30 calendar days, it is escalated to the Dispute Review Team."
+        }
+      ]
+    },
+    {
+      "test_id": "bank_10",
+      "question": "When is the monthly fee waived on a savings account?",
+      "ground_truth_answer": "When the daily balance stays at or above $300, or with an automatic monthly transfer of at least $25 from Harbor Ridge checking",
+      "type": "distractor",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "The $5 monthly service fee is waived when the account keeps a minimum daily balance of $300 or when the customer sets up an automatic monthly transfer of at least $25 from a Harbor Ridge checking account."
+        }
+      ],
+      "note": "'Fee is waived' also appears for the credit card annual fee and the checking maintenance fee."
+    },
+    {
+      "test_id": "bank_11",
+      "question": "How many days does a customer have to report an unauthorized international transaction on their card?",
+      "ground_truth_answer": "60 calendar days after the statement date it first appeared on",
+      "type": "distractor",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Customers must report an unauthorized debit card or electronic transaction within 60 calendar days after the statement date on which the transaction first appeared."
+        }
+      ],
+      "note": "'International', 'card' and 'days' pull toward the credit card International Use and welcome-offer chunks."
+    },
+    {
+      "test_id": "bank_12",
+      "question": "How many days until a customer receives a credit after disputing a charge?",
+      "ground_truth_answer": "Provisional credit is posted within 10 business days of receiving the dispute",
+      "type": "distractor",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Provisional credit is posted to the account within 10 business days of receiving the dispute and the customer is notified in writing within 2 business days of posting."
+        }
+      ],
+      "note": "The credit card doc says a statement credit for a promotional charge billed in error posts within 2 billing cycles."
+    },
+    {
+      "test_id": "bank_13",
+      "question": "What is Harbor Ridge Bank's current 30-year fixed mortgage rate?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "note": "No mortgage product is documented; the model should abstain rather than borrow a savings APY or credit card APR."
+    },
+    {
+      "test_id": "bank_14",
+      "question": "What is the penalty for withdrawing early from a 12-month certificate of deposit?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "note": "CDs are never covered; the savings early closure fee ($25) and excess withdrawal fee ($10) are tempting wrong answers."
+    }
+  ]
+}
