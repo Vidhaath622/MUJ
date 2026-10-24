@@ -45,7 +45,8 @@
           "quote": "The overdraft fee is $35 per item when the bank pays a transaction that overdraws the account."
         }
       ],
-      "note": "v1 said $35; v2 (current) says $25."
+      "note": "v1 said $35; v2 (current) says $25.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_02",
@@ -64,7 +65,8 @@
           "quote": "The monthly maintenance fee is waived when the account keeps a minimum daily balance of $1,500 for the entire statement cycle."
         }
       ],
-      "note": "v1 said $1,500; v2 says $1,000."
+      "note": "v1 said $1,500; v2 says $1,000.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_03",
@@ -83,7 +85,8 @@
           "quote": "Each withdrawal at an out-of-network ATM costs $3.00, in addition to any fee charged by the ATM owner."
         }
       ],
-      "note": "v1 said $3.00; v2 says $2.50."
+      "note": "v1 said $3.00; v2 says $2.50.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_04",
@@ -102,7 +105,8 @@
           "quote": "An outgoing international wire transfer costs $45 per transfer."
         }
       ],
-      "note": "v1 had a flat $45; v2 splits into $40 online and $50 branch. Also overlaps with 'international' wording in the credit card distractor."
+      "note": "v1 had a flat $45; v2 splits into $40 online and $50 branch. Also overlaps with 'international' wording in the credit card distractor.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_05",
@@ -115,7 +119,8 @@
           "quote": "Balances from $10,000 to $49,999.99 earn an annual percentage yield of 1.25%."
         }
       ],
-      "note": "Requires picking the middle tier from three adjacent tiers."
+      "note": "Requires picking the middle tier from three adjacent tiers.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_06",
@@ -127,7 +132,8 @@
           "file": "savings_account_terms.md",
           "quote": "Each withdrawal beyond the sixth in a statement cycle incurs an excess withdrawal fee of $10."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "bank_07",
@@ -139,7 +145,8 @@
           "file": "savings_account_terms.md",
           "quote": "An account becomes dormant when there is no customer-initiated activity for 12 consecutive months."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "bank_08",
@@ -151,7 +158,8 @@
           "file": "dispute_procedure_internal.md",
           "quote": "Staff must collect a signed Dispute Affidavit (form DR-12), a copy of the relevant account statement, and any receipts or correspondence with the merchant."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "bank_09",
@@ -163,7 +171,8 @@
           "file": "dispute_procedure_internal.md",
           "quote": "Step 2: If a case is not resolved within 30 calendar days, it is escalated to the Dispute Review Team."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "bank_10",
@@ -176,7 +185,8 @@
           "quote": "The $5 monthly service fee is waived when the account keeps a minimum daily balance of $300 or when the customer sets up an automatic monthly transfer of at least $25 from a Harbor Ridge checking account."
         }
       ],
-      "note": "'Fee is waived' also appears for the credit card annual fee and the checking maintenance fee."
+      "note": "'Fee is waived' also appears for the credit card annual fee and the checking maintenance fee.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_11",
@@ -189,7 +199,8 @@
           "quote": "Customers must report an unauthorized debit card or electronic transaction within 60 calendar days after the statement date on which the transaction first appeared."
         }
       ],
-      "note": "'International', 'card' and 'days' pull toward the credit card International Use and welcome-offer chunks."
+      "note": "'International', 'card' and 'days' pull toward the credit card International Use and welcome-offer chunks.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_12",
@@ -202,21 +213,820 @@
           "quote": "Provisional credit is posted to the account within 10 business days of receiving the dispute and the customer is notified in writing within 2 business days of posting."
         }
       ],
-      "note": "The credit card doc says a statement credit for a promotional charge billed in error posts within 2 billing cycles."
+      "note": "The credit card doc says a statement credit for a promotional charge billed in error posts within 2 billing cycles.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_13",
       "question": "What is Harbor Ridge Bank's current 30-year fixed mortgage rate?",
       "ground_truth_answer": "",
       "type": "unanswerable",
-      "note": "No mortgage product is documented; the model should abstain rather than borrow a savings APY or credit card APR."
+      "note": "No mortgage product is documented; the model should abstain rather than borrow a savings APY or credit card APR.",
+      "origin": "hand"
     },
     {
       "test_id": "bank_14",
       "question": "What is the penalty for withdrawing early from a 12-month certificate of deposit?",
       "ground_truth_answer": "",
       "type": "unanswerable",
-      "note": "CDs are never covered; the savings early closure fee ($25) and excess withdrawal fee ($10) are tempting wrong answers."
+      "note": "CDs are never covered; the savings early closure fee ($25) and excess withdrawal fee ($10) are tempting wrong answers.",
+      "origin": "hand"
+    },
+    {
+      "test_id": "bank_15",
+      "question": "What is the effective date of Harbor Ridge Bank Consumer Fee Schedule Version 2?",
+      "ground_truth_answer": "July 1, 2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "Effective date: July 1, 2026."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_16",
+      "question": "What is the monthly maintenance fee for the Everyday Checking account?",
+      "ground_truth_answer": "$12",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "The Everyday Checking account carries a monthly maintenance fee of $12."
+        },
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "The Everyday Checking account carries a monthly maintenance fee of $12."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_17",
+      "question": "What is the overdraft fee amount per item when the bank pays a transaction that overdraws the account?",
+      "ground_truth_answer": "$25 per item",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "The overdraft fee is $25 per item when the bank pays a transaction that overdraws the account."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_18",
+      "question": "What is the fee for an outgoing domestic wire transfer?",
+      "ground_truth_answer": "$25",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "An outgoing domestic wire transfer costs $25."
+        },
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "An outgoing domestic wire transfer costs $25."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_19",
+      "question": "What is the fee for each withdrawal at an out-of-network ATM for Harbor Ridge Bank customers?",
+      "ground_truth_answer": "$2.50",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "Each withdrawal at an out-of-network ATM costs $2.50, in addition to any fee charged by the ATM owner."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_20",
+      "question": "What is the cost and active duration of a stop payment order?",
+      "ground_truth_answer": "$30 per request and stays active for 6 months.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "A stop payment order costs $30 per request and stays active for 6 months."
+        },
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "A stop payment order costs $30 per request and stays active for 6 months."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_21",
+      "question": "How many days' written notice must the bank give before increasing any fee in this schedule?",
+      "ground_truth_answer": "at least 30 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "The bank will give at least 30 days' written notice before increasing any fee in this schedule."
+        },
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "The bank will give at least 30 days' written notice before increasing any fee in this schedule."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_22",
+      "question": "What is the name of the savings account that the Harbor Ridge Bank terms apply to?",
+      "ground_truth_answer": "Harbor Ridge Bank Everyday Savings account",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "These terms apply to the Harbor Ridge Bank Everyday Savings account."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_23",
+      "question": "What is the minimum deposit required to open an Everyday Savings account?",
+      "ground_truth_answer": "$50",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "The minimum deposit to open an Everyday Savings account is $50."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_24",
+      "question": "What annual percentage yield does the account pay on balances below $10,000?",
+      "ground_truth_answer": "0.50%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "The account pays an annual percentage yield of 0.50% on balances below $10,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_25",
+      "question": "How many withdrawals or outgoing transfers may a customer make from the account per statement cycle?",
+      "ground_truth_answer": "up to 6",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "Customers may make up to 6 withdrawals or outgoing transfers from the account per statement cycle."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_26",
+      "question": "After how many months of no customer-initiated activity does an account become dormant?",
+      "ground_truth_answer": "12 months",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "An account becomes dormant when there is no customer-initiated activity for 12 consecutive months."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_27",
+      "question": "What early closure fee applies if an account is closed within 90 days of opening?",
+      "ground_truth_answer": "$25",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "If the account is closed within 90 days of opening, an early closure fee of $25 applies."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_28",
+      "question": "Who is the procedure owner for the Internal Procedure: Debit Card and Electronic Transaction Disputes?",
+      "ground_truth_answer": "Deposit Operations",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Procedure owner: Deposit Operations."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_29",
+      "question": "Within how many calendar days must customers report an unauthorized debit card or electronic transaction according to the filing deadlines?",
+      "ground_truth_answer": "60 calendar days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Customers must report an unauthorized debit card or electronic transaction within 60 calendar days after the statement date on which the transaction first appeared."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_30",
+      "question": "What documents must staff collect for a dispute according to the Dispute Affidavit process?",
+      "ground_truth_answer": "A signed Dispute Affidavit (form DR-12), a copy of the relevant account statement, and any receipts or correspondence with the merchant.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Staff must collect a signed Dispute Affidavit (form DR-12), a copy of the relevant account statement, and any receipts or correspondence with the merchant."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_31",
+      "question": "Within how many business days must the bank issue provisional credit if the investigation cannot be completed?",
+      "ground_truth_answer": "10 business days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "If the investigation cannot be completed within 10 business days of receiving the dispute, the bank must issue provisional credit for the disputed amount."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_32",
+      "question": "What is the maximum investigation period for a dispute under the Investigation Timeline policy?",
+      "ground_truth_answer": "45 calendar days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "The investigation must be completed within 45 calendar days of receiving the dispute."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_33",
+      "question": "Within how many calendar days must a case be resolved before it is escalated to the Dispute Review Team?",
+      "ground_truth_answer": "30 calendar days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Step 2: If a case is not resolved within 30 calendar days, it is escalated to the Dispute Review Team."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_34",
+      "question": "How long must records be kept after a case is closed?",
+      "ground_truth_answer": "5 years",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Records are kept for 5 years after the case is closed."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_35",
+      "question": "Which specific credit cards are covered by the Harbor Ridge Bank promotions and rewards page?",
+      "ground_truth_answer": "The Voyager and Everyday Rewards credit cards",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "This page covers the Voyager and Everyday Rewards credit cards."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_36",
+      "question": "How many bonus points do new Voyager cardholders earn and what is the spending requirement?",
+      "ground_truth_answer": "40,000 bonus points after spending $3,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "New Voyager cardholders earn 40,000 bonus points after spending $3,000 in the first 90 days."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_37",
+      "question": "What is the annual fee for the Voyager card and is it waived for the first year?",
+      "ground_truth_answer": "The annual fee is $95, which is waived for the first year.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "The Voyager card has an annual fee of $95, which is waived for the first year."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_38",
+      "question": "What is the foreign transaction fee for the Everyday Rewards card on international purchases?",
+      "ground_truth_answer": "3% of each purchase made outside the United States",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "The Everyday Rewards card charges a foreign transaction fee of 3% of each purchase made outside the United States."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "bank_39",
+      "question": "How long does the 0% introductory APR on purchases last for the Everyday Rewards card?",
+      "ground_truth_answer": "15 months",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "The Everyday Rewards card offers a 0% introductory APR on purchases for 15 months from account opening."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_40",
+      "question": "How many points does a cardholder earn per dollar on travel and dining purchases?",
+      "ground_truth_answer": "2 points per dollar",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "Cardholders earn 2 points per dollar on travel and dining and 1 point per dollar on everything else."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "bank_41",
+      "question": "What is the maximum late payment fee for a credit card if the minimum payment is not received by the due date?",
+      "ground_truth_answer": "Up to $29",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "A late payment fee of up to $29 applies if the minimum payment is not received by the due date."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_42",
+      "question": "Which previous version does Harbor Ridge Bank Consumer Fee Schedule Version 2 supersede and what was its date?",
+      "ground_truth_answer": "It supersedes Consumer Fee Schedule Version 1 dated January 1, 2025.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "This version supersedes the Consumer Fee Schedule (Version 1) dated January 1, 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_43",
+      "question": "When is the monthly maintenance fee waived for the Everyday Checking account based on balance?",
+      "ground_truth_answer": "When the account keeps a minimum daily balance of $1,000 for the entire statement cycle",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "The monthly maintenance fee is waived when the account keeps a minimum daily balance of $1,000 for the entire statement cycle."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_44",
+      "question": "How many overdraft fees can the bank charge in a single business day?",
+      "ground_truth_answer": "At most 3 overdraft fees",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "The bank charges at most 3 overdraft fees per business day."
+        },
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "The bank charges at most 3 overdraft fees per business day."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_45",
+      "question": "How much does an outgoing international wire transfer cost when sent through online banking?",
+      "ground_truth_answer": "$40 per transfer",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "An outgoing international wire transfer costs $40 per transfer when sent through online banking and $50 per transfer when sent through a branch."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_46",
+      "question": "What fee does Harbor Ridge Bank charge for ATM withdrawals made outside the United States?",
+      "ground_truth_answer": "3% of the withdrawal amount",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "ATM withdrawals made outside the United States carry a fee of 3% of the withdrawal amount."
+        },
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "ATM withdrawals made outside the United States carry a fee of 3% of the withdrawal amount."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_47",
+      "question": "How much does a replacement debit card cost after the first free request in a calendar year?",
+      "ground_truth_answer": "$5 for each additional request.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "A replacement debit card is free for the first request each calendar year and $5 for each additional request."
+        },
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "A replacement debit card is free for the first request each calendar year and $5 for each additional request."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_48",
+      "question": "Can fee decreases take effect without any notice according to the schedule?",
+      "ground_truth_answer": "Yes",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "fee_schedule_v2.md",
+          "quote": "Fee decreases may take effect without notice."
+        },
+        {
+          "file": "fee_schedule_v1.md",
+          "quote": "Fee decreases may take effect without notice."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_49",
+      "question": "Which bank offers the Everyday Savings account mentioned in the terms?",
+      "ground_truth_answer": "Harbor Ridge Bank",
+      "type": "distractor",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "Harbor Ridge Bank is a fictional bank used for demonstration only."
+        }
+      ],
+      "note": "A distractor chunk is at least as similar to the question (0.70 vs gold 0.70).",
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_50",
+      "question": "How much is the monthly service fee for an Everyday Savings account?",
+      "ground_truth_answer": "$5",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "A monthly service fee of $5 applies to every Everyday Savings account."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_51",
+      "question": "At what balance does the account earn an annual percentage yield of 2.10%?",
+      "ground_truth_answer": "$50,000 or more",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "Balances of $50,000 or more earn an annual percentage yield of 2.10%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_52",
+      "question": "What fee is charged for each withdrawal beyond the sixth in a statement cycle?",
+      "ground_truth_answer": "$10",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "Each withdrawal beyond the sixth in a statement cycle incurs an excess withdrawal fee of $10."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_53",
+      "question": "What is the monthly dormancy fee charged to a dormant account, and can it reduce the balance below zero?",
+      "ground_truth_answer": "$3 per month, and it never reduces the balance below zero",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "A dormant account is charged a dormancy fee of $3 per month, but the fee never reduces the balance below zero."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_54",
+      "question": "What happens to accrued interest that has not yet been credited when the account is closed before the end of a month?",
+      "ground_truth_answer": "It is forfeited",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "savings_account_terms.md",
+          "quote": "Accrued interest that has not yet been credited is forfeited when the account is closed before the end of a month."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_55",
+      "question": "What account types are covered by the Internal Procedure: Debit Card and Electronic Transaction Disputes?",
+      "ground_truth_answer": "checking and savings accounts",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "This procedure covers disputes on checking and savings accounts, including debit card and electronic transfers."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_56",
+      "question": "Are disputes reported after the 60‑day window eligible for provisional credit?",
+      "ground_truth_answer": "No, they are not eligible for provisional credit",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Disputes reported after the 60-day window are reviewed case by case and are not eligible for provisional credit."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_57",
+      "question": "What additional information must be recorded for card-not-present fraud cases?",
+      "ground_truth_answer": "The last date the customer had physical possession of the card.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "For card-not-present fraud, staff must also record the last date the customer had physical possession of the card."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_58",
+      "question": "How long after receiving a dispute must provisional credit be posted to the account?",
+      "ground_truth_answer": "within 10 business days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Provisional credit is posted to the account within 10 business days of receiving the dispute and the customer is notified in writing within 2 business days of posting."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_59",
+      "question": "When can the investigation period be extended to 90 calendar days according to the Investigation Timeline?",
+      "ground_truth_answer": "For transactions made outside the United States or at point-of-sale terminals",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "For transactions made outside the United States or at point-of-sale terminals, the investigation period may be extended to 90 calendar days."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_60",
+      "question": "What approval is required for disputed amounts above $5,000 before a final decision can be made?",
+      "ground_truth_answer": "Approval by a Deposit Operations manager",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Step 3: Disputed amounts above $5,000 must be approved by a Deposit Operations manager before any final decision."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "bank_61",
+      "question": "What document must be sent to the customer when a case is closed?",
+      "ground_truth_answer": "A written resolution letter",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "dispute_procedure_internal.md",
+          "quote": "Every closed case must include a written resolution letter sent to the customer."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_62",
+      "question": "What types of accounts are explicitly excluded from the Harbor Ridge Bank credit card promotions and rewards page?",
+      "ground_truth_answer": "Checking, savings, or debit card accounts",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "It does not cover checking, savings or debit card accounts."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_63",
+      "question": "How long does it take for the Voyager card welcome bonus to be credited after meeting the spending requirement?",
+      "ground_truth_answer": "Within 8 weeks",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "The welcome bonus is credited within 8 weeks after the spending requirement is met."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_64",
+      "question": "Does the Everyday Rewards card charge an annual fee?",
+      "ground_truth_answer": "No, the Everyday Rewards card has no annual fee.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "credit_card_promotions_distractor.md",
+          "quote": "The Everyday Rewards card has no annual fee."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_65",
+      "question": "What is the maximum liability amount for a customer who reports a lost debit card after 2 business days but within 30 days?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_66",
+      "question": "What is the maximum amount a cardholder can earn in points per year on travel and dining purchases?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "bank_67",
+      "question": "What is the specific point value of the welcome bonus for the Everyday Rewards card?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_68",
+      "question": "How many points does a cardholder earn per dollar on groceries?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b + qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_69",
+      "question": "What is the specific fee for a stop payment order if the request is made within the first 30 days of the account opening?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_70",
+      "question": "What is the minimum amount required for a cash advance made at an international ATM with the Voyager card?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b + qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "bank_71",
+      "question": "What is the specific annual fee amount for the Voyager card after the first year if the cardholder is not an active-duty military member?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b + qwen3:8b"
     }
   ]
 }

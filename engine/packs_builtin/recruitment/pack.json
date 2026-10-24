@@ -4,11 +4,22 @@
   "description": "Fictional hiring policies, a job description and a recruiter guide for Northwind Talent Co., with stale-version, unanswerable and distractor traps.",
   "demo_data": true,
   "documents": [
-    {"file": "hiring_policy_v2.md"},
-    {"file": "hiring_policy_v1.md", "superseded_by": "hiring_policy_v2.md"},
-    {"file": "job_description_senior_data_analyst.md"},
-    {"file": "recruiter_guide.md"},
-    {"file": "benefits_overview_distractor.md"}
+    {
+      "file": "hiring_policy_v2.md"
+    },
+    {
+      "file": "hiring_policy_v1.md",
+      "superseded_by": "hiring_policy_v2.md"
+    },
+    {
+      "file": "job_description_senior_data_analyst.md"
+    },
+    {
+      "file": "recruiter_guide.md"
+    },
+    {
+      "file": "benefits_overview_distractor.md"
+    }
   ],
   "risk_rules": [
     "Never quote a superseded hiring policy (Version 1) as current.",
@@ -18,94 +29,1024 @@
   ],
   "test_cases": [
     {
-      "test_id": "rec_01", "type": "factoid",
+      "test_id": "rec_01",
+      "type": "factoid",
       "question": "What is the salary band for the Senior Data Analyst role?",
       "ground_truth_answer": "$62,000 to $78,000 per year",
-      "gold": [{"file": "job_description_senior_data_analyst.md", "quote": "The salary band for this role is $62,000 to $78,000 per year."}]
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "The salary band for this role is $62,000 to $78,000 per year."
+        }
+      ],
+      "origin": "hand"
     },
     {
-      "test_id": "rec_02", "type": "factoid",
+      "test_id": "rec_02",
+      "type": "factoid",
       "question": "How many days per week must a Senior Data Analyst work from the office, and is any day mandatory?",
       "ground_truth_answer": "At least 3 days per week in the Pune office, with Tuesday as a mandatory office day",
-      "gold": [{"file": "job_description_senior_data_analyst.md", "quote": "Employees in this role must work from the Pune office at least 3 days per week, and Tuesday is a mandatory office day for the whole team."}]
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Employees in this role must work from the Pune office at least 3 days per week, and Tuesday is a mandatory office day for the whole team."
+        }
+      ],
+      "origin": "hand"
     },
     {
-      "test_id": "rec_03", "type": "factoid",
+      "test_id": "rec_03",
+      "type": "factoid",
       "question": "Within how many business days must recruiters screen a new application?",
       "ground_truth_answer": "Within 3 business days of receiving it",
-      "gold": [{"file": "recruiter_guide.md", "quote": "Recruiters must screen every new application within 3 business days of it being received."}]
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Recruiters must screen every new application within 3 business days of it being received."
+        }
+      ],
+      "origin": "hand"
     },
     {
-      "test_id": "rec_04", "type": "factoid",
+      "test_id": "rec_04",
+      "type": "factoid",
       "question": "How soon after an interview must an interviewer submit their scorecard?",
       "ground_truth_answer": "Within 24 hours of the interview",
-      "gold": [{"file": "recruiter_guide.md", "quote": "Interviewers must submit their scorecard within 24 hours of the interview."}]
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Interviewers must submit their scorecard within 24 hours of the interview."
+        }
+      ],
+      "origin": "hand"
     },
     {
-      "test_id": "rec_05", "type": "factoid",
+      "test_id": "rec_05",
+      "type": "factoid",
       "question": "Which topics are recruiters never allowed to ask candidates about?",
       "ground_truth_answer": "Age, marital status, pregnancy or family plans, religion, and caste",
-      "gold": [{"file": "recruiter_guide.md", "quote": "Recruiters must never ask candidates about their age, marital status, pregnancy or family plans, religion, or caste."}]
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Recruiters must never ask candidates about their age, marital status, pregnancy or family plans, religion, or caste."
+        }
+      ],
+      "origin": "hand"
     },
     {
-      "test_id": "rec_06", "type": "factoid",
+      "test_id": "rec_06",
+      "type": "factoid",
       "question": "What is the time limit for the SQL take-home assignment, and how long is the case study panel?",
       "ground_truth_answer": "48 hours for the take-home assignment; the case study panel lasts 60 minutes",
-      "gold": [{"file": "job_description_senior_data_analyst.md", "quote": "The SQL take-home assignment has a time limit of 48 hours from when it is sent."}],
-      "note": "Needs two facts from the same chunk (the 60-minute panel is in the next sentence)."
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "The SQL take-home assignment has a time limit of 48 hours from when it is sent."
+        }
+      ],
+      "note": "Needs two facts from the same chunk (the 60-minute panel is in the next sentence).",
+      "origin": "hand"
     },
     {
-      "test_id": "rec_07", "type": "stale",
+      "test_id": "rec_07",
+      "type": "stale",
       "question": "How many years of relevant experience are required for senior roles such as the Senior Data Analyst?",
       "ground_truth_answer": "A minimum of 3 years of relevant experience",
-      "gold": [{"file": "hiring_policy_v2.md", "quote": "Senior roles, including the Senior Data Analyst role, require a minimum of 3 years of relevant experience."}],
-      "stale": [{"file": "hiring_policy_v1.md", "quote": "Senior roles, including the Senior Data Analyst role, require a minimum of 5 years of relevant experience."}]
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Senior roles, including the Senior Data Analyst role, require a minimum of 3 years of relevant experience."
+        }
+      ],
+      "stale": [
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "Senior roles, including the Senior Data Analyst role, require a minimum of 5 years of relevant experience."
+        }
+      ],
+      "origin": "hand"
     },
     {
-      "test_id": "rec_08", "type": "stale",
+      "test_id": "rec_08",
+      "type": "stale",
       "question": "How much is the employee referral bonus when a referred candidate is hired?",
       "ground_truth_answer": "$3,000, once the referred hire completes probation",
-      "gold": [{"file": "hiring_policy_v2.md", "quote": "The referral bonus is $3,000 for each referred candidate who is hired and completes probation."}],
-      "stale": [{"file": "hiring_policy_v1.md", "quote": "The referral bonus is $2,000 for each referred candidate who is hired and completes probation."}]
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "The referral bonus is $3,000 for each referred candidate who is hired and completes probation."
+        }
+      ],
+      "stale": [
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "The referral bonus is $2,000 for each referred candidate who is hired and completes probation."
+        }
+      ],
+      "origin": "hand"
     },
     {
-      "test_id": "rec_09", "type": "stale",
+      "test_id": "rec_09",
+      "type": "stale",
       "question": "How many days does a candidate have to accept a written offer before it expires?",
       "ground_truth_answer": "5 calendar days after it is sent",
-      "gold": [{"file": "hiring_policy_v2.md", "quote": "A written offer expires 5 calendar days after it is sent if the candidate has not accepted it."}],
-      "stale": [{"file": "hiring_policy_v1.md", "quote": "A written offer expires 7 calendar days after it is sent if the candidate has not accepted it."}]
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "A written offer expires 5 calendar days after it is sent if the candidate has not accepted it."
+        }
+      ],
+      "stale": [
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "A written offer expires 7 calendar days after it is sent if the candidate has not accepted it."
+        }
+      ],
+      "origin": "hand"
     },
     {
-      "test_id": "rec_10", "type": "unanswerable",
+      "test_id": "rec_10",
+      "type": "unanswerable",
       "question": "Does Northwind Talent Co. sponsor work visas for international candidates?",
-      "ground_truth_answer": ""
+      "ground_truth_answer": "",
+      "origin": "hand"
     },
     {
-      "test_id": "rec_11", "type": "unanswerable",
+      "test_id": "rec_11",
+      "type": "unanswerable",
       "question": "How many weeks of paid parental leave do new hires get?",
       "ground_truth_answer": "",
-      "note": "The benefits doc covers annual leave, which a weak generator may borrow."
+      "note": "The benefits doc covers annual leave, which a weak generator may borrow.",
+      "origin": "hand"
     },
     {
-      "test_id": "rec_12", "type": "distractor",
+      "test_id": "rec_12",
+      "type": "distractor",
       "question": "What relocation bonus does a new Senior Data Analyst hire get for moving to Pune?",
       "ground_truth_answer": "A one-time joining bonus of $4,000, paid with the first salary",
-      "gold": [{"file": "job_description_senior_data_analyst.md", "quote": "Candidates who relocate to Pune for this role receive a one-time joining bonus of $4,000, paid with their first salary."}],
-      "note": "Distractor: the benefits doc gives a $6,000 relocation allowance for current employees."
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Candidates who relocate to Pune for this role receive a one-time joining bonus of $4,000, paid with their first salary."
+        }
+      ],
+      "note": "Distractor: the benefits doc gives a $6,000 relocation allowance for current employees.",
+      "origin": "hand"
     },
     {
-      "test_id": "rec_13", "type": "distractor",
+      "test_id": "rec_13",
+      "type": "distractor",
       "question": "How long a notice period can a candidate have before the hiring manager must approve them?",
       "ground_truth_answer": "Up to 60 days; a notice period longer than 60 days needs written approval from the hiring manager",
-      "gold": [{"file": "recruiter_guide.md", "quote": "Candidates with a notice period longer than 60 days can only move forward with written approval from the hiring manager."}],
-      "note": "Distractor: the benefits doc gives resignation notice periods of 30 and 90 days."
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Candidates with a notice period longer than 60 days can only move forward with written approval from the hiring manager."
+        }
+      ],
+      "note": "Distractor: the benefits doc gives resignation notice periods of 30 and 90 days.",
+      "origin": "hand"
     },
     {
-      "test_id": "rec_14", "type": "distractor",
+      "test_id": "rec_14",
+      "type": "distractor",
       "question": "Which employees are not eligible for a bonus when someone they referred is hired?",
       "ground_truth_answer": "Employees in the recruiting team",
-      "gold": [{"file": "hiring_policy_v2.md", "quote": "Employees in the recruiting team are not eligible for referral bonuses."}],
-      "note": "Distractor: the benefits doc says employees who joined less than 3 months before year end are not eligible for the annual bonus."
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Employees in the recruiting team are not eligible for referral bonuses."
+        }
+      ],
+      "note": "Distractor: the benefits doc says employees who joined less than 3 months before year end are not eligible for the annual bonus.",
+      "origin": "hand"
+    },
+    {
+      "test_id": "rec_15",
+      "question": "When does the Northwind Talent Co. Hiring Policy Version 2 become effective?",
+      "ground_truth_answer": "1 January 2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "This policy is effective from 1 January 2026."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_16",
+      "question": "How long does an approved position remain open before the hiring manager must re-confirm the budget or close it?",
+      "ground_truth_answer": "90 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Approved positions stay open for 90 days."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "Approved positions stay open for 90 days."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_17",
+      "question": "How many years of relevant experience are required for mid-level roles?",
+      "ground_truth_answer": "At least 2 years",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Mid-level roles require at least 2 years of relevant experience."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "Mid-level roles require at least 2 years of relevant experience."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_18",
+      "question": "How much is the referral bonus for a candidate who is hired and completes probation?",
+      "ground_truth_answer": "$3,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "The referral bonus is $3,000 for each referred candidate who is hired and completes probation."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_19",
+      "question": "How many business days does a candidate have to complete a background check after giving consent?",
+      "ground_truth_answer": "7 business days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "The background check must be completed within 7 business days of the candidate giving consent."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_20",
+      "question": "How long does a written offer from Northwind last before it expires if not accepted?",
+      "ground_truth_answer": "5 calendar days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "A written offer expires 5 calendar days after it is sent if the candidate has not accepted it."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_21",
+      "question": "How long is the standard probation period for new hires?",
+      "ground_truth_answer": "6 months",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "New hires complete a probation period of 6 months."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "New hires complete a probation period of 6 months."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_22",
+      "question": "What is the requisition number for the Senior Data Analyst position at Northwind Talent Co.?",
+      "ground_truth_answer": "NW-DA-2026-014",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Requisition number: NW-DA-2026-014."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_23",
+      "question": "What are the key responsibilities of the Senior Data Analyst role?",
+      "ground_truth_answer": "The Senior Data Analyst builds dashboards, designs A/B test analyses and explains customer trends to product and marketing leaders.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "The Senior Data Analyst builds dashboards, designs A/B test analyses and explains customer trends to product and marketing leaders."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_24",
+      "question": "What is the minimum required years of relevant experience for the candidate?",
+      "ground_truth_answer": "3 years",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Candidates need a minimum of 3 years of relevant experience, in line with the current hiring policy."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_25",
+      "question": "What is the annual salary band for the role described in the compensation section?",
+      "ground_truth_answer": "$62,000 to $78,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "The salary band for this role is $62,000 to $78,000 per year."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_26",
+      "question": "What is the maximum allowed remote work period per year for this role?",
+      "ground_truth_answer": "2 weeks per year",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Short remote periods of up to 2 weeks per year need written approval from the Head of Analytics."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_27",
+      "question": "What is the time limit for the SQL take-home assignment in the interview process?",
+      "ground_truth_answer": "48 hours",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "The SQL take-home assignment has a time limit of 48 hours from when it is sent."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_28",
+      "question": "What equipment do new Senior Data Analysts receive on their first day?",
+      "ground_truth_answer": "A laptop",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "New Senior Data Analysts receive a laptop and access to the analytics warehouse on their first day."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_29",
+      "question": "What is the primary purpose of the Northwind Talent Co. Recruiter Guide?",
+      "ground_truth_answer": "To explain how recruiters screen candidates and run the interview process.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "This guide explains how recruiters screen candidates and run the interview process."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_30",
+      "question": "How many business days does a recruiter have to screen a new application after it is received?",
+      "ground_truth_answer": "3 business days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Recruiters must screen every new application within 3 business days of it being received."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_31",
+      "question": "What must recruiters confirm regarding a candidate's notice period during the phone screen?",
+      "ground_truth_answer": "The candidate's current notice period",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Recruiters must confirm the candidate's current notice period during the phone screen."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_32",
+      "question": "What is the minimum average score a candidate needs across all scorecards to receive an offer?",
+      "ground_truth_answer": "3.0",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "A candidate needs an average score of at least 3.0 across all scorecards to receive an offer."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_33",
+      "question": "What information must recruiters avoid asking candidates during the recruitment process?",
+      "ground_truth_answer": "Recruiters must never ask candidates about their age, marital status, pregnancy or family plans, religion, or caste.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Recruiters must never ask candidates about their age, marital status, pregnancy or family plans, religion, or caste."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_34",
+      "question": "How long must candidate records be retained in the candidate portal before they are deleted?",
+      "ground_truth_answer": "12 months",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Candidate records are kept in the candidate portal for 12 months and then deleted."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_35",
+      "question": "How many business days must recruiters reply to candidate emails?",
+      "ground_truth_answer": "1 business day",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Recruiters must reply to candidate emails within 1 business day."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_36",
+      "question": "What is the primary scope of the Northwind Talent Co. Employee Benefits and Relocation Overview?",
+      "ground_truth_answer": "It describes benefits for current employees.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "This overview describes benefits for current employees."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_37",
+      "question": "What is the maximum percentage of base salary that permanent employees can receive as an annual performance bonus?",
+      "ground_truth_answer": "12%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "Permanent employees are eligible for an annual performance bonus of up to 12% of base salary."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_38",
+      "question": "What is the relocation allowance provided to current employees transferring between Pune and Jaipur offices?",
+      "ground_truth_answer": "$6,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "Current employees who transfer between the Pune and Jaipur offices receive a relocation allowance of $6,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_39",
+      "question": "How many days of paid annual leave do employees with 5 years of service receive?",
+      "ground_truth_answer": "25 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "Employees with 5 years of service receive 25 days of paid annual leave, and employees with 10 years of service receive 30 days."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rec_40",
+      "question": "What is the standard resignation notice period required for senior employees?",
+      "ground_truth_answer": "90 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "Senior employees must serve a notice period of 90 days."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_41",
+      "question": "How much is the wellness allowance per year for employees?",
+      "ground_truth_answer": "$500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "The wellness allowance is $500 per year and can be used for gym memberships or fitness classes."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_42",
+      "question": "What is the annual learning budget allocated to each employee for courses, certifications, and conference tickets?",
+      "ground_truth_answer": "$800",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "Each employee has a learning budget of $800 per year for courses, certifications and conference tickets."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_43",
+      "question": "Which previous version of the Northwind Talent Co. Hiring Policy is superseded by Version 2?",
+      "ground_truth_answer": "Hiring Policy Version 1 dated 1 January 2025",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "It supersedes the Hiring Policy Version 1 dated 1 January 2025, which must no longer be used."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_44",
+      "question": "What additional approval is required for positions with a salary above the top of the published band?",
+      "ground_truth_answer": "Sign-off from the regional finance lead",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Positions with a salary above the top of the published band also need sign-off from the regional finance lead."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "Positions with a salary above the top of the published band also need sign-off from the regional finance lead."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_45",
+      "question": "What is the minimum experience requirement for the Senior Data Analyst role?",
+      "ground_truth_answer": "3 years of relevant experience",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Senior roles, including the Senior Data Analyst role, require a minimum of 3 years of relevant experience."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_46",
+      "question": "When are employee referral bonuses paid?",
+      "ground_truth_answer": "In the payroll cycle after the new hire passes probation",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Referral bonuses are paid in the payroll cycle after the new hire passes probation."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "Referral bonuses are paid in the payroll cycle after the new hire passes probation."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_47",
+      "question": "What should a recruiter do if a background check is not completed in time?",
+      "ground_truth_answer": "The recruiter must inform the hiring manager and pause the offer.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "If a background check is not completed in time, the recruiter must inform the hiring manager and pause the offer."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "If a background check is not completed in time, the recruiter must inform the hiring manager and pause the offer."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_48",
+      "question": "Can a recruiter extend the deadline for a written offer, and if so, by how many days?",
+      "ground_truth_answer": "Up to 3 calendar days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Recruiters may extend an offer deadline once, by up to 3 calendar days, with approval from the hiring manager."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "Recruiters may extend an offer deadline once, by up to 3 calendar days, with approval from the hiring manager."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_49",
+      "question": "Under what condition can a new hire's probation be extended, and by how much?",
+      "ground_truth_answer": "It can be extended once by up to 3 months if the manager documents a performance plan.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Probation can be extended once by up to 3 months if the manager documents a performance plan."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "Probation can be extended once by up to 3 months if the manager documents a performance plan."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_50",
+      "question": "Which team does the Senior Data Analyst role belong to at Northwind Talent Co.?",
+      "ground_truth_answer": "Customer Insights",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Team: Customer Insights."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_51",
+      "question": "Which report does the Senior Data Analyst own on a weekly basis?",
+      "ground_truth_answer": "The role owns the weekly retention report.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "The role owns the weekly retention report."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_52",
+      "question": "Which BI tools are required for the candidate to have experience with?",
+      "ground_truth_answer": "Power BI or Tableau",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Strong SQL and experience with at least one BI tool such as Power BI or Tableau are required."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_53",
+      "question": "Who must approve salary offers above $78,000 for this role?",
+      "ground_truth_answer": "The regional finance lead",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Offers above $78,000 need sign-off from the regional finance lead."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_54",
+      "question": "How long does the case study panel last and who participates in it?",
+      "ground_truth_answer": "60 minutes, including two analysts from the Customer Insights team",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "The case study panel lasts 60 minutes and includes two analysts from the Customer Insights team."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_55",
+      "question": "How long does the onboarding process last for new Senior Data Analysts?",
+      "ground_truth_answer": "2 weeks",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "job_description_senior_data_analyst.md",
+          "quote": "Onboarding lasts 2 weeks and includes a data governance course that must be passed before production data access is granted."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_56",
+      "question": "Which policy does the Northwind Talent Co. Recruiter Guide follow?",
+      "ground_truth_answer": "The current hiring policy.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "It follows the current hiring policy."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_57",
+      "question": "What is the duration of the phone screen during the screening process?",
+      "ground_truth_answer": "20-minute",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Screening has three steps: a CV review, a 20-minute phone screen and a check of salary expectations against the published band."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_58",
+      "question": "What is the maximum notice period a candidate can have to proceed without additional approval?",
+      "ground_truth_answer": "60 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Candidates with a notice period longer than 60 days can only move forward with written approval from the hiring manager."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_59",
+      "question": "How many hours does an interviewer have to submit their scorecard after the interview?",
+      "ground_truth_answer": "24 hours",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Interviewers must submit their scorecard within 24 hours of the interview."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_60",
+      "question": "Can recruiters ask for a candidate's current salary slip during the recruitment process?",
+      "ground_truth_answer": "Recruiters must not ask for a candidate's current salary slip.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Recruiters must not ask for a candidate's current salary slip, but they may ask for salary expectations."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_61",
+      "question": "Within how many business days must rejected candidates receive a written rejection?",
+      "ground_truth_answer": "5 business days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "recruiter_guide.md",
+          "quote": "Rejected candidates must receive a written rejection within 5 business days of the decision."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_62",
+      "question": "Does the Northwind Talent Co. Employee Benefits and Relocation Overview cover hiring or recruitment processes?",
+      "ground_truth_answer": "No, it does not cover hiring, offers or recruitment.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "It does not cover hiring, offers or recruitment."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_63",
+      "question": "In which month is the annual performance bonus paid to permanent employees?",
+      "ground_truth_answer": "April",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "The bonus is paid in April each year for the previous financial year."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_64",
+      "question": "How soon must the relocation allowance be claimed after a transfer between Pune and Jaipur offices?",
+      "ground_truth_answer": "Within 90 days of the transfer date",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "benefits_overview_distractor.md",
+          "quote": "The relocation allowance must be claimed within 90 days of the transfer date."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_65",
+      "question": "What is the specific deadline for submitting the case study panel deliverable?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_66",
+      "question": "What is the maximum number of referral bonuses an employee can receive in a single payroll cycle?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "rec_67",
+      "question": "What is the maximum number of business days a recruiter has to schedule the phone screen after completing the initial CV review?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_68",
+      "question": "In which cities does the Northwind Talent Co. Hiring Policy Version 2 apply to permanent and fixed-term roles?",
+      "ground_truth_answer": "Pune and Jaipur",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "It applies to all permanent and fixed-term roles at Northwind Talent Co."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "It applies to all permanent and fixed-term roles at Northwind Talent Co."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_69",
+      "question": "Which previous hiring policy does the Northwind Talent Co. Hiring Policy Version 2 supersede?",
+      "ground_truth_answer": "Hiring Policy Version 1 dated 1 January 2025",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "It supersedes the Hiring Policy Version 1 dated 1 January 2025, which must no longer be used."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rec_70",
+      "question": "Who must approve a new position before it is advertised?",
+      "ground_truth_answer": "The hiring manager and the HR business partner",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "Every new position must be approved by the hiring manager and the HR business partner before it is advertised."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "Every new position must be approved by the hiring manager and the HR business partner before it is advertised."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "rec_71",
+      "question": "To which types of roles does the Northwind Talent Co. Hiring Policy Version 2 apply?",
+      "ground_truth_answer": "All permanent and fixed-term roles",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "hiring_policy_v2.md",
+          "quote": "It applies to all permanent and fixed-term roles at Northwind Talent Co."
+        },
+        {
+          "file": "hiring_policy_v1.md",
+          "quote": "It applies to all permanent and fixed-term roles at Northwind Talent Co."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "openai/gpt-oss-120b"
     }
   ]
 }

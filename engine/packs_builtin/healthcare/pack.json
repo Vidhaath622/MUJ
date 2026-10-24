@@ -38,7 +38,8 @@
           "file": "emergency_department_operations.md",
           "quote": "Level 3 patients have a target wait of 60 minutes."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_02",
@@ -50,7 +51,8 @@
           "file": "emergency_department_operations.md",
           "quote": "The department is staffed with 1 registered nurse for every 4 majors cubicles."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_03",
@@ -62,7 +64,8 @@
           "file": "emergency_department_operations.md",
           "quote": "When any patient has been in the department for 6 hours, the Nurse in Charge must notify the Site Duty Manager."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_04",
@@ -74,7 +77,8 @@
           "file": "patient_records_policy.md",
           "quote": "The requester must provide two forms of identification, one of which must be photographic and one of which must show their current address."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_05",
@@ -86,7 +90,8 @@
           "file": "patient_records_policy.md",
           "quote": "Adult inpatient records are retained for 8 years after the last episode of care."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_06",
@@ -98,7 +103,8 @@
           "file": "patient_records_policy.md",
           "quote": "Paper copies cost a flat fee of 25 credits per request to cover printing and postage."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_07",
@@ -116,7 +122,8 @@
           "file": "discharge_protocol_v1.md",
           "quote": "A nurse from the Patient Flow Office makes a follow-up phone call within 72 hours of discharge."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_08",
@@ -134,7 +141,8 @@
           "file": "discharge_protocol_v1.md",
           "quote": "The discharge summary is sent to the patient's family doctor within 5 business days of discharge."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_09",
@@ -152,7 +160,8 @@
           "file": "discharge_protocol_v1.md",
           "quote": "A pharmacy review is required before discharge for any patient going home with 5 or more regular medications."
         }
-      ]
+      ],
+      "origin": "hand"
     },
     {
       "test_id": "hc_10",
@@ -165,7 +174,8 @@
           "quote": "Requests for copies of health records are processed within 15 working days of receiving a complete request with verified identity."
         }
       ],
-      "note": "Distractor: parking permit requests for visitors are processed within 3 working days."
+      "note": "Distractor: parking permit requests for visitors are processed within 3 working days.",
+      "origin": "hand"
     },
     {
       "test_id": "hc_11",
@@ -178,7 +188,8 @@
           "quote": "Companions may accompany patients in the Emergency Department at any hour, limited to one companion per patient."
         }
       ],
-      "note": "Distractor: Visitor Lounge and cafeteria hours."
+      "note": "Distractor: Visitor Lounge and cafeteria hours.",
+      "origin": "hand"
     },
     {
       "test_id": "hc_12",
@@ -191,19 +202,833 @@
           "quote": "Hand-hygiene audits in the Emergency Department are carried out every 2 weeks by the infection prevention link nurse."
         }
       ],
-      "note": "Distractor: monthly hand-washing workshop for visitors."
+      "note": "Distractor: monthly hand-washing workshop for visitors.",
+      "origin": "hand"
     },
     {
       "test_id": "hc_13",
       "question": "What is the ICU visiting policy for children under 12?",
       "ground_truth_answer": "",
-      "type": "unanswerable"
+      "type": "unanswerable",
+      "origin": "hand"
     },
     {
       "test_id": "hc_14",
       "question": "What dose of pain relief should patients take in the first days after discharge?",
       "ground_truth_answer": "",
-      "type": "unanswerable"
+      "type": "unanswerable",
+      "origin": "hand"
+    },
+    {
+      "test_id": "hc_15",
+      "question": "Which office is responsible for the Patient Discharge Protocol at Mercy Vale General Hospital?",
+      "ground_truth_answer": "Patient Flow Office",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Document owner: Patient Flow Office."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "Document owner: Patient Flow Office."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_16",
+      "question": "What is the new visitor limit at the bedside according to Version 2?",
+      "ground_truth_answer": "The visitor limit at the bedside has been lowered.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Version 2 shortens the follow-up call window, speeds up discharge summaries, lowers the visitor limit at the bedside and widens the pharmacy review requirement."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_17",
+      "question": "What specific administrative steps does the discharge protocol for Mercy Vale General Hospital cover?",
+      "ground_truth_answer": "Paperwork, communication with the family doctor, visitor arrangements on the day of discharge, and follow-up contact.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "It covers paperwork, communication with the family doctor, visitor arrangements on the day of discharge and follow-up contact."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "It covers paperwork, communication with the family doctor, visitor arrangements on the day of discharge and follow-up contact."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_18",
+      "question": "What time should ward teams aim to complete planned discharges?",
+      "ground_truth_answer": "11:00 on the day of discharge",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Ward teams should aim to complete planned discharges by 11:00 on the day of discharge."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "Ward teams should aim to complete planned discharges by 11:00 on the day of discharge."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_19",
+      "question": "Within how many business days must the discharge summary be sent to the patient's family doctor?",
+      "ground_truth_answer": "2 business days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "The discharge summary is sent to the patient's family doctor within 2 business days of discharge."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_20",
+      "question": "How long does it take to complete a pharmacy review before discharge for patients with 3 or more regular medications?",
+      "ground_truth_answer": "Normally completed within 4 hours of the request.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "The review is booked through the ward pharmacy request form and is normally completed within 4 hours of the request."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "The review is booked through the ward pharmacy request form and is normally completed within 4 hours of the request."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_21",
+      "question": "What is the maximum number of visitors allowed at the bedside while discharge paperwork is being completed?",
+      "ground_truth_answer": "2",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "A maximum of 2 visitors may be present at the bedside while discharge paperwork is being completed."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_22",
+      "question": "How soon after discharge does a nurse from the Patient Flow Office make a follow-up phone call?",
+      "ground_truth_answer": "Within 48 hours of discharge.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "A nurse from the Patient Flow Office makes a follow-up phone call within 48 hours of discharge."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_23",
+      "question": "What is the escalation order for administrative problems with a discharge?",
+      "ground_truth_answer": "Ward Clerk, Ward Manager, Patient Flow Coordinator, Site Duty Manager",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Administrative problems with a discharge are escalated in this order: Ward Clerk, Ward Manager, Patient Flow Coordinator, Site Duty Manager."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "Administrative problems with a discharge are escalated in this order: Ward Clerk, Ward Manager, Patient Flow Coordinator, Site Duty Manager."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_24",
+      "question": "Who is the document owner for the Mercy Vale General Hospital Emergency Department Operations document?",
+      "ground_truth_answer": "Emergency Department Operations Lead",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Document owner: Emergency Department Operations Lead."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_25",
+      "question": "What is the target wait time for Level 1 patients in the Emergency Department?",
+      "ground_truth_answer": "No waiting time.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Level 1 patients are seen immediately, with no waiting time."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_26",
+      "question": "What is the maximum total time from arrival to admission, transfer, or discharge for at least 95 percent of patients in the department?",
+      "ground_truth_answer": "4 hours",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "The total time from arrival to admission, transfer or discharge should not exceed 4 hours for at least 95 percent of patients."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_27",
+      "question": "What is the occupancy threshold for Escalation Level B?",
+      "ground_truth_answer": "Occupancy exceeds 100 percent or more than 8 patients are waiting for a ward bed.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Escalation Level B applies when occupancy exceeds 100 percent or more than 8 patients are waiting for a ward bed."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_28",
+      "question": "How many registered nurses are staffed per 4 majors cubicles?",
+      "ground_truth_answer": "1 registered nurse",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "The department is staffed with 1 registered nurse for every 4 majors cubicles."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_29",
+      "question": "How many companions are allowed to accompany an adult patient in the Emergency Department?",
+      "ground_truth_answer": "One companion per patient",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Companions may accompany patients in the Emergency Department at any hour, limited to one companion per patient."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_30",
+      "question": "How often are hand-hygiene audits conducted in the Emergency Department?",
+      "ground_truth_answer": "Every 2 weeks",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Hand-hygiene audits in the Emergency Department are carried out every 2 weeks by the infection prevention link nurse."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_31",
+      "question": "Who is the owner of the Mercy Vale General Hospital Patient Records Access and Retention Policy?",
+      "ground_truth_answer": "Health Records Manager",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Document owner: Health Records Manager."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_32",
+      "question": "Who can request a patient's health records on their behalf?",
+      "ground_truth_answer": "A parent or guardian may request records for a child under 16.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "A parent or guardian may request records for a child under 16."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_33",
+      "question": "Where can a patient obtain the Records Access Form to submit a request?",
+      "ground_truth_answer": "The main reception desk or the hospital website",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Requests are submitted on the Records Access Form, available from the main reception desk or the hospital website."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_34",
+      "question": "What are the specific requirements for the two forms of identification a requester must provide to the Health Records Department?",
+      "ground_truth_answer": "One form must be photographic and one must show their current address.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "The requester must provide two forms of identification, one of which must be photographic and one of which must show their current address."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_35",
+      "question": "How long does it take to process a request for copies of health records after identity verification is complete?",
+      "ground_truth_answer": "15 working days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Requests for copies of health records are processed within 15 working days of receiving a complete request with verified identity."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_36",
+      "question": "What is the flat fee for paper copies of records?",
+      "ground_truth_answer": "25 credits",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Paper copies cost a flat fee of 25 credits per request to cover printing and postage."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_37",
+      "question": "How long are adult inpatient records retained after the last episode of care?",
+      "ground_truth_answer": "8 years",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Adult inpatient records are retained for 8 years after the last episode of care."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_38",
+      "question": "How long does the Health Records Manager take to respond to a correction request?",
+      "ground_truth_answer": "30 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "The Health Records Manager responds to correction requests within 30 days."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_39",
+      "question": "Who is the owner of the Mercy Vale General Hospital Visitor Amenities and Wellness Guide?",
+      "ground_truth_answer": "Facilities and Patient Experience Team",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "visitor_and_wellness_distractor.md",
+          "quote": "Document owner: Facilities and Patient Experience Team."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_40",
+      "question": "What does the visitor guide for the hospital explain?",
+      "ground_truth_answer": "The amenities available to visitors, the hospital's wellness programmes, and how to find your way around.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "visitor_and_wellness_distractor.md",
+          "quote": "This guide explains the amenities available to visitors, the hospital's wellness programmes and how to find your way around."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_41",
+      "question": "What are the daily opening hours for the Visitor Lounge on the first floor?",
+      "ground_truth_answer": "07:00 to 21:00",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "visitor_and_wellness_distractor.md",
+          "quote": "The Visitor Lounge on the first floor is open from 07:00 to 21:00 every day."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_42",
+      "question": "What are the operating hours of the main cafeteria on weekdays?",
+      "ground_truth_answer": "07:30 to 19:30",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "visitor_and_wellness_distractor.md",
+          "quote": "The main cafeteria is open from 07:30 to 19:30 on weekdays and from 09:00 to 17:00 at weekends."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_43",
+      "question": "How long can a visitor park for free in the multi-storey car park next to the main entrance?",
+      "ground_truth_answer": "The first 30 minutes are free.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "visitor_and_wellness_distractor.md",
+          "quote": "The first 30 minutes are free."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_44",
+      "question": "How long after a wellness course ends are follow-up sessions scheduled at the hospital?",
+      "ground_truth_answer": "14 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "visitor_and_wellness_distractor.md",
+          "quote": "Wellness follow-up sessions are scheduled 14 days after each course ends, so participants can talk about their progress."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_45",
+      "question": "When did the Patient Discharge Protocol at Mercy Vale General Hospital become effective?",
+      "ground_truth_answer": "1 February 2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Effective date: 1 February 2026."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_46",
+      "question": "How has the follow-up call window been adjusted in Version 2?",
+      "ground_truth_answer": "The follow-up call window has been shortened.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Version 2 shortens the follow-up call window, speeds up discharge summaries, lowers the visitor limit at the bedside and widens the pharmacy review requirement."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_47",
+      "question": "Does the Mercy Vale General Hospital discharge protocol include clinical decisions about patient readiness?",
+      "ground_truth_answer": "No, it does not cover clinical decisions about whether a patient is ready to leave.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "It does not cover clinical decisions about whether a patient is ready to leave."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "It does not cover clinical decisions about whether a patient is ready to leave."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_48",
+      "question": "When does the Discharge Lounge operate on weekdays?",
+      "ground_truth_answer": "08:00 to 20:00",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Patients who are ready to leave but are waiting for transport move to the Discharge Lounge on the ground floor, which is staffed from 08:00 to 20:00 on weekdays."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "Patients who are ready to leave but are waiting for transport move to the Discharge Lounge on the ground floor, which is staffed from 08:00 to 20:00 on weekdays."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_49",
+      "question": "Who is responsible for resolving missing discharge paperwork and by when?",
+      "ground_truth_answer": "The Ward Manager, before the end of the same shift",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Missing paperwork is escalated to the Ward Manager, who must resolve it before the end of the same shift."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "Missing paperwork is escalated to the Ward Manager, who must resolve it before the end of the same shift."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_50",
+      "question": "What is provided to patients with fewer than 3 regular medications during discharge?",
+      "ground_truth_answer": "A standard medicines list printed with the discharge letter.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Patients with fewer medications receive a standard medicines list printed with the discharge letter."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "Patients with fewer medications receive a standard medicines list printed with the discharge letter."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_51",
+      "question": "Where should visitors helping with transport wait if the ward is busy?",
+      "ground_truth_answer": "Discharge Lounge",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "Visitors helping with transport should wait in the Discharge Lounge if the ward is busy."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "Visitors helping with transport should wait in the Discharge Lounge if the ward is busy."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_52",
+      "question": "What happens if a nurse cannot reach a patient during the follow-up call?",
+      "ground_truth_answer": "The nurse tries again the next working day and then sends a letter.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "If the patient cannot be reached, the nurse tries again the next working day and then sends a letter."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "If the patient cannot be reached, the nurse tries again the next working day and then sends a letter."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_53",
+      "question": "What is the phone extension for the Site Duty Manager?",
+      "ground_truth_answer": "4400",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "discharge_protocol_v2.md",
+          "quote": "The Site Duty Manager is available 24 hours a day on extension 4400."
+        },
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "The Site Duty Manager is available 24 hours a day on extension 4400."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_54",
+      "question": "What is the effective date for the Mercy Vale General Hospital Emergency Department Operations document?",
+      "ground_truth_answer": "1 January 2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Effective date: 1 January 2026."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_55",
+      "question": "What is the target wait time for Level 3 patients in the Emergency Department?",
+      "ground_truth_answer": "60 minutes.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Level 3 patients have a target wait of 60 minutes."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_56",
+      "question": "Who must the Nurse in Charge notify when a patient has been in the department for 6 hours?",
+      "ground_truth_answer": "The Site Duty Manager",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "When any patient has been in the department for 6 hours, the Nurse in Charge must notify the Site Duty Manager."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_57",
+      "question": "How often does the Site Duty Manager hold a bed meeting at Escalation Level B or above?",
+      "ground_truth_answer": "The Site Duty Manager holds a bed meeting every 2 hours.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "At Level B or above, the Site Duty Manager holds a bed meeting every 2 hours."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_58",
+      "question": "How many registered nurses are staffed per 2 resuscitation bays?",
+      "ground_truth_answer": "1 registered nurse",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "The resuscitation area is staffed with 1 registered nurse for every 2 resuscitation bays."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_59",
+      "question": "How many parents or guardians may accompany a child under 16 attending as a patient in the Emergency Department?",
+      "ground_truth_answer": "Two parents or guardians",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Children under 16 attending as patients may have two parents or guardians with them."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_60",
+      "question": "What is the required timeframe for a repeat audit if an Emergency Department hand-hygiene score is below 90 percent?",
+      "ground_truth_answer": "Within 7 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "emergency_department_operations.md",
+          "quote": "Any audit score below 90 percent triggers a repeat audit within 7 days."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_61",
+      "question": "What is the effective date of the Mercy Vale General Hospital Patient Records Access and Retention Policy?",
+      "ground_truth_answer": "1 April 2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Effective date: 1 April 2026."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_62",
+      "question": "What is required for a solicitor or insurer to request a patient's health records?",
+      "ground_truth_answer": "Requests from solicitors or insurers must include signed written consent from the patient.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Requests from solicitors or insurers must include signed written consent from the patient."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b"
+    },
+    {
+      "test_id": "hc_63",
+      "question": "What are the two methods for submitting a completed Records Access Form to the Health Records Department?",
+      "ground_truth_answer": "Posting it to the Health Records Department or handing it in at the main reception desk",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Completed forms can be posted to the Health Records Department or handed in at the main reception desk."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_64",
+      "question": "How recent must the proof of address be when verifying identity for Health Records Department requests?",
+      "ground_truth_answer": "Within the last 3 months.",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "patient_records_policy.md",
+          "quote": "Proof of address must be dated within the last 3 months."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_65",
+      "question": "What is the specific penalty fee charged to a patient if the discharge summary is sent to the family doctor after the 2-business-day deadline?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_66",
+      "question": "What is the specific extension number for the Patient Flow Coordinator?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_67",
+      "question": "How many days does the Health Records Manager have to respond to a patient's complaint regarding the quality of care, as opposed to a request for a correction note?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_68",
+      "question": "How many hand gel stations are installed in the main cafeteria?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b + qwen3:8b"
+    },
+    {
+      "test_id": "hc_69",
+      "question": "What is the maximum number of visitors allowed in the Discharge Lounge during busy periods?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen3:8b + qwen/qwen3.8-27b"
+    },
+    {
+      "test_id": "hc_70",
+      "question": "What is the specific penalty fee charged to a patient if they fail to attend their scheduled follow-up appointment within the shortened window?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b + qwen3:8b"
+    },
+    {
+      "test_id": "hc_71",
+      "question": "What is the specific fee charged to patients for the first 100 pages of their requested health records?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "synthetic",
+      "generated_by": "qwen/qwen3.8-27b + qwen3:8b"
     }
   ]
 }
