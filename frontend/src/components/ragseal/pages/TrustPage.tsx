@@ -257,7 +257,7 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
     >
       {agreement.original && (
         <div className="mb-6 rounded-xl border border-[var(--rule)] p-4">
-          <div className="mb-3 text-xs uppercase tracking-[0.1em] text-[var(--ink-2)]">
+          <div className="mb-3 text-[13px] font-medium text-[var(--ink-1)]">
             Inter-annotator agreement (before review) · labels as first given, n = {agreement.original.n ?? agreement.original.human_human?.n ?? '—'}
           </div>
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
@@ -269,7 +269,7 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
         </div>
       )}
       {agreement.original && (
-        <div className="mb-3 text-xs uppercase tracking-[0.1em] text-[var(--ink-2)]">After disagreement review (adjudicated)</div>
+        <div className="mb-3 text-[13px] font-medium text-[var(--ink-1)]">After disagreement review (adjudicated)</div>
       )}
       <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
         <Metric big label="Pipeline agrees with humans" value={pct(pv.agreement)} sub={`Cohen's κ ${fmtNum(pv.kappa)}`} color={tone(pv.agreement)} />

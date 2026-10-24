@@ -213,7 +213,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
             {turns.map((t) => (
               <React.Fragment key={t.id}>
                 {t.example && (
-                  <div className="-mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+                  <div className="-mb-2 flex items-center gap-2 text-[12px] text-[var(--ink-2)]">
                     <span className="h-px flex-1 bg-[var(--rule)]" /> From the latest test run <span className="h-px flex-1 bg-[var(--rule)]" />
                   </div>
                 )}
@@ -572,7 +572,7 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
 };
 
 const SectionLabel: React.FC<{ n: number; children: React.ReactNode }> = ({ n, children }) => (
-  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--ink-2)]">
+  <div className="flex items-center gap-2 text-[12.5px] font-medium text-[var(--ink-1)]">
     <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--rule-2)] font-mono text-[9.5px] text-[var(--ink-1)]">{n}</span>
     {children}
   </div>

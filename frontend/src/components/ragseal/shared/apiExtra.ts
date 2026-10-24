@@ -178,6 +178,8 @@ export interface LabelItem {
   generated_answer?: string;
   retrieved_chunks?: LabelChunk[];
   labeled?: boolean;
+  /** The requesting labeller's own current label on this item, or null if they haven't labelled it. */
+  my_label?: { correct: boolean; failure_type?: string | null; note?: string | null } | null;
 }
 
 export interface LabelQueue {
@@ -205,9 +207,11 @@ export interface DisagreementItem extends LabelItem {
 /** Answers where the two labellers disagree on correct vs wrong, for a second look. */
 export async function getDisagreements(
   packId: string,
-  token: string
+  token: string,
+  labeler?: string
 ): Promise<{ items: DisagreementItem[]; total?: number; failure_types?: string[] }> {
   const qs = new URLSearchParams({ pack_id: packId });
+  if (labeler) qs.set('labeler', labeler);
   const { body } = await call<{ items: DisagreementItem[]; total?: number } | DisagreementItem[]>(`/labels/disagreements?${qs}`, token);
   return Array.isArray(body) ? { items: body } : body;
 }

@@ -121,7 +121,9 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) 
             </button>
           </div>
         )}
-        <div className="min-h-0 flex-1">
+        {/* Scrolls when the report is taller than the screen (short laptop screens), so the
+            evidence and answer are never cut off below the verdict. */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {selected === AD_HOC ? (
             lab.asking ? (
               <Centered>

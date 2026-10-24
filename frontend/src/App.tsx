@@ -152,8 +152,9 @@ export const App: React.FC = () => {
         onOpenAuth={() => setIsAuthOpen(true)}
         fitScreen={route === 'diagnose' || route === 'label' || route === 'bots' || route === 'testsets'}
       >
-        {/* Keyed by route so each page eases in instead of cutting. */}
-        <div key={route} className="page-enter flex min-h-0 flex-1 flex-col">
+        {/* Keyed by route so each page eases in instead of cutting. h-full, not flex-1: <main> is not a
+            flex container, so fit-to-screen pages need an explicit height or <main> clips them. */}
+        <div key={route} className="page-enter flex h-full min-h-0 flex-col">
         {route === 'bots' && <BotsPage token={authToken} initialPack={activePackId} />}
 
         {route === 'testsets' && <TestSetsPage token={authToken} />}

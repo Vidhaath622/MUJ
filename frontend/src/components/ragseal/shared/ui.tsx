@@ -67,7 +67,7 @@ export const PackSwitcher: React.FC<{
   onChange: (p: PackId) => void;
   packs?: { id: PackId; label: string }[];
 }> = ({ value, onChange, packs = PACKS }) => (
-  <div className="flex items-center gap-0.5 rounded-[10px] border border-[var(--panel-2)] p-[3px] text-[13px]" role="tablist">
+  <div className="flex shrink-0 items-center gap-0.5 rounded-[10px] border border-[var(--panel-2)] p-[3px] text-[13px]" role="tablist">
     {packs.map((p) => (
       <button
         key={p.id}
@@ -75,7 +75,7 @@ export const PackSwitcher: React.FC<{
         aria-selected={value === p.id}
         onClick={() => onChange(p.id)}
         className={cn(
-          'rounded-[7px] px-3 py-[5px] transition-colors',
+          'whitespace-nowrap rounded-[7px] px-3 py-[5px] transition-colors',
           value === p.id
             ? 'bg-[var(--panel-2)] text-[var(--ink)] shadow-[inset_0_1px_0_rgba(27,27,24,0.06)]'
             : 'text-[var(--ink-2)] hover:text-[var(--ink)]'

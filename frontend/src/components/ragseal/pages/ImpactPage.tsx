@@ -345,7 +345,7 @@ const ChangeRow: React.FC<{ change: ImpactChange }> = ({ change }) => {
   const nums = change.numbers_changed ?? [];
   return (
     <li className="space-y-1.5 px-5 py-3.5 text-[13px] leading-relaxed">
-      <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--ink-2)]">
+      <div className="flex flex-wrap items-center gap-2 text-[12px] capitalize text-[var(--ink-2)]">
         <span>{change.kind}</span>
         {nums.map((n, i) => (
           <span key={i} className="rounded-full border border-[var(--rule)] px-2 py-0.5 font-mono normal-case tracking-normal">
