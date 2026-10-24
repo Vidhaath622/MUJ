@@ -138,6 +138,22 @@ def test_batch_with_pack_only_loads_pack(client, alice, fake_engine):
     assert client.get("/api/runs", headers=alice).json()[0]["pack_id"] == "banking"
 
 
+def test_pack_batch_with_frontend_shape_uses_whole_pack(client, alice, fake_engine):
+    # frontend/src/lib/api.ts sends one document_id plus trimmed test cases and the pack_id.
+    other = upload(client, alice)["document_id"]
+    resp = client.post(
+        "/api/evaluate/batch",
+        headers=alice,
+        json={"document_id": other, "pack_id": "banking", "test_cases": [{"test_id": "bk_01", "question": "What is the monthly fee?"}]},
+    )
+    assert resp.status_code == 200, resp.text
+    _, _, document_ids, _, pack_id = fake_engine.calls[-1]
+    # The pack's own document plus the one the client sent.
+    assert other in document_ids and len(document_ids) == 2 and pack_id == "banking"
+    assert fake_engine.last_batch_cases[0]["type"] == "factoid"
+    assert fake_engine.last_batch_cases[0]["ground_truth_answer"] == "5 USD"
+
+
 def test_synthetic_count_is_capped(client, alice, fake_engine):
     doc_id = upload(client, alice)["document_id"]
     resp = client.post("/api/synthetic/generate", headers=alice, json={"document_id": doc_id, "count": 50})

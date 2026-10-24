@@ -38,11 +38,17 @@ def evaluate_batch(
 ) -> dict:
     document_ids = body.ids()
     test_cases = [case.model_dump(exclude_none=True) for case in body.test_cases]
-    if body.pack_id and (not document_ids or not test_cases):
+    if body.pack_id:
         # Loading is idempotent: documents already embedded for this user are skipped.
         pack = engine.load_pack(user.id, body.pack_id)
-        document_ids = document_ids or pack["document_ids"]
-        test_cases = test_cases or pack["test_cases"]
+        # A pack run searches all of the pack's documents, whatever single document_id the client sent.
+        document_ids = list(dict.fromkeys([*pack["document_ids"], *document_ids]))
+        if not test_cases:
+            test_cases = pack["test_cases"]
+        else:
+            # Restore trap metadata (gold/stale chunks, type) that the client may have dropped.
+            by_id = {case["test_id"]: case for case in pack["test_cases"]}
+            test_cases = [{**by_id.get(case.get("test_id"), {}), **case} for case in test_cases]
     if not document_ids:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "document_id, document_ids or pack_id is required")
     if not test_cases:
