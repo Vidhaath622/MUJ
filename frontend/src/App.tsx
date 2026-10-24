@@ -18,14 +18,17 @@ import {
   MOCK_RUN_HISTORY 
 } from './data/mockPacksDataset';
 import { MOCK_SYNTHETIC_QUESTIONS } from './data/mockAtsDataset';
-import { PackId, AuthUser, SyntheticTestCase, EvaluationResult } from './types/ragseal';
+import { PackId, AuthUser, SyntheticTestCase, EvaluationResult, BatchSummary } from './types/ragseal';
 import { 
   checkBackendHealth, 
   loginUser, 
   evaluateLiveQuery, 
+  evaluateBatchByPack,
   fetchRunHistory, 
+  fetchRunDetail,
   loadPackBackend, 
-  HealthResponse 
+  HealthResponse,
+  ApiError 
 } from './lib/api';
 
 export const App: React.FC = () => {
@@ -37,6 +40,10 @@ export const App: React.FC = () => {
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [liveEvaluation, setLiveEvaluation] = useState<EvaluationResult | null>(null);
+  const [liveBatchSummary, setLiveBatchSummary] = useState<BatchSummary | null>(null);
+  const [isBatchEvaluating, setIsBatchEvaluating] = useState<boolean>(false);
+  const [batchElapsedSeconds, setBatchElapsedSeconds] = useState<number>(0);
+  const [batchError, setBatchError] = useState<string | null>(null);
   const [liveNotification, setLiveNotification] = useState<string | null>(null);
   const [serverRunHistory, setServerRunHistory] = useState<any[]>([]);
 
@@ -62,16 +69,20 @@ export const App: React.FC = () => {
         setBackendHealth(health);
         setIsLiveBackend(true);
         // Login seeded demo user to obtain real JWT token
-        const auth = await loginUser('demo@ragseal.dev', 'demo1234');
-        if (!mounted) return;
-        if (auth) {
-          setAuthToken(auth.access_token);
-          setCurrentUser(auth.user);
-          // Fetch real run history from GET /api/runs
-          const runs = await fetchRunHistory(auth.access_token);
-          if (runs && runs.length > 0) {
-            setServerRunHistory(runs);
+        try {
+          const auth = await loginUser('demo@ragseal.dev', 'demo1234');
+          if (!mounted) return;
+          if (auth) {
+            setAuthToken(auth.access_token);
+            setCurrentUser(auth.user);
+            // Fetch real run history from GET /api/runs
+            const runs = await fetchRunHistory(auth.access_token);
+            if (runs && runs.length > 0) {
+              setServerRunHistory(runs);
+            }
           }
+        } catch (err: any) {
+          console.warn('Backend auto-login notice:', err?.detail || err?.message);
         }
       } else {
         setIsLiveBackend(false);
@@ -103,7 +114,9 @@ export const App: React.FC = () => {
   const handleSelectPack = (packId: PackId) => {
     setActivePackId(packId);
     setLiveEvaluation(null);
+    setLiveBatchSummary(null);
     setLiveNotification(null);
+    setBatchError(null);
     const newPack = INDUSTRY_PACKS[packId] || INDUSTRY_PACKS.recruitment;
     const firstCaseKey = Object.keys(newPack.cases)[0];
     setActiveCaseId(firstCaseKey);
@@ -130,8 +143,9 @@ export const App: React.FC = () => {
           setIsEvaluating(false);
           return;
         }
-      } catch (err) {
-        console.warn('Live evaluation error, falling back to pack case:', err);
+      } catch (err: any) {
+        const msg = err instanceof ApiError ? `Backend (${err.status}): ${err.detail}` : (err.message || 'Evaluation error');
+        setLiveNotification(`${msg} — displayed state-grounded pack evaluation.`);
       }
     }
 
@@ -149,6 +163,44 @@ export const App: React.FC = () => {
         setLiveNotification('Backend connected at localhost:8000. Engine running local mode — displayed state-grounded pack evaluation.');
       }
     }, 400);
+  };
+
+  /**
+   * Note #1: Critical: Run packs by sending ONLY { "pack_id": activePackId }.
+   * Note #5: Slow batch progress state with timer and 180s timeout.
+   */
+  const handleRunBatch = async () => {
+    if (!authToken) {
+      setBatchError('Please sign in (Demo account available) to run a batch evaluation.');
+      return;
+    }
+    setIsBatchEvaluating(true);
+    setBatchElapsedSeconds(0);
+    setBatchError(null);
+
+    const startTime = Date.now();
+    const intervalId = setInterval(() => {
+      setBatchElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+
+    try {
+      const summary = await evaluateBatchByPack(activePackId, authToken);
+      clearInterval(intervalId);
+      setIsBatchEvaluating(false);
+      setLiveBatchSummary(summary);
+      setLiveNotification(`Batch complete: ${summary.total_evaluated} cases evaluated (Pass Rate: ${(summary.aggregates.pass_rate * 100).toFixed(0)}%).`);
+      // Refresh run history
+      const runs = await fetchRunHistory(authToken);
+      if (runs && runs.length > 0) setServerRunHistory(runs);
+    } catch (err: any) {
+      clearInterval(intervalId);
+      setIsBatchEvaluating(false);
+      if (err instanceof ApiError) {
+        setBatchError(`Backend (${err.status}): ${err.detail}`);
+      } else {
+        setBatchError(err.message || 'Batch evaluation failed.');
+      }
+    }
   };
 
   // Handler for clicking starter questions inside PromptBox
@@ -174,7 +226,21 @@ export const App: React.FC = () => {
   };
 
   // Handler for loading previous run from history
-  const handleLoadRun = (batchId: string) => {
+  const handleLoadRun = async (batchId: string) => {
+    if (authToken) {
+      try {
+        const fullBatch = await fetchRunDetail(batchId, authToken);
+        if (fullBatch) {
+          setLiveBatchSummary(fullBatch);
+          if (fullBatch.pack_id) {
+            setActivePackId(fullBatch.pack_id as PackId);
+          }
+          return;
+        }
+      } catch {
+        // Fallback to local history
+      }
+    }
     const runItem = [...serverRunHistory, ...MOCK_RUN_HISTORY].find(r => r.batch_id === batchId);
     if (runItem && runItem.pack_id) {
       handleSelectPack(runItem.pack_id);
@@ -316,11 +382,16 @@ export const App: React.FC = () => {
             {/* 5. Batch Dashboard (Recharts failure distribution & Judge Agreement) */}
             <div className="pt-4 border-t border-neutral-800/80">
               <BatchSummarySection
-                batch={currentPack.batchSummary}
+                batch={liveBatchSummary || currentPack.batchSummary}
                 selectedCaseId={activeCaseId}
                 onSelectCase={handleSelectCaseFromBatch}
                 runHistory={serverRunHistory.length > 0 ? serverRunHistory : MOCK_RUN_HISTORY}
                 onLoadRun={handleLoadRun}
+                onRunBatch={handleRunBatch}
+                isBatchEvaluating={isBatchEvaluating}
+                batchElapsedSeconds={batchElapsedSeconds}
+                batchError={batchError}
+                packName={currentPack.name}
               />
             </div>
           </div>
@@ -367,6 +438,7 @@ export const App: React.FC = () => {
         isOpen={isDocVaultOpen}
         onClose={() => setIsDocVaultOpen(false)}
         documents={currentPack.documents}
+        token={authToken}
       />
 
       {/* Modal 2: Synthetic Test-Question Generator */}
@@ -376,6 +448,7 @@ export const App: React.FC = () => {
         questions={MOCK_SYNTHETIC_QUESTIONS}
         documents={currentPack.documents}
         onSelectQuestion={handleSelectSyntheticQuestion}
+        token={authToken}
       />
 
       {/* Modal 3: User Auth / Session Modal */}
@@ -383,8 +456,19 @@ export const App: React.FC = () => {
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         currentUser={currentUser}
-        onLogin={setCurrentUser}
-        onLogout={() => setCurrentUser(null)}
+        onLogin={(user, token) => {
+          setCurrentUser(user);
+          if (token) {
+            setAuthToken(token);
+            fetchRunHistory(token).then((runs) => {
+              if (runs && runs.length > 0) setServerRunHistory(runs);
+            }).catch(() => {});
+          }
+        }}
+        onLogout={() => {
+          setCurrentUser(null);
+          setAuthToken(null);
+        }}
       />
     </div>
   );

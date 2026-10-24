@@ -9,15 +9,17 @@ import {
   Lock, 
   Mail, 
   Sparkles, 
-  AlertCircle 
+  AlertCircle,
+  RotateCw 
 } from 'lucide-react';
 import { AuthUser } from '../../types/ragseal';
+import { loginUser, registerUser, ApiError } from '../../lib/api';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: AuthUser | null;
-  onLogin: (user: AuthUser) => void;
+  onLogin: (user: AuthUser, token?: string) => void;
   onLogout: () => void;
 }
 
@@ -32,33 +34,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [password, setPassword] = useState('demo1234');
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
-  const handleUseDemoAccount = () => {
-    setEmail('demo@ragseal.dev');
-    setPassword('demo1234');
-    onLogin({
-      id: 'usr_seeded_demo',
-      email: 'demo@ragseal.dev',
-      name: 'RAGSeal Lead Judge Demo',
-    });
-    onClose();
+  const handleUseDemoAccount = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const auth = await loginUser('demo@ragseal.dev', 'demo1234');
+      onLogin(auth.user, auth.access_token);
+      onClose();
+    } catch (err: any) {
+      setError(err instanceof ApiError ? err.detail : 'Could not sign in with demo user.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     if (!email.trim() || !password.trim()) {
       setError('Please provide both email and password.');
       return;
     }
 
-    onLogin({
-      id: `usr_${Date.now()}`,
-      email: email.trim(),
-      name: email.split('@')[0],
-    });
-    onClose();
+    setIsLoading(true);
+    try {
+      if (mode === 'login') {
+        const auth = await loginUser(email.trim(), password.trim());
+        onLogin(auth.user, auth.access_token);
+        onClose();
+      } else {
+        const auth = await registerUser(email.trim(), password.trim());
+        onLogin(auth.user, auth.access_token);
+        onClose();
+      }
+    } catch (err: any) {
+      if (err instanceof ApiError) {
+        setError(err.detail);
+      } else {
+        setError(err.message || 'Authentication request failed.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -179,9 +200,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="submit"
                   variant="default"
                   size="default"
-                  className="w-full bg-gradient-to-r from-teal-500 to-sky-600 hover:from-teal-600 hover:to-sky-700 text-white font-mono text-xs"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-teal-500 to-sky-600 hover:from-teal-600 hover:to-sky-700 text-white font-mono text-xs gap-1.5"
                 >
-                  {mode === 'login' ? 'Sign In to Workspace' : 'Create & Log In'}
+                  {isLoading ? (
+                    <>
+                      <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>{mode === 'login' ? 'Signing in...' : 'Registering...'}</span>
+                    </>
+                  ) : (
+                    <span>{mode === 'login' ? 'Sign In to Workspace' : 'Create & Log In'}</span>
+                  )}
                 </Button>
               </div>
 

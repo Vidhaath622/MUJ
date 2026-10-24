@@ -5,9 +5,11 @@ import {
   Sparkles, 
   X, 
   ArrowRight, 
-  RotateCw
+  RotateCw,
+  AlertCircle 
 } from 'lucide-react';
 import { SyntheticTestCase, DocumentItem } from '../../types/ragseal';
+import { generateSynthetic, ApiError } from '../../lib/api';
 
 interface SyntheticGeneratorModalProps {
   isOpen: boolean;
@@ -15,25 +17,57 @@ interface SyntheticGeneratorModalProps {
   questions: SyntheticTestCase[];
   documents: DocumentItem[];
   onSelectQuestion: (question: SyntheticTestCase) => void;
+  token?: string | null;
 }
 
 export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = ({
   isOpen,
   onClose,
-  questions,
+  questions: initialQuestions,
   documents,
   onSelectQuestion,
+  token,
 }) => {
   const [selectedDocId, setSelectedDocId] = useState(documents[0]?.document_id || '');
+  const [questionList, setQuestionList] = useState<SyntheticTestCase[]>(initialQuestions);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatorError, setGeneratorError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleTriggerGenerate = () => {
+  const handleTriggerGenerate = async () => {
     setIsGenerating(true);
+    setGeneratorError(null);
+
+    if (token) {
+      try {
+        const res = await generateSynthetic(selectedDocId, 5, token);
+        if (res && res.test_cases) {
+          const newCases: SyntheticTestCase[] = res.test_cases.map((tc) => ({
+            test_id: tc.test_id,
+            question: tc.question,
+            ground_truth_answer: tc.ground_truth_answer,
+            source_chunk_id: tc.source_chunk_id,
+            context_snippet: tc.context_snippet,
+            archetype: tc.type || 'factoid',
+          }));
+          setQuestionList((prev) => [...newCases, ...prev]);
+          setIsGenerating(false);
+          return;
+        }
+      } catch (err: any) {
+        if (err instanceof ApiError) {
+          setGeneratorError(`Backend (${err.status}): ${err.detail}`);
+        } else {
+          setGeneratorError(err.message || 'Synthetic generation failed');
+        }
+      }
+    }
+
+    // Fallback animation if backend model offline or no token
     setTimeout(() => {
       setIsGenerating(false);
-    }, 1200);
+    }, 1000);
   };
 
   return (
@@ -108,11 +142,18 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
 
         {/* Question List */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
+          {generatorError && (
+            <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-xs font-mono text-rose-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+              <span>{generatorError}</span>
+            </div>
+          )}
+
           <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 block mb-1">
-            Generated Benchmark Test Cases ({questions.length}):
+            Generated Benchmark Test Cases ({questionList.length}):
           </span>
 
-          {questions.map((q) => (
+          {questionList.map((q) => (
             <div
               key={q.test_id}
               className="p-4 rounded-xl border border-neutral-800 bg-neutral-900/40 hover:border-neutral-700 transition space-y-2.5"
@@ -130,38 +171,38 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
                   </span>
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    onSelectQuestion(q);
-                    onClose();
-                  }}
-                  className="text-[11px] font-mono border-sky-800 text-sky-300 hover:bg-sky-950/40 gap-1 py-1 h-7"
-                >
-                  <span>Test in Trace</span>
-                  <ArrowRight className="w-3 h-3" />
-                </Button>
-              </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onSelectQuestion(q);
+                      onClose();
+                    }}
+                    className="text-[11px] font-mono border-sky-800 text-sky-300 hover:bg-sky-950/40 gap-1 py-1 h-7"
+                  >
+                    <span>Test in Trace</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Button>
+                </div>
 
-              <div className="text-sm font-semibold text-white font-sans">
-                {q.question}
-              </div>
+                <div className="text-sm font-semibold text-white font-sans">
+                  {q.question}
+                </div>
 
-              <div className="p-2.5 rounded-lg bg-black/50 border border-neutral-800/80 text-xs space-y-1">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">
-                  Ground Truth Expected Answer:
-                </span>
-                <p className="text-neutral-200 font-mono text-[11px]">
-                  {q.ground_truth_answer}
-                </p>
-              </div>
+                <div className="p-2.5 rounded-lg bg-black/50 border border-neutral-800/80 text-xs space-y-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">
+                    Ground Truth Expected Answer:
+                  </span>
+                  <p className="text-neutral-200 font-mono text-[11px]">
+                    {q.ground_truth_answer}
+                  </p>
+                </div>
 
-              <div className="text-[11px] font-mono text-neutral-400 truncate">
-                Context snippet: <span className="text-neutral-400 italic">"{q.context_snippet}"</span>
+                <div className="text-[11px] font-mono text-neutral-400 truncate">
+                  Context snippet: <span className="text-neutral-400 italic">"{q.context_snippet}"</span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         {/* Footer */}

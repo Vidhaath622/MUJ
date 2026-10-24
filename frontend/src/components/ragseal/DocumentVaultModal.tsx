@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { FileDropzone } from '../domain/file-dropzone';
@@ -6,34 +6,112 @@ import {
   X, 
   Database, 
   Upload, 
-  Check 
+  Check,
+  AlertCircle,
+  RotateCw 
 } from 'lucide-react';
 import { DocumentItem } from '../../types/ragseal';
+import { uploadDocument, fetchDocuments, ApiError } from '../../lib/api';
 
 interface DocumentVaultModalProps {
   isOpen: boolean;
   onClose: () => void;
   documents: DocumentItem[];
-  onUploadDocument?: (file: File) => void;
+  token?: string | null;
+  onUploadSuccess?: () => void;
 }
 
 export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
   isOpen,
   onClose,
-  documents,
+  documents: initialDocs,
+  token,
+  onUploadSuccess,
 }) => {
-  const [selectedDocId, setSelectedDocId] = useState<string>(documents[0]?.document_id || '');
+  const [documents, setDocuments] = useState<DocumentItem[]>(initialDocs);
+  const [selectedDocId, setSelectedDocId] = useState<string>(initialDocs[0]?.document_id || '');
   const [activeTab, setActiveTab] = useState<'inspect' | 'upload'>('inspect');
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+
+  // Sync initial docs and fetch user's documents if token present
+  useEffect(() => {
+    setDocuments(initialDocs);
+    if (token) {
+      fetchDocuments(token)
+        .then((userDocs) => {
+          if (userDocs && userDocs.length > 0) {
+            const mappedUserDocs: DocumentItem[] = userDocs.map((ud) => ({
+              document_id: ud.document_id,
+              filename: ud.filename,
+              title: ud.filename,
+              chunk_count: ud.chunk_count,
+              status: 'active',
+              category: 'policy',
+              chunks: (ud.chunks || []).map((c, idx) => ({
+                chunk_id: c.chunk_id,
+                text: c.text,
+                page: c.ordinal || idx + 1,
+              })),
+            }));
+            // Merge deduplicating by document_id
+            setDocuments((prev) => {
+              const existingIds = new Set(mappedUserDocs.map((d) => d.document_id));
+              return [...mappedUserDocs, ...prev.filter((d) => !existingIds.has(d.document_id))];
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [initialDocs, token, isOpen]);
 
   if (!isOpen) return null;
 
   const currentDoc = documents.find((d) => d.document_id === selectedDocId) || documents[0];
 
-  const handleSimulateUpload = (files: File[]) => {
-    if (files.length > 0) {
-      setUploadStatus(`Uploaded and chunked ${files[0].name} (4 chunks extracted)`);
-      setTimeout(() => setUploadStatus(null), 4000);
+  const handleUploadFile = async (file: File) => {
+    if (!token) {
+      setUploadError('Please sign in (Demo account available) to upload documents.');
+      return;
+    }
+    setIsUploading(true);
+    setUploadError(null);
+    setUploadStatus(null);
+    try {
+      const res = await uploadDocument(file, token);
+      setUploadStatus(`Ingested ${res.filename} into SQLite store (${res.chunk_count} chunks created)`);
+      if (onUploadSuccess) onUploadSuccess();
+      // Fetch latest documents to update list
+      const latest = await fetchDocuments(token);
+      if (latest && latest.length > 0) {
+        const mapped = latest.map((ud) => ({
+          document_id: ud.document_id,
+          filename: ud.filename,
+          title: ud.filename,
+          chunk_count: ud.chunk_count,
+          status: 'active' as const,
+          category: 'policy' as const,
+          chunks: (ud.chunks || []).map((c, idx) => ({
+            chunk_id: c.chunk_id,
+            text: c.text,
+            page: c.ordinal || idx + 1,
+          })),
+        }));
+        setDocuments((prev) => {
+          const ids = new Set(mapped.map((d) => d.document_id));
+          return [...mapped, ...prev.filter((d) => !ids.has(d.document_id))];
+        });
+        setSelectedDocId(res.document_id);
+      }
+    } catch (err: any) {
+      if (err instanceof ApiError) {
+        setUploadError(err.detail);
+      } else {
+        setUploadError(err.message || 'File upload failed');
+      }
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -190,10 +268,24 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
               </div>
 
               <FileDropzone
-                onFileSelect={(file) => handleSimulateUpload([file])}
+                onFileSelect={(file) => handleUploadFile(file)}
                 acceptedFormats={['.pdf', '.txt', '.md']}
-                maxSizeMb={25}
+                maxSizeMb={20}
               />
+
+              {isUploading && (
+                <div className="p-3 rounded-xl bg-teal-950/40 border border-teal-800 text-xs text-teal-300 flex items-center gap-2">
+                  <RotateCw className="w-4 h-4 text-teal-400 animate-spin" />
+                  <span>Uploading and parsing document into chunks...</span>
+                </div>
+              )}
+
+              {uploadError && (
+                <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-xs text-rose-300 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
 
               {uploadStatus && (
                 <div className="p-3 rounded-xl bg-emerald-950/50 border border-emerald-800 text-xs text-emerald-300 flex items-center gap-2">

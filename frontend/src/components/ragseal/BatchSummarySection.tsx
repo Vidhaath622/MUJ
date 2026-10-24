@@ -17,7 +17,10 @@ import {
   BarChart2,
   Users,
   History,
-  Clock
+  Clock,
+  Play,
+  RotateCw,
+  AlertCircle 
 } from 'lucide-react';
 import { BatchSummary, RunHistoryItem } from '../../types/ragseal';
 import { EvaluationTable, EvaluationItem } from '../domain/evaluation-table';
@@ -28,7 +31,11 @@ interface BatchSummarySectionProps {
   onSelectCase: (caseId: string) => void;
   runHistory?: RunHistoryItem[];
   onLoadRun?: (batchId: string) => void;
-  onRunBatchAgain?: () => void;
+  onRunBatch?: () => void;
+  isBatchEvaluating?: boolean;
+  batchElapsedSeconds?: number;
+  batchError?: string | null;
+  packName?: string;
 }
 
 export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
@@ -37,6 +44,11 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
   onSelectCase,
   runHistory = [],
   onLoadRun,
+  onRunBatch,
+  isBatchEvaluating = false,
+  batchElapsedSeconds = 0,
+  batchError = null,
+  packName = 'Active Pack',
 }) => {
   const [showHistory, setShowHistory] = useState(false);
 
@@ -95,6 +107,42 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Note #5: Slow Batch Progress State */}
+      {isBatchEvaluating && (
+        <Card variant="glass" className="p-4 border-teal-800 bg-teal-950/40 space-y-3 animate-in fade-in">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="text-teal-300 font-bold flex items-center gap-2">
+              <RotateCw className="w-4 h-4 text-teal-400 animate-spin" />
+              <span>Evaluating pack cases across {packName} (~60s)...</span>
+            </span>
+            <span className="text-teal-400 font-bold">
+              {batchElapsedSeconds}s elapsed / ~60s estimated
+            </span>
+          </div>
+          <div className="w-full bg-neutral-900 rounded-full h-2 overflow-hidden border border-neutral-800">
+            <div
+              className="bg-gradient-to-r from-teal-500 to-sky-400 h-full transition-all duration-300"
+              style={{ width: `${Math.min(95, Math.max(5, (batchElapsedSeconds / 60) * 100))}%` }}
+            />
+          </div>
+          <div className="text-[11px] text-neutral-400 font-mono flex items-center justify-between">
+            <span>Running local generator (llama3.2:3b) + judge model...</span>
+            <span className="text-neutral-500">Request timeout: 180s</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Note #2: Real Error Message Display */}
+      {batchError && (
+        <div className="p-3.5 rounded-xl bg-rose-950/50 border border-rose-800 text-xs font-mono text-rose-300 flex items-start gap-2.5 animate-in fade-in">
+          <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-bold text-white block">Batch Evaluation Error:</span>
+            <span>{batchError}</span>
+          </div>
+        </div>
+      )}
+
       {/* Aggregates Top Summary Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Pass Rate */}
@@ -308,9 +356,28 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
             </div>
           </div>
 
-          {/* Past Run History Drawer Toggle */}
-          <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px] font-mono">
-            <span className="text-neutral-500">Runs: {runHistory.length} saved</span>
+          {/* Batch Run & Past Run History Actions */}
+          <div className="pt-3 border-t border-neutral-800 flex items-center justify-between gap-2 text-[11px] font-mono flex-wrap">
+            <Button
+              variant="default"
+              size="xs"
+              onClick={onRunBatch}
+              disabled={isBatchEvaluating}
+              className="bg-teal-600 hover:bg-teal-500 text-white font-mono text-xs gap-1.5"
+            >
+              {isBatchEvaluating ? (
+                <>
+                  <RotateCw className="w-3 h-3 animate-spin" />
+                  <span>Evaluating ({batchElapsedSeconds}s)...</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3 h-3 fill-current" />
+                  <span>Run Pack Suite</span>
+                </>
+              )}
+            </Button>
+
             <Button
               variant="outline"
               size="xs"
@@ -318,7 +385,7 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
               className="text-xs font-mono gap-1"
             >
               <History className="w-3 h-3 text-neutral-400" />
-              <span>{showHistory ? 'Hide Runs' : 'Past Runs'}</span>
+              <span>{showHistory ? 'Hide Runs' : `Past Runs (${runHistory.length})`}</span>
             </Button>
           </div>
         </Card>

@@ -215,13 +215,40 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400">
-            <span className="bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800 text-neutral-300">
-              Model: {backendHealth?.generator_model || 'llama3.2:3b'}
+          <div className="flex items-center gap-2 text-[11px] font-mono flex-wrap">
+            {/* Generator Badge */}
+            <span className="bg-neutral-900 px-2.5 py-1 rounded-md border border-neutral-800 text-neutral-300 flex items-center gap-1.5">
+              <span className="text-neutral-500">Generator:</span>
+              <span className="text-sky-300 font-bold">{backendHealth?.generator_model || 'llama3.2:3b'}</span>
+              {backendHealth?.models?.generator?.ready ? (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Ready" />
+              ) : (
+                <span className="text-[10px] text-amber-400 font-normal">(warming up)</span>
+              )}
             </span>
-            <span className="bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800 text-neutral-300">
-              Judge: {backendHealth?.judge_model || 'qwen3:8b'} (cached)
-            </span>
+
+            {/* Judge Badge per Note #3 */}
+            {backendHealth?.evaluation_mode === 'hosted' ? (
+              <span className="bg-purple-950/60 border border-purple-800/80 px-2.5 py-1 rounded-md text-purple-200 font-bold flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                <span>Using hosted judge: {backendHealth.judge_model?.split('/').pop() || 'gpt-oss-120b'} (Groq)</span>
+              </span>
+            ) : backendHealth && !backendHealth.engine_ready && !backendHealth.ollama_reachable ? (
+              <span className="bg-amber-950/40 border border-amber-800/60 px-2.5 py-1 rounded-md text-amber-300 flex items-center gap-1.5" title={backendHealth.engine_error || "Ollama unreachable at localhost:11434"}>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span>Local model warming up ({backendHealth.judge_model || 'qwen3:8b'})</span>
+              </span>
+            ) : backendHealth?.models?.judge?.ready === false ? (
+              <span className="bg-rose-950/40 border border-rose-800 px-2.5 py-1 rounded-md text-rose-300 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <span>Judge unavailable</span>
+              </span>
+            ) : (
+              <span className="bg-neutral-900 px-2.5 py-1 rounded-md border border-neutral-800 text-teal-300 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                <span>Local judge: {backendHealth?.judge_model || 'qwen3:8b'} (cached)</span>
+              </span>
+            )}
           </div>
         </div>
       )}
