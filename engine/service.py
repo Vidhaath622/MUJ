@@ -512,6 +512,75 @@ class Engine:
             "results": results,
         }
 
+    # ---------------------------------------------------------- impact radar
+
+    def impact(
+        self,
+        owner_id: str,
+        old_document_id: str,
+        new_document_id: str,
+        max_tests: int = 10,
+        progress: Callable[[int, int, int], None] | None = None,
+    ) -> dict:
+        """What an update from old to new document breaks: changed facts, and which still answer with the old one."""
+        from .impact import diff, make_tests, quotes_old_value
+
+        old_doc = self.store.get_document(owner_id, old_document_id)
+        new_doc = self.store.get_document(owner_id, new_document_id)
+        if old_doc is None or new_doc is None:
+            raise NotFound("both documents must exist for this user")
+        document_ids = [old_document_id, new_document_id]
+        self._ensure_embeddings(owner_id, document_ids)
+        changes, unchanged = diff(self.store.chunks_for(owner_id, [old_document_id]), self.store.chunks_for(owner_id, [new_document_id]))
+        for change in changes:
+            change["tested"] = False
+        pairs = make_tests(self.judge, changes, max_tests)
+        if progress:
+            progress(0, len(pairs), 0)
+        tests = []
+        for done, (case, change) in enumerate(pairs, start=1):
+            try:
+                ev = self.evaluator.evaluate(owner_id, _case_from_dict(case), document_ids)
+            except (ModelUnavailable, JudgeError) as exc:
+                ev = failed_result(_case_from_dict(case), exc, self.judge, self.generator.model)
+            root = ev["root_cause"]
+            stale_retrieved = bool(set(case["stale_chunk_ids"]) & set(ev["retrieved_chunk_ids"]))
+            old_value = quotes_old_value(ev["generated_answer"], change)
+            tests.append({
+                "test_id": case["test_id"],
+                "question": case["question"],
+                "gold": change["new"],
+                "expected_answer": case["ground_truth_answer"],
+                "old_fact": change["old"],
+                "answer": ev["generated_answer"],
+                "verdict": root["category"],
+                "failure_type": root.get("failure_type"),
+                "stage": root.get("stage"),
+                "stale_retrieved": stale_retrieved,
+                "gold_retrieved": ev["gold_retrieved"],
+                "quotes_old_value": old_value,
+                "at_risk": root.get("failure_type") == "STALE_SOURCE" or old_value
+                           or (root["category"] != "CLEAN_PASS" and stale_retrieved),
+                "retrieved_chunk_ids": ev["retrieved_chunk_ids"],
+                "judge_model": ev.get("judge_model"),
+                "evaluation_id": ev["evaluation_id"],
+                "evaluation": ev,
+            })
+            if progress:
+                progress(done, len(pairs), 0)
+        kinds = [c["kind"] for c in changes]
+        at_risk = sum(t["at_risk"] for t in tests)
+        return {
+            "old_document": {"document_id": old_document_id, "filename": old_doc.filename},
+            "new_document": {"document_id": new_document_id, "filename": new_doc.filename},
+            "summary": {"unchanged": unchanged, "changed": kinds.count("changed"), "added": kinds.count("added"),
+                        "removed": kinds.count("removed"), "tests": len(tests), "at_risk": at_risk},
+            "changes": [{k: v for k, v in c.items() if k != "similarity"} for c in changes],
+            "tests": tests,
+            "at_risk": at_risk,
+            "judge_model": self.judge.model,
+        }
+
     # ------------------------------------------------------ fault injection
 
     def injection_run(
