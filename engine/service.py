@@ -227,6 +227,7 @@ class Engine:
         progress: Callable[[int, int, int], None] | None = None,
         batch_id: str | None = None,
         concurrency: int | None = None,
+        top_k: int | None = None,
     ) -> dict:
         """Evaluate many cases. `progress(done, total, failed)` is called after each case."""
         self._check_documents(owner_id, document_ids)
@@ -241,7 +242,7 @@ class Engine:
 
         def run(case: TestCase) -> dict:
             try:
-                result = self.evaluator.evaluate(owner_id, case, document_ids)
+                result = self.evaluator.evaluate(owner_id, case, document_ids, top_k)
             except (ModelUnavailable, JudgeError) as exc:
                 result = failed_result(case, exc, self.judge, self.generator.model)
             with lock:
@@ -293,6 +294,7 @@ class Engine:
             "judge_fallback_cases": sum(bool(ev.get("judge_fallback_used")) for ev in evaluations),
             "judge_fallback_models": fallback_models,
             "generator_model": self.generator.model,
+            "top_k": top_k or self.settings.top_k,
             "duration_ms": wall_ms,
             "timing": {
                 "wall_ms": wall_ms,
@@ -372,6 +374,7 @@ class Engine:
             "demo_data": bool(spec.manifest.get("demo_data", True)),
             "document_ids": document_ids,
             "distractor_document_ids": distractor_ids,
+            "superseded_document_ids": [docs_by_file[e["file"]].document_id for e in spec.documents if e.get("superseded_by")],
             "documents": [
                 {"document_id": d.document_id, "filename": d.filename, "chunk_count": len(d.chunks)} for d in docs_by_file.values()
             ],
@@ -438,6 +441,32 @@ class Engine:
             if not ready:
                 raise ModelUnavailable(f"judge {model.provider}:{model.model} is not available: {reason}")
         return run_stability(self, owner_id, batch, models, shuffles=shuffles, max_cases=max_cases, progress=progress)
+
+    # ------------------------------------------------------- RAG versions
+
+    def profiles(self) -> list[dict]:
+        from .compare import PROFILES
+
+        return list(PROFILES.values())
+
+    def run_profile(
+        self, owner_id: str, pack_id: str, profile_id: str, progress: Callable[[int, int, int], None] | None = None, batch_id: str | None = None
+    ) -> dict:
+        """Run a whole pack under one RAG version (see compare.PROFILES)."""
+        from .compare import PROFILES
+
+        profile = PROFILES.get(profile_id)
+        if profile is None:
+            raise NotFound(f"unknown RAG profile {profile_id!r}")
+        pack = self.load_pack(owner_id, pack_id)
+        document_ids = pack["document_ids"]
+        if profile["params"]["newest_versions_only"]:
+            document_ids = [d for d in document_ids if d not in set(pack["superseded_document_ids"])]
+        batch = self.evaluate_batch(
+            owner_id, document_ids, pack["test_cases"], pack_id=pack_id, progress=progress, batch_id=batch_id,
+            top_k=profile["params"]["top_k"],
+        )
+        return {**batch, "profile": profile_id}
 
     def pack_labels(self, pack_id: str) -> list[dict]:
         try:

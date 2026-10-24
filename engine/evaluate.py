@@ -94,7 +94,7 @@ class Evaluator:
 
     # ------------------------------------------------------------ evaluate
 
-    def evaluate(self, owner_id: str, case: TestCase, document_ids: list[str]) -> dict:
+    def evaluate(self, owner_id: str, case: TestCase, document_ids: list[str], top_k: int | None = None) -> dict:
         started = time.perf_counter()
         self.judge.start_tracking()
         counter = {"judge_calls": 0, "rule_shortcuts": 0}
@@ -105,10 +105,10 @@ class Evaluator:
             else:
                 answer, citations, gen_ms = self.rag.generate(case.question, [s.chunk for s in retrieved])
         elif case.manual_answer:
-            retrieved = self.rag.retrieve(owner_id, case.question, document_ids)
+            retrieved = self.rag.retrieve(owner_id, case.question, document_ids, top_k)
             answer, citations, gen_ms = case.manual_answer, [], 0
         else:
-            rag = self.rag.ask(owner_id, case.question, document_ids)
+            rag = self.rag.ask(owner_id, case.question, document_ids, top_k)
             retrieved, answer, citations, gen_ms = rag.retrieved, rag.answer, rag.citations, rag.generation_ms
         chunks = [s.chunk for s in retrieved]
         retrieved_ids = [c.chunk_id for c in chunks]
