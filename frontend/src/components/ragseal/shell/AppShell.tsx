@@ -166,7 +166,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-[var(--rule)] bg-[var(--panel)] text-[10px] font-semibold tabular-nums text-[var(--ink-1)]">
                   {g.step}
                 </span>
-                <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--muted)]">{g.group}</span>
+                <span className="text-[12px] font-medium text-[var(--ink-2)]">{g.group}</span>
               </div>
             )}
             {/* Connector line linking the three steps */}
@@ -244,11 +244,12 @@ export const AppShell: React.FC<AppShellProps> = ({
 
     <div className="flex min-w-0 flex-1 flex-col">
       <header className="flex min-h-14 shrink-0 items-center gap-4 border-b border-[var(--rule)] px-6 py-2">
-        <div className="min-w-0">
-          <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)]">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
+        {/* The title block absorbs the squeeze (its blurb truncates); the controls keep their width. */}
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)]">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
           <p className="truncate text-xs text-[var(--ink-2)]">{ROUTE_BLURB[route]}</p>
         </div>
-        <div id={TOP_BAR_SLOT} className="ml-auto flex min-w-0 items-center gap-3">
+        <div id={TOP_BAR_SLOT} className="ml-auto flex shrink-0 items-center gap-3">
           {topBarControls}
         </div>
       </header>

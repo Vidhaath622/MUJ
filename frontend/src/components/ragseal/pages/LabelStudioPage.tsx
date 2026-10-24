@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Check, Keyboard, SkipForward, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Keyboard, SkipForward, X } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { PackId } from '../../../types/ragseal';
 import { TopBarControls } from '../shell/AppShell';
@@ -26,6 +26,17 @@ function saveLabeler(name: string | null) {
   } catch {
     // private mode: the name just isn't remembered
   }
+}
+
+/** A stored label as the value the page tracks: 'correct', a failure type, or 'wrong' (reason unknown). */
+function labelValue(l: { correct: boolean; failure_type?: string | null } | null | undefined): string | undefined {
+  if (!l) return undefined;
+  return l.correct ? 'correct' : l.failure_type || 'wrong';
+}
+
+function describeLabel(value: string): string {
+  if (value === 'correct') return 'Correct';
+  return value === 'wrong' ? 'Wrong' : `Wrong · ${failureLabel(value)}`;
 }
 
 /** The backend's accepted failure types, in its order, with our labels and stages. */
@@ -60,6 +71,11 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
   // After everything is labelled the queue shows a completion card; "Review my labels" browses 1..N.
   const [browsing, setBrowsing] = useState(false);
   const [done, setDone] = useState<Record<string, 'correct' | string>>({});
+  // This labeller's own current label per item ('correct', a failure type or 'wrong'), from the
+  // backend's my_label and updated on every save, so an existing label can be seen and changed.
+  const [mine, setMine] = useState<Record<string, string>>({});
+  // Short confirmation after changing an existing label ("Label updated").
+  const [flash, setFlash] = useState<string | null>(null);
   const [pickingType, setPickingType] = useState(false);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
@@ -76,14 +92,22 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
     setItems(null);
     setLoadError(null);
     setDone({});
+    setMine({});
+    setFlash(null);
     setPickingType(false);
     (async () => {
       try {
         if (review) {
-          const d = await getDisagreements(packId, token);
+          const d = await getDisagreements(packId, token, labeler);
           if (cancelled) return;
           if (d.failure_types) setTypes(typesFrom(d.failure_types));
           setWaitingFor(null);
+          const own: Record<string, string> = {};
+          d.items.forEach((it) => {
+            const v = labelValue(it.my_label ?? it.labels?.[labeler]);
+            if (v) own[it.test_id] = v;
+          });
+          setMine(own);
           setItems(d.items);
           setIndex(0);
           return;
@@ -107,8 +131,15 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
         setWaitingFor(null);
         setItems(q.items);
         const already: Record<string, string> = {};
-        q.items.forEach((it) => it.labeled && (already[it.test_id] = 'labeled'));
+        const own: Record<string, string> = {};
+        q.items.forEach((it) => {
+          const v = labelValue(it.my_label);
+          if (v) own[it.test_id] = v;
+          // Older backends only say "labeled" without the label itself.
+          if (it.labeled || v) already[it.test_id] = v ?? 'labeled';
+        });
         setDone(already);
+        setMine(own);
         const firstOpen = q.items.findIndex((it) => !it.labeled);
         setIndex(firstOpen === -1 ? 0 : firstOpen);
       } catch (err) {
@@ -172,9 +203,13 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
     else setIndex((i) => Math.min(items.length - 1, i + 1));
   }, [items, index, done, browsing]);
 
+  // Changing a label you already gave keeps you on the item with a confirmation; a first label
+  // (and every answer in disagreement review) moves on to the next item.
   const submit = useCallback(
     async (correct: boolean, failureType: string | null) => {
       if (!item || !token || !labeler || saving) return;
+      const previous = mine[item.test_id] ?? (done[item.test_id] && done[item.test_id] !== 'labeled' ? done[item.test_id] : undefined);
+      const editing = !review && (previous !== undefined || done[item.test_id] === 'labeled');
       setSaving(true);
       setError(null);
       try {
@@ -184,15 +219,27 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
         );
         const value = correct ? 'correct' : failureType ?? 'wrong';
         setDone((d) => ({ ...d, [item.test_id]: value }));
-        advance();
+        setMine((m) => ({ ...m, [item.test_id]: value }));
+        setPickingType(false);
+        if (editing) setFlash(previous === value ? 'Saved, unchanged' : 'Label updated');
+        else advance();
       } catch (err) {
         setError(errorText(err));
       } finally {
         setSaving(false);
       }
     },
-    [item, token, labeler, saving, note, advance]
+    [item, token, labeler, saving, note, advance, mine, done, review]
   );
+
+  useEffect(() => {
+    if (!flash) return;
+    const id = window.setTimeout(() => setFlash(null), 1800);
+    return () => window.clearTimeout(id);
+  }, [flash]);
+
+  // The confirmation belongs to the item it was shown on.
+  useEffect(() => setFlash(null), [index]);
 
   // Keyboard: 1 correct, 2 wrong → 1-9 failure type, Esc back, S skip, ← previous.
   useEffect(() => {
@@ -235,6 +282,10 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
   }, [item, items, pickingType, submit, advance, types, goTo, index]);
 
   const knownAnswer = item?.ground_truth ?? item?.ground_truth_answer;
+  // What this labeller currently has on the item: the backend's my_label, or what they just saved.
+  const current = item
+    ? mine[item.test_id] ?? (done[item.test_id] && done[item.test_id] !== 'labeled' && !review ? done[item.test_id] : undefined)
+    : undefined;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -245,16 +296,16 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
               saveLabeler(null);
               setLabeler(null);
             }}
-            className="text-xs text-[var(--ink-2)] hover:text-[var(--ink)]"
+            className="shrink-0 whitespace-nowrap text-xs text-[var(--ink-2)] hover:text-[var(--ink)]"
           >
-            Labeling as <span className="font-medium text-[var(--ink)]">{labeler}</span> · switch
+            Labelling as <span className="font-medium text-[var(--ink)]">{labeler}</span> · switch
           </button>
         )}
         {labeler && (
           <button
             onClick={() => setReview((r) => !r)}
             className={cn(
-              'rounded-md border px-2.5 py-1 text-xs transition-colors',
+              'shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs transition-colors',
               review
                 ? 'border-[var(--retr)] bg-[color:color-mix(in_srgb,var(--retr)_12%,transparent)] text-[var(--ink)]'
                 : 'border-[var(--rule)] text-[var(--ink-2)] hover:text-[var(--ink)]'
@@ -296,7 +347,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
       ) : showComplete ? (
         <div className="flex h-full items-center justify-center p-6">
           <div className="lab-panel lab-fade-up w-full max-w-lg rounded-2xl p-7 text-center">
-            <div className="text-xs uppercase tracking-[0.12em] text-[var(--ok)]">Pack complete</div>
+            <div className="text-[13px] font-medium text-[var(--ok)]">Pack complete</div>
             <h2 className="mt-2 text-xl font-semibold tracking-[-0.01em] text-[var(--ink)]">
               All {items.length} labelled in {PACK_NAME[packId] ?? packId}
             </h2>
@@ -340,32 +391,51 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
             )}
             <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
-            <div key={item.test_id} className="page-enter grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr]">
-              <section className="lab-panel flex min-h-0 flex-col rounded-2xl p-6">
-                <div className="flex items-center gap-2 text-xs text-[var(--ink-2)]">
-                  <span className="font-mono">{item.test_id}</span>
-                  {done[item.test_id] && (
-                    <span className="text-[var(--ok)]">
-                      · {done[item.test_id] === 'labeled' ? 'already labelled' : `you said ${done[item.test_id] === 'correct' ? 'Correct' : `Wrong${done[item.test_id] === 'wrong' ? '' : ` · ${failureLabel(done[item.test_id])}`}`}`}
-                      <span className="text-[var(--ink-2)]"> (press 1 / 2 to change)</span>
-                    </span>
-                  )}
+            {/* Rows are minmax(0, 1fr) so long chunk lists scroll inside their pane instead of
+                stretching the grid and pushing the action bar below the screen. */}
+            <div
+              key={item.test_id}
+              className="page-enter grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-4 lg:grid-cols-[1.1fr_1fr] lg:grid-rows-[minmax(0,1fr)]"
+            >
+              <section className="lab-panel flex min-h-0 flex-col overflow-hidden rounded-2xl">
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5 pt-5">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-[var(--ink-2)]">
+                    <span className="font-mono">{item.test_id}</span>
+                    {current ? (
+                      <span
+                        className="rounded-full px-2.5 py-0.5 font-medium"
+                        style={{ color: current === 'correct' ? PASS : RED, background: tint(current === 'correct' ? PASS : RED, 0.12) }}
+                      >
+                        Your label: {describeLabel(current)}
+                      </span>
+                    ) : (
+                      done[item.test_id] === 'labeled' && <span>already labelled</span>
+                    )}
+                    {(current || done[item.test_id]) && !flash && (
+                      <span className="text-[var(--muted)]">Click Correct or Wrong below to change it</span>
+                    )}
+                    {flash && (
+                      <span className="flex items-center gap-1 font-medium text-[var(--ok)]" role="status">
+                        <Check className="h-3.5 w-3.5" /> {flash}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="mt-2 text-[22px] font-semibold leading-snug tracking-[-0.02em] text-[var(--ink)]">{item.question}</h2>
+
+                  <div className="mt-5 text-xs text-[var(--ink-2)]">Known answer</div>
+                  <p className="mt-1 text-[15px] leading-relaxed text-[var(--ink-1)]">
+                    {item.expected_abstain
+                      ? 'Not in the documents. The right reply is to say so, not to answer.'
+                      : knownAnswer || '— (none given)'}
+                  </p>
+
+                  <div className="mt-5 text-xs text-[var(--ink-2)]">Model answer</div>
+                  <p className="mt-1 whitespace-pre-wrap text-[17px] leading-relaxed tracking-[-0.01em] text-[var(--ink)]">
+                    {item.generated_answer || '— (no answer)'}
+                  </p>
                 </div>
-                <h2 className="mt-2 text-[22px] font-semibold leading-snug tracking-[-0.02em] text-[var(--ink)]">{item.question}</h2>
 
-                <div className="mt-6 text-xs text-[var(--ink-2)]">Known answer</div>
-                <p className="mt-1 text-[15px] leading-relaxed text-[var(--ink-1)]">
-                  {item.expected_abstain
-                    ? 'Not in the documents. The right reply is to say so, not to answer.'
-                    : knownAnswer || '— (none given)'}
-                </p>
-
-                <div className="mt-6 text-xs text-[var(--ink-2)]">Model answer</div>
-                <p className="mt-1 overflow-y-auto whitespace-pre-wrap text-[17px] leading-relaxed tracking-[-0.01em] text-[var(--ink)]">
-                  {item.generated_answer || '— (no answer)'}
-                </p>
-
-                <div className="mt-auto pt-6">
+                <div className="shrink-0 border-t border-[var(--rule)] px-6 py-3">
                   <label className="flex h-9 items-center gap-2 rounded-[9px] border border-[var(--rule-2)] bg-[var(--paper)] px-3">
                     <span className="sr-only">Note</span>
                     <input
@@ -404,13 +474,18 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
               types={types}
               picking={pickingType}
               saving={saving}
+              current={current}
+              labelled={!!current || !!done[item.test_id]}
               onCorrect={() => submit(true, null)}
               onWrong={() => setPickingType(true)}
               onType={(id) => submit(false, id)}
+              onUnsure={() => submit(false, null)}
               onCancel={() => setPickingType(false)}
               onSkip={advance}
               onBack={() => goTo(index - 1)}
               backDisabled={index === 0}
+              onNext={() => goTo(index + 1)}
+              nextDisabled={index >= items.length - 1}
             />
           </div>
         )
@@ -482,14 +557,37 @@ const ActionBar: React.FC<{
   types: FailureType[];
   picking: boolean;
   saving: boolean;
+  /** This labeller's current label on the item, if any: 'correct', a failure type or 'wrong'. */
+  current?: string;
+  labelled: boolean;
   onCorrect: () => void;
   onWrong: () => void;
   onType: (id: string) => void;
+  onUnsure: () => void;
   onCancel: () => void;
   onSkip: () => void;
   onBack: () => void;
   backDisabled?: boolean;
-}> = ({ types, picking, saving, onCorrect, onWrong, onType, onCancel, onSkip, onBack, backDisabled }) => {
+  onNext: () => void;
+  nextDisabled?: boolean;
+}> = ({
+  types,
+  picking,
+  saving,
+  current,
+  labelled,
+  onCorrect,
+  onWrong,
+  onType,
+  onUnsure,
+  onCancel,
+  onSkip,
+  onBack,
+  backDisabled,
+  onNext,
+  nextDisabled,
+}) => {
+  const currentType = current && current !== 'correct' && current !== 'wrong' ? current : undefined;
   const groups = useMemo(() => {
     const keyed = types.map((f, i) => ({ ...f, key: i + 1 }));
     return [
@@ -501,12 +599,12 @@ const ActionBar: React.FC<{
 
   if (picking) {
     return (
-      <div className="lab-panel lab-fade-up rounded-2xl p-4">
-        <div className="mb-3 flex items-center justify-between text-[13px]">
+      <div className="lab-panel lab-fade-up shrink-0 rounded-2xl p-4">
+        <div className="mb-3 flex items-center justify-between gap-4 text-[13px]">
           <span className="text-[var(--ink)]">
-            Why is it wrong? <span className="text-[var(--ink-2)]">Press a number, or <Key>0</Key> if you're not sure (that still counts).</span>
+            Why is it wrong? <span className="text-[var(--ink-2)]">Pick the closest reason. Not sure is a fine answer.</span>
           </span>
-          <button onClick={onCancel} className="flex items-center gap-1.5 text-xs text-[var(--ink-2)] hover:text-[var(--ink)]">
+          <button onClick={onCancel} className="flex shrink-0 items-center gap-1.5 text-xs text-[var(--ink-2)] hover:text-[var(--ink)]">
             <Key>Esc</Key> back
           </button>
         </div>
@@ -514,59 +612,107 @@ const ActionBar: React.FC<{
           {groups.map((g) => (
             <div key={g.stage || 'other'} className="flex flex-wrap items-center gap-2">
               {g.stage && <span className="mr-1 text-[11px] text-[var(--muted)]">{g.stage}</span>}
-              {g.items.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => onType(f.id)}
-                  disabled={saving}
-                  title={f.hint}
-                  className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border px-3 py-2 text-left text-[13px] text-[var(--ink)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] disabled:opacity-50"
-                  style={{ borderColor: tint(STAGE_COLOR[f.stage], 0.35) }}
-                >
-                  <span style={{ color: STAGE_COLOR[f.stage] }}>
-                    <Key>{f.key}</Key>
-                  </span>
-                  <span className="flex flex-col items-start leading-tight">
-                    <span>{f.plain ?? f.label}</span>
-                    <span className="text-[11px] text-[var(--ink-2)]">{f.hint}</span>
-                  </span>
-                </button>
-              ))}
+              {g.items.map((f) => {
+                const chosen = f.id === currentType;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => onType(f.id)}
+                    disabled={saving}
+                    title={f.hint}
+                    aria-pressed={chosen}
+                    className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border px-3 py-2 text-left text-[13px] text-[var(--ink)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] disabled:opacity-50"
+                    style={{
+                      borderColor: chosen ? STAGE_COLOR[f.stage] : tint(STAGE_COLOR[f.stage], 0.35),
+                      background: chosen ? tint(STAGE_COLOR[f.stage], 0.12) : undefined,
+                    }}
+                  >
+                    <span style={{ color: STAGE_COLOR[f.stage] }}>
+                      <Key>{f.key}</Key>
+                    </span>
+                    <span className="flex flex-col items-start leading-tight">
+                      <span>
+                        {f.plain ?? f.label}
+                        {chosen && <span className="ml-1.5 text-[11px] text-[var(--ink-2)]">(your label)</span>}
+                      </span>
+                      <span className="text-[11px] text-[var(--ink-2)]">{f.hint}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           ))}
+          <button
+            onClick={onUnsure}
+            disabled={saving}
+            aria-pressed={current === 'wrong'}
+            className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border border-[var(--rule-2)] px-3 py-2 text-left text-[13px] text-[var(--ink)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] disabled:opacity-50"
+            style={current === 'wrong' ? { borderColor: 'var(--ink-2)', background: 'color-mix(in srgb, var(--ink) 6%, transparent)' } : undefined}
+          >
+            <span className="text-[var(--ink-2)]">
+              <Key>0</Key>
+            </span>
+            <span className="flex flex-col items-start leading-tight">
+              <span>
+                Wrong, not sure why
+                {current === 'wrong' && <span className="ml-1.5 text-[11px] text-[var(--ink-2)]">(your label)</span>}
+              </span>
+              <span className="text-[11px] text-[var(--ink-2)]">Still counts as wrong.</span>
+            </span>
+          </button>
         </div>
       </div>
     );
   }
 
+  const isCorrect = current === 'correct';
+  const isWrong = !!current && !isCorrect;
   return (
-    <div className="flex items-center gap-3">
-      <button
-        onClick={onBack}
-        disabled={backDisabled}
-        className="flex h-14 items-center gap-2 rounded-xl border border-[var(--rule)] px-4 text-[13px] text-[var(--ink-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-35"
-        aria-label="Previous item"
-      >
+    <div className="flex shrink-0 items-stretch gap-3">
+      <NavButton onClick={onBack} disabled={backDisabled} label="Previous answer">
         <ArrowLeft className="h-4 w-4" />
-      </button>
-      <BigChoice color={PASS} onClick={onCorrect} disabled={saving} hotkey="1" icon={<Check className="h-5 w-5" />}>
+      </NavButton>
+      <BigChoice color={PASS} onClick={onCorrect} disabled={saving} hotkey="1" selected={isCorrect} icon={<Check className="h-5 w-5" />}>
         Correct
       </BigChoice>
-      <BigChoice color={RED} onClick={onWrong} disabled={saving} hotkey="2" icon={<X className="h-5 w-5" />}>
+      <BigChoice color={RED} onClick={onWrong} disabled={saving} hotkey="2" selected={isWrong} icon={<X className="h-5 w-5" />}>
         Wrong
       </BigChoice>
-      <button
-        onClick={onSkip}
-        className="flex h-14 items-center gap-2 rounded-xl border border-[var(--rule)] px-4 text-[13px] text-[var(--ink-2)] hover:text-[var(--ink)]"
-      >
-        <SkipForward className="h-4 w-4" /> Skip <span className="text-[var(--muted)]"><Key>S</Key></span>
-      </button>
-      <div className="ml-2 hidden items-center gap-1.5 text-xs text-[var(--muted)] xl:flex">
-        <Keyboard className="h-3.5 w-3.5" /> ← previous
+      {labelled ? (
+        <NavButton onClick={onNext} disabled={nextDisabled} label="Next answer">
+          <ArrowRight className="h-4 w-4" />
+        </NavButton>
+      ) : (
+        <button
+          onClick={onSkip}
+          className="flex h-14 shrink-0 items-center gap-2 rounded-xl border border-[var(--rule)] px-4 text-[13px] text-[var(--ink-2)] transition-colors hover:text-[var(--ink)]"
+        >
+          <SkipForward className="h-4 w-4" /> Skip <span className="text-[var(--muted)]"><Key>S</Key></span>
+        </button>
+      )}
+      <div className="ml-1 hidden items-center gap-1.5 self-center text-xs text-[var(--muted)] xl:flex">
+        <Keyboard className="h-3.5 w-3.5" /> 1 · 2 · ← →
       </div>
     </div>
   );
 };
+
+const NavButton: React.FC<{ onClick: () => void; disabled?: boolean; label: string; children: React.ReactNode }> = ({
+  onClick,
+  disabled,
+  label,
+  children,
+}) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    aria-label={label}
+    title={label}
+    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[var(--rule)] text-[var(--ink-2)] transition-colors hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-35"
+  >
+    {children}
+  </button>
+);
 
 const BigChoice: React.FC<{
   color: string;
@@ -574,16 +720,26 @@ const BigChoice: React.FC<{
   icon: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  selected?: boolean;
   children: React.ReactNode;
-}> = ({ color, hotkey, icon, onClick, disabled, children }) => (
+}> = ({ color, hotkey, icon, onClick, disabled, selected, children }) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className={cn('flex h-14 flex-1 items-center justify-center gap-3 rounded-xl border text-[15px] font-semibold transition-colors disabled:opacity-50')}
-    style={{ borderColor: tint(color, 0.45), background: tint(color, 0.08), color }}
+    aria-pressed={selected}
+    className={cn(
+      'flex h-14 min-w-0 flex-1 items-center justify-center gap-3 rounded-xl border text-[15px] font-semibold transition-colors disabled:opacity-50'
+    )}
+    style={{
+      borderColor: selected ? color : tint(color, 0.45),
+      borderWidth: selected ? 2 : 1,
+      background: tint(color, selected ? 0.18 : 0.07),
+      color,
+    }}
   >
     {icon}
     {children}
+    {selected && <span className="text-[12px] font-medium opacity-80">· your label</span>}
     <Key>{hotkey}</Key>
   </button>
 );

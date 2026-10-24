@@ -54,7 +54,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
   return (
     // key on the case so the entrance motion replays when the selection changes
     <KeyFigures.Provider value={keyFigures}>
-    <div key={result.evaluation_id ?? result.query} className="flex h-full min-h-0 flex-col gap-4">
+    <div key={result.evaluation_id ?? result.query} className="flex min-h-full flex-col gap-4">
       <header className="lab-fade-up flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2.5 text-xs text-[var(--ink-2)]">
@@ -159,7 +159,9 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
         </div>
       </section>
 
-      {/* Evidence beside answer (the main view), then the replay proof on its own tab */}
+      {/* Evidence beside answer (the main view), then the replay proof on its own tab. A minimum
+          height keeps the panes readable on short screens; the report column scrolls instead. */}
+      <div className="flex min-h-[380px] flex-1 flex-col">
       <TabbedPanes
         fill
         panes={[
@@ -222,6 +224,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
             : []),
         ]}
       />
+      </div>
     </div>
     </KeyFigures.Provider>
   );

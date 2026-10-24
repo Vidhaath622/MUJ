@@ -214,7 +214,7 @@ export const Tour: React.FC<{ enabled: boolean }> = ({ enabled }) => {
         className="tour-card absolute rounded-2xl border border-[var(--rule)] bg-[var(--panel)] p-5 shadow-2xl"
         style={{ ...cardStyle, width: CARD_W }}
       >
-        <div className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-2)]">
+        <div className="text-[12px] text-[var(--ink-2)]">
           Step {step + 1} of {STEPS.length}
         </div>
         <h3 className="mt-1.5 text-[17px] font-semibold leading-snug text-[var(--ink)]">{current.title}</h3>
