@@ -87,3 +87,13 @@ def test_citation_ranges():
     assert parse_citations("Fee is $25 [2][1-3].", chunks) == ["c1", "c0", "c2"]
     assert strip_citations("x [1-4].") == "x."
     assert is_abstention("I don't know based on the provided documents. [1-4]")
+
+
+def test_numeric_shortcut_is_strict():
+    from engine.scoring import accuracy_rule
+
+    assert accuracy_rule("The overdraft fee is $25 per item.", "$25 per item").score == 1.0
+    # Negation, a different unit, or extra numbers all go to the grading model instead.
+    assert accuracy_rule("The fee is NOT $25.", "$25 per item") is None
+    assert accuracy_rule("It takes 25 days.", "$25 per item") is None
+    assert accuracy_rule("The fee is $25 per item, down from $35.", "$25 per item") is None
