@@ -45,6 +45,39 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
     };
   }, [token]);
 
+  // Follows an async comparison until it finishes, updating the page as it goes.
+  const follow = (id: string) => {
+    if (!token) return;
+    setRunning(true);
+    const tick = async () => {
+      try {
+        const r = await getCompare(id, token);
+        setResult(r);
+        if (r.status === 'running') {
+          timer.current = window.setTimeout(tick, 2000);
+          return;
+        }
+      } catch (err) {
+        setError(errorText(err));
+      }
+      setRunning(false);
+    };
+    timer.current = window.setTimeout(tick, 2000);
+  };
+
+  // Show the latest comparison on arrival, so a finished result survives a page change.
+  useEffect(() => {
+    if (!token) return;
+    getCompare('latest', token)
+      .then((r) => {
+        if (!r || r.status === 'none' || !r.compare_id) return;
+        setResult(r);
+        if (r.status === 'running') follow(r.compare_id);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
   const run = async () => {
     if (!token || !base || !candidate) return;
     setRunning(true);
@@ -54,21 +87,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
       const first = await startCompare(base, candidate, packs, token);
       setResult(first);
       if (first.status === 'running' && first.compare_id) {
-        const id = first.compare_id;
-        const tick = async () => {
-          try {
-            const r = await getCompare(id, token);
-            setResult(r);
-            if (r.status === 'running') {
-              timer.current = window.setTimeout(tick, 2000);
-              return;
-            }
-          } catch (err) {
-            setError(errorText(err));
-          }
-          setRunning(false);
-        };
-        timer.current = window.setTimeout(tick, 2000);
+        follow(first.compare_id);
         return;
       }
     } catch (err) {
@@ -148,6 +167,13 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
             </div>
           ) : null}
         </Panel>
+      )}
+
+      {!running && !result && profiles && (
+        <EmptyState title="No comparison yet">
+          Pick a base and a candidate version, then compare them on the same questions. Questions that flip are
+          listed, and a significance test says whether the change is real.
+        </EmptyState>
       )}
 
       {finished && (
