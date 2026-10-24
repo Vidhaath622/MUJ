@@ -14,8 +14,8 @@ ABSTAIN_ANSWER = "I don't know based on the provided documents."
 
 _ABSTAIN_PATTERNS = [
     r"\bi (?:do not|don't|cannot|can't) (?:know|find|answer|determine|say)\b",
-    r"\b(?:not|no(?:thing)?) (?:mentioned|stated|specified|provided|found|available|covered|included)\b",
-    r"\b(?:does not|doesn't|do not|don't) (?:mention|say|state|specify|contain|provide|include|cover)\b",
+    r"\b(?:not|no(?:thing)?) (?:\w+ly )?(?:mentioned|stated|specified|provided|found|available|covered|included)\b",
+    r"\b(?:does not|doesn't|do not|don't) (?:\w+ly )?(?:mention|say|state|specify|contain|provide|include|cover)\b",
     r"\bno (?:information|mention|details?|data)\b",
     r"\binsufficient (?:information|context)\b",
     r"\bnot enough (?:information|context)\b",
@@ -29,12 +29,26 @@ GENERATOR_SYSTEM = (
 )
 
 
-def is_abstention(answer: str) -> bool:
-    # A reply that is only citation markers ("[1]") gives no answer at all.
-    text = strip_citations(answer).strip(" .").lower()
-    if not text:
-        return True
+def _sentences(text: str) -> list[str]:
+    return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if re.search(r"[A-Za-z0-9]", s)]
+
+
+def _is_hedge(sentence: str) -> bool:
+    text = sentence.lower().strip(" .")
     return any(re.search(p, text) for p in _ABSTAIN_PATTERNS)
+
+
+def without_hedges(answer: str) -> str:
+    """The answer minus "I don't know" / "not stated" sentences, which make no factual claim."""
+    return " ".join(s for s in _sentences(strip_citations(answer)) if not _is_hedge(s))
+
+
+def is_abstention(answer: str) -> bool:
+    """True when the reply gives no answer: empty, only citation markers, or only "not stated" sentences.
+
+    A real answer with a hedge tacked on ("... every 2 weeks [1]. I don't know ...") is not an abstention.
+    """
+    return not without_hedges(answer)
 
 
 @dataclass

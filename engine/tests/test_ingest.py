@@ -67,3 +67,13 @@ def test_sample_is_deterministic_and_spread():
     first = sample_chunks(doc.chunks, 4)
     assert first == sample_chunks(doc.chunks, 4)
     assert first[0].index == 0 and first[-1].index > len(doc.chunks) // 2
+
+
+def test_abstention_detection():
+    from engine.rag import is_abstention
+
+    assert is_abstention("I don't know based on the provided documents.")
+    assert is_abstention("[1]")
+    assert is_abstention("The hours are not explicitly stated. However, [2] does not specify the hours.")
+    assert not is_abstention("Audits are carried out every 2 weeks [1]. I don't know based on the provided documents.")
+    assert not is_abstention("Sick leave is 10 days per year [1].")

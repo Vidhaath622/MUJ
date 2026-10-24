@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from .config import REVIEW_BAND, THRESHOLDS
 from .ingest import Chunk
 from .llm import Judge
-from .rag import is_abstention, strip_citations
+from .rag import is_abstention, strip_citations, without_hedges
 
 
 @dataclass
@@ -130,11 +130,14 @@ def score_context_relevance(judge: Judge, query: str, chunks: list[Chunk]) -> tu
 FAITHFULNESS_SYSTEM = (
     "You check an AI answer for hallucinations.\n"
     "Step 1: split the ANSWER into short, self-contained factual claims (ignore citation markers like [1] and polite filler).\n"
-    "Step 2: for each claim, decide against the numbered CONTEXT passages only:\n"
-    "  supported = the context states it or it follows directly\n"
-    "  contradicted = the context states something different\n"
-    "  unsupported = the context does not say it\n"
-    "Give the passage number used as evidence, or 0 if none. Do not use outside knowledge."
+    "Step 2: for each claim, read EVERY numbered CONTEXT passage, then decide:\n"
+    "  supported = at least one passage states it or it follows directly from one passage\n"
+    "  contradicted = no passage supports it and a passage states something different\n"
+    "  unsupported = no passage says it\n"
+    "Passages can disagree with each other (for example an old and a new version of a policy). "
+    "A claim that matches ANY one passage is supported, even if another passage says something else.\n"
+    "Give the number of the passage that supports the claim (or that contradicts it), or 0 if none. "
+    "Do not use outside knowledge."
 )
 
 FAITHFULNESS_SCHEMA = {
@@ -169,7 +172,7 @@ def score_faithfulness(judge: Judge, answer: str, chunks: list[Chunk]) -> Metric
             {"claims": [], "hallucinated_claims": [strip_citations(answer)]},
         )
     result = judge.ask(
-        FAITHFULNESS_SYSTEM, f"CONTEXT:\n\n{_passages(chunks)}\n\nANSWER: {strip_citations(answer)}", FAITHFULNESS_SCHEMA
+        FAITHFULNESS_SYSTEM, f"CONTEXT:\n\n{_passages(chunks)}\n\nANSWER: {without_hedges(answer)}", FAITHFULNESS_SCHEMA
     )
     claims = []
     for item in result.get("claims", []):
