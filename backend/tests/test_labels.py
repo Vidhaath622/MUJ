@@ -175,3 +175,25 @@ def test_rejudge_in_place(client, alice, fake_engine):
     after = client.get(f"/api/runs/{run['batch_id']}", headers=alice).json()
     assert after["batch_id"] == run["batch_id"] and after["rejudged"]["judge"] == "groq:openai/gpt-oss-120b"
     assert client.post("/api/runs/batch_nope/rejudge", headers=alice).status_code == 404
+
+
+def test_impact_flow(client, alice, bob, fake_engine):
+    from tests.test_api import upload
+
+    import time
+
+    a = upload(client, alice)["document_id"]
+    b = client.post("/api/documents/upload", headers=alice, files={"file": ("v2.md", b"# v2\n\nThe fee is $25.", "text/markdown")}).json()["document_id"]
+    assert client.post("/api/impact", headers=alice, json={"old_document_id": a, "new_document_id": a}).status_code == 422
+    assert client.post("/api/impact", headers=bob, json={"old_document_id": a, "new_document_id": b}).status_code == 404
+    started = client.post("/api/impact", headers=alice, json={"old_document_id": a, "new_document_id": b})
+    assert started.status_code == 202, started.text
+    iid = started.json()["impact_id"]
+    for _ in range(100):
+        body = client.get(f"/api/impact/{iid}", headers=alice).json()
+        if body["status"] != "running":
+            break
+        time.sleep(0.05)
+    assert body["status"] == "done" and body["at_risk"] == 1 and body["tests"][0]["failure_type"] == "STALE_SOURCE"
+    assert client.get("/api/impact/latest", headers=alice).json()["impact_id"] == iid
+    assert client.get("/api/impact/latest", headers=bob).json() == {"impact_id": None, "status": "none"}

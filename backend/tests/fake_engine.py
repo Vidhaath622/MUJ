@@ -193,3 +193,13 @@ class FakeEngine:
         if progress:
             progress(1, 1, 0)
         return {**batch, "rejudged": {"judge": "groq:openai/gpt-oss-120b"}}
+
+    def impact(self, owner_id, old_document_id, new_document_id, max_tests=10, progress=None):
+        if progress:
+            progress(1, 1, 0)
+        return {"old_document": {"document_id": old_document_id}, "new_document": {"document_id": new_document_id},
+                "summary": {"unchanged": 1, "changed": 1, "added": 0, "removed": 0, "tests": 1, "at_risk": 1},
+                "changes": [{"kind": "changed", "old": "fee $35", "new": "fee $25", "numbers_changed": [{"old": "35", "new": "25"}]}],
+                "tests": [{"test_id": "imp_01", "question": "fee?", "answer": "$35", "verdict": "RETRIEVAL_FAILURE",
+                           "failure_type": "STALE_SOURCE", "at_risk": True}],
+                "at_risk": 1, "judge_model": "fake"}
