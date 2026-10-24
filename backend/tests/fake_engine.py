@@ -90,6 +90,7 @@ class FakeEngine:
 
     def evaluate_batch(self, owner_id, document_ids, test_cases, pack_id=None, progress=None):
         self.calls.append(("evaluate_batch", owner_id, tuple(document_ids), len(test_cases), pack_id))
+        self.last_batch_cases = test_cases
         self._check(owner_id, document_ids)
         results = []
         for i, case in enumerate(test_cases, start=1):
