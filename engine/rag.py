@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass, field
 
 from .ingest import Chunk
-from .llm import OllamaClient
+from .llm import ChatModel, EmbedModel
 from .store import ScoredChunk, VectorStore
 
 ABSTAIN_ANSWER = "I don't know based on the provided documents."
@@ -23,14 +23,15 @@ _ABSTAIN_PATTERNS = [
 
 GENERATOR_SYSTEM = (
     "You answer questions using ONLY the numbered context passages. "
-    "Cite the passages you used with their numbers in square brackets, like [1] or [2][3]. "
-    "Be concise: one to three sentences. "
+    "Write the answer as one to three full sentences, and put the numbers of the passages you used in square brackets "
+    "at the end of each sentence, for example: Sick leave is 10 days per year [2]. "
     f"If the passages do not contain the answer, reply exactly: {ABSTAIN_ANSWER}"
 )
 
 
 def is_abstention(answer: str) -> bool:
-    text = answer.strip().lower()
+    # A reply that is only citation markers ("[1]") gives no answer at all.
+    text = strip_citations(answer).strip(" .").lower()
     if not text:
         return True
     return any(re.search(p, text) for p in _ABSTAIN_PATTERNS)
@@ -64,14 +65,18 @@ def parse_citations(answer: str, chunks: list[Chunk]) -> list[str]:
 
 
 class RagSystem:
-    def __init__(self, store: VectorStore, ollama: OllamaClient, generator_model: str, top_k: int):
+    def __init__(self, store: VectorStore, generator: ChatModel, embedder: EmbedModel, top_k: int):
         self.store = store
-        self.ollama = ollama
-        self.generator_model = generator_model
+        self.generator = generator
+        self.embedder = embedder
         self.top_k = top_k
 
+    @property
+    def generator_model(self) -> str:
+        return self.generator.model
+
     def embed_query(self, query: str) -> list[float]:
-        return self.ollama.embed([f"search_query: {query}"])[0]
+        return self.embedder.embed([query], "query")[0]
 
     def retrieve(self, owner_id: str, query: str, document_ids: list[str], k: int | None = None) -> list[ScoredChunk]:
         return self.store.search(owner_id, document_ids, self.embed_query(query), k or self.top_k)
@@ -79,8 +84,7 @@ class RagSystem:
     def generate(self, query: str, chunks: list[Chunk]) -> tuple[str, list[str], int]:
         if not chunks:
             return ABSTAIN_ANSWER, [], 0
-        result = self.ollama.chat(
-            self.generator_model,
+        result = self.generator.chat(
             [{"role": "system", "content": GENERATOR_SYSTEM}, {"role": "user", "content": build_prompt(query, chunks)}],
             num_predict=256,
         )

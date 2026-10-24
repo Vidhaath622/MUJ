@@ -25,24 +25,25 @@ def bag_of_words(text: str) -> list[float]:
     return vec.tolist()
 
 
-class FakeOllama:
-    """Embeds with hashed bag-of-words; the generator returns scripted answers keyed by question."""
+class FakeGenerator:
+    """Returns scripted answers keyed by question; unknown questions get an abstention."""
 
-    def __init__(self, answers: dict[str, str] | None = None):
+    model = "fake-generator"
+    provider = "fake"
+    hosted = False
+
+    def __init__(self, answers: dict | None = None):
         self.answers = answers or {}
-        self.generate_calls: list[tuple[str, str]] = []
+        self.calls: list[tuple[str, str]] = []
 
-    def list_models(self) -> list[str]:
-        return ["llama3.2:3b", "nomic-embed-text:latest", "qwen3:8b"]
+    def ready(self):
+        return True, None
 
-    def embed(self, texts: list[str]) -> list[list[float]]:
-        return [bag_of_words(t) for t in texts]
-
-    def chat(self, model, messages, fmt=None, temperature=0.0, num_predict=512) -> Generation:
+    def chat(self, messages, schema=None, num_predict=512) -> Generation:
         prompt = messages[-1]["content"]
         question = prompt.rsplit("Question:", 1)[-1].replace("Answer:", "").strip()
         context = prompt.split("Question:", 1)[0]
-        self.generate_calls.append((question, context))
+        self.calls.append((question, context))
         scripted = self.answers.get(question)
         if callable(scripted):
             text = scripted(context)
@@ -50,7 +51,22 @@ class FakeOllama:
             text = scripted
         else:
             text = "I don't know based on the provided documents."
-        return Generation(text=text, model=model, latency_ms=1)
+        return Generation(text=text, model=self.model, latency_ms=1)
+
+
+class FakeEmbedder:
+    """Hashed bag-of-words vectors: deterministic and good enough to make retrieval testable."""
+
+    model = "fake-embed"
+    provider = "fake"
+    hosted = False
+    key = "fake:fake-embed"
+
+    def ready(self):
+        return True, None
+
+    def embed(self, texts, kind="passage"):
+        return [bag_of_words(t) for t in texts]
 
 
 class FakeJudge:
@@ -59,9 +75,14 @@ class FakeJudge:
 
     mode = "local"
     model = "fake-judge"
+    provider = "fake"
 
     def __init__(self):
         self.calls = 0
+        self.chat_model = self
+
+    def ready(self):
+        return True, None
 
     @staticmethod
     def _numbers(text: str) -> set[str]:

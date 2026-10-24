@@ -17,7 +17,7 @@ from .agreement import judge_agreement, load_labels
 from .config import Settings, get_settings
 from .evaluate import Evaluator, TestCase, summarize_batch
 from .ingest import ParsedDocument, parse_document
-from .llm import Judge, ModelUnavailable, OllamaClient
+from .llm import ChatModel, EmbedModel, Judge, ModelUnavailable, build_models
 from .packs import PackError, discover, read_document_bytes, resolve_test_cases
 from .rag import RagSystem
 from .store import VectorStore
@@ -43,49 +43,62 @@ def _case_from_dict(raw: dict) -> TestCase:
 
 
 class Engine:
-    def __init__(self, settings: Settings | None = None, *, ollama: OllamaClient | None = None, judge: Judge | None = None):
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        *,
+        generator: ChatModel | None = None,
+        embedder: EmbedModel | None = None,
+        judge: Judge | None = None,
+    ):
         self.settings = settings or get_settings()
         self.settings.data_dir.mkdir(parents=True, exist_ok=True)
-        self.ollama = ollama or OllamaClient(self.settings)
-        self.judge = judge or Judge(self.settings, self.ollama)
+        if generator is None or embedder is None or judge is None:
+            models = build_models(self.settings)
+            generator = generator or models.generator
+            embedder = embedder or models.embedder
+            judge = judge or Judge(models.judge, self.settings.data_dir / "judge_cache.sqlite")
+        self.generator = generator
+        self.embedder = embedder
+        self.judge = judge
         self.store = VectorStore(self.settings.data_dir / "vectors.sqlite")
-        self.rag = RagSystem(self.store, self.ollama, self.settings.generator_model, self.settings.top_k)
+        self.rag = RagSystem(self.store, generator, embedder, self.settings.top_k)
         self.evaluator = Evaluator(self.store, self.rag, self.judge)
         self.synth = SyntheticGenerator(self.judge, self.rag)
 
     # ------------------------------------------------------------- status
 
     def status(self) -> dict:
-        try:
-            models = self.ollama.list_models()
-            reachable = True
-        except ModelUnavailable:
-            models, reachable = [], False
-
-        def pulled(name: str) -> bool:
-            return name in models or f"{name}:latest" in models
-
-        generator_ok = pulled(self.settings.generator_model)
-        embed_ok = pulled(self.settings.embed_model)
-        judge_ok = True if self.judge.mode == "hosted" else pulled(self.settings.judge_model_local)
+        roles = {}
+        for role, model in (("generator", self.generator), ("embeddings", self.embedder), ("judge", self.judge.chat_model)):
+            ready, reason = model.ready()
+            roles[role] = {"name": model.model, "provider": model.provider, "ready": ready, "error": reason}
+        judge_ready = roles["judge"]["ready"]
         return {
-            "engine_ready": reachable and generator_ok and embed_ok and judge_ok,
-            "ollama_reachable": reachable,
-            "models": {
-                "generator": {"name": self.settings.generator_model, "ready": generator_ok},
-                "embeddings": {"name": self.settings.embed_model, "ready": embed_ok},
-                "judge": {"name": self.judge.model, "ready": judge_ok, "mode": self.judge.mode},
-            },
-            "evaluation_mode": self.judge.mode,
+            "engine_ready": all(r["ready"] for r in roles.values()),
+            "models": roles,
+            # "unavailable" tells the UI that no judge can run, rather than showing stale or made-up scores.
+            "evaluation_mode": self.judge.mode if judge_ready else "unavailable",
             "judge_model": self.judge.model,
-            "generator_model": self.settings.generator_model,
+            "judge_provider": self.judge.provider,
+            "generator_model": self.generator.model,
+            "generator_provider": self.generator.provider,
+            "embed_model": self.embedder.model,
+            "embed_provider": self.embedder.provider,
         }
 
     # ---------------------------------------------------------- documents
 
     def _embed_and_store(self, owner_id: str, doc: ParsedDocument, pack_id: str | None):
-        vectors = self.ollama.embed([f"search_document: {c.text}" for c in doc.chunks])
-        return self.store.add_document(owner_id, doc, vectors, pack_id)
+        vectors = self.embedder.embed([c.text for c in doc.chunks], "passage")
+        return self.store.add_document(owner_id, doc, vectors, self.embedder.key, pack_id)
+
+    def _ensure_embeddings(self, owner_id: str, document_ids: list[str]) -> None:
+        """Re-embed documents stored with a different embedding model (for example after switching provider)."""
+        for document_id in self.store.documents_needing_embeddings(owner_id, document_ids, self.embedder.key):
+            chunks = self.store.chunks_for(owner_id, [document_id])
+            vectors = self.embedder.embed([c.text for c in chunks], "passage")
+            self.store.replace_embeddings(owner_id, document_id, {c.chunk_id: v for c, v in zip(chunks, vectors)}, self.embedder.key)
 
     def ingest(self, owner_id: str, filename: str, data: bytes, pack_id: str | None = None) -> dict:
         doc = parse_document(filename, data, self.settings.chunk_chars)
@@ -122,6 +135,7 @@ class Engine:
         missing = [d for d in document_ids if not self.store.has_document(owner_id, d)]
         if missing:
             raise NotFound(f"documents not found: {', '.join(missing)}")
+        self._ensure_embeddings(owner_id, document_ids)
         return document_ids
 
     # ---------------------------------------------------------------- RAG
@@ -223,7 +237,7 @@ class Engine:
             "judge_agreement": agreement,
             "evaluation_mode": self.judge.mode,
             "judge_model": self.judge.model,
-            "generator_model": self.settings.generator_model,
+            "generator_model": self.generator.model,
             "duration_ms": int((time.perf_counter() - started) * 1000),
             "results": results,
         }
@@ -239,12 +253,14 @@ class Engine:
         base, version = version_key(doc.filename)
         old_chunks = []
         search_ids = [document_id]
+        self._ensure_embeddings(owner_id, [document_id])
         if version is not None:
             for other in self.store.list_documents(owner_id):
                 other_base, other_version = version_key(other.filename)
                 if other.document_id != document_id and other_base == base and other_version is not None and other_version < version:
                     old_chunks.extend(self.store.chunks_for(owner_id, [other.document_id]))
                     search_ids.append(other.document_id)
+        self._ensure_embeddings(owner_id, search_ids)
         cases = self.synth.generate(owner_id, document_id, chunks, count, search_ids, old_chunks, include_traps)
         return {
             "document_id": document_id,

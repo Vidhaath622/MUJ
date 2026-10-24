@@ -7,7 +7,7 @@ import pytest
 from engine.config import Settings
 from engine.service import Engine, NotFound
 
-from .fakes import FakeJudge, FakeOllama
+from .fakes import FakeEmbedder, FakeGenerator, FakeJudge
 
 POLICY = b"""# Leave policy
 
@@ -32,8 +32,7 @@ def answer_from_context(fact: str, right: str, wrong: str):
 def make_engine(tmp_path: Path):
     def make(answers: dict, top_k: int = 1) -> Engine:
         settings = Settings(data_dir=tmp_path / "data", top_k=top_k, packs_dirs=(Path(__file__).parent.parent / "packs_builtin",))
-        ollama = FakeOllama(answers)
-        return Engine(settings, ollama=ollama, judge=FakeJudge())
+        return Engine(settings, generator=FakeGenerator(answers), embedder=FakeEmbedder(), judge=FakeJudge())
 
     return make
 
@@ -96,7 +95,7 @@ def test_unanswerable_abstain_and_hallucinate(make_engine):
     assert ok["root_cause"]["category"] == "CLEAN_PASS"
     assert ok["metrics"]["answer_accuracy"]["judged_by"] == "rule"
 
-    engine.rag.ollama.answers[q] = "The dental limit is 500 dollars."
+    engine.generator.answers[q] = "The dental limit is 500 dollars."
     bad = engine.evaluate_query("usr_a", q, [doc_id], case_type="unanswerable")
     assert bad["root_cause"]["category"] == "GENERATION_HALLUCINATION"
 

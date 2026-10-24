@@ -136,18 +136,18 @@ def decide(f: Facts) -> Verdict:
             return Verdict("CLEAN_PASS", "The gold chunk was retrieved and the answer is correct and fully supported.", "None.")
         if f.faithful and not f.correct:
             if f.stale_retrieved:
-                effect = None
-                if f.replay_ran:
-                    effect = (
-                        "With only the current-version chunk the answer was correct, so the outdated chunk misled the generator."
-                        if f.replay_correct
-                        else "Even with only the current-version chunk the answer was still wrong."
+                if f.replay_ran and f.replay_correct:
+                    return Verdict(
+                        "RETRIEVAL_FAILURE",
+                        "The retriever ranked an outdated version above the current one; with only the current chunk the generator was right.",
+                        "Filter superseded versions or rank newer ones first.",
+                        "Replay with only the current-version chunk fixed the answer, so the outdated chunk retrieved alongside it caused the failure.",
                     )
                 return Verdict(
                     "UNRESOLVED",
                     "Evidence conflicts: both the current and an outdated version of this fact were retrieved, and the answer follows the wrong one.",
                     "Filter superseded document versions out of the index or rank newer versions first.",
-                    effect,
+                    "Even with only the current-version chunk the answer was still wrong." if f.replay_ran else None,
                 )
             if f.abstained:
                 return Verdict(

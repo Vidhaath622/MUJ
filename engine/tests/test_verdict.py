@@ -27,7 +27,8 @@ def facts(**overrides) -> Facts:
         ({"faithful": False, "correct": False}, False, "GENERATION_HALLUCINATION"),
         ({"gold_retrieved": False, "faithful": False, "correct": False}, False, "COMPOUND_FAILURE"),
         ({"correct": False}, None, "NEEDS_REVIEW"),
-        ({"correct": False, "stale_retrieved": True}, True, "UNRESOLVED"),
+        ({"correct": False, "stale_retrieved": True}, True, "RETRIEVAL_FAILURE"),
+        ({"correct": False, "stale_retrieved": True}, False, "UNRESOLVED"),
         # Beyond the table.
         ({"gold_retrieved": False, "faithful": True, "correct": False}, False, "COMPOUND_FAILURE"),
         ({"gold_retrieved": False}, None, "CLEAN_PASS"),
