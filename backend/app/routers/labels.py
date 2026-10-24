@@ -120,3 +120,38 @@ def submit_label(body: LabelIn, user: User = Depends(get_current_user), db: Data
         {**body.model_dump(), "pack_id": pack_id, "question": result["query"], "answer": result["generated_answer"]},
     )
     return {"ok": True, "test_id": body.test_id, "batch_id": body.batch_id, "labeler": body.labeler}
+
+
+@router.get("/disagreements")
+def label_disagreements(
+    pack_id: str | None = None,
+    user: User = Depends(get_current_user),
+    db: Database = Depends(get_db),
+) -> dict:
+    """Items two labellers judged differently on correct/incorrect, with both labels, for adjudication."""
+    by_item: dict[tuple[str, str], dict[str, dict]] = {}
+    for label in db.labels(pack_id):
+        by_item.setdefault((label["batch_id"], label["test_id"]), {})[label["labeler"]] = label
+    runs: dict[str, dict | None] = {}
+    items = []
+    for (batch_id, test_id), votes in sorted(by_item.items()):
+        if len(votes) < 2 or len({v["correct"] for v in votes.values()}) < 2:
+            continue
+        if batch_id not in runs:
+            runs[batch_id] = db.run_by_id(batch_id)
+        result = next((r for r in (runs[batch_id] or {}).get("results", []) if r["test_id"] == test_id), None)
+        if result is None:
+            continue
+        items.append({
+            "test_id": test_id,
+            "batch_id": batch_id,
+            "pack_id": (runs[batch_id] or {}).get("pack_id"),
+            "question": result["query"],
+            "ground_truth": result.get("ground_truth"),
+            "expected_abstain": result.get("expected_abstain", False),
+            "generated_answer": result["generated_answer"],
+            "retrieved_chunks": [{"chunk_id": c["chunk_id"], "document_id": c.get("document_id"), "filename": c.get("filename"), "text": c["text"]}
+                                 for c in result.get("retrieved_chunks", [])],
+            "labels": {name: {"correct": v["correct"], "failure_type": v.get("failure_type"), "note": v.get("note")} for name, v in votes.items()},
+        })
+    return {"items": items, "total": len(items)}
