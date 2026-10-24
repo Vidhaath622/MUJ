@@ -19,14 +19,28 @@ def evaluate_query(
     engine: Engine = Depends(get_engine),
     db: Database = Depends(get_db),
 ) -> dict:
+    document_ids = body.ids()
+    case: dict = {}
+    if body.pack_id:
+        pack = engine.load_pack(user.id, body.pack_id)
+        document_ids = list(dict.fromkeys([*pack["document_ids"], *document_ids]))
+        if body.test_id:
+            case = next((c for c in pack["test_cases"] if c["test_id"] == body.test_id), None)
+            if case is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, f"test case {body.test_id} not found in pack {body.pack_id}")
+    if not document_ids:
+        document_ids = require_document_ids(body)
+    # Fields the client sent win; the pack fills in what it left out.
     result = engine.evaluate_query(
         user.id,
         body.query,
-        require_document_ids(body),
-        ground_truth=body.optional_ground_truth,
+        document_ids,
+        ground_truth=body.optional_ground_truth or case.get("ground_truth_answer"),
         manual_answer=body.optional_manual_answer,
-        gold_chunk_ids=body.gold_chunk_ids,
-        case_type=body.type,
+        gold_chunk_ids=body.gold_chunk_ids or case.get("gold_chunk_ids"),
+        case_type=body.type if "type" in body.model_fields_set else case.get("type", body.type),
+        stale_chunk_ids=body.stale_chunk_ids or case.get("stale_chunk_ids"),
+        test_id=body.test_id,
     )
     db.save_evaluation(user.id, result)
     return result

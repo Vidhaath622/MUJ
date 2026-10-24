@@ -60,7 +60,11 @@ class EvaluateQueryRequest(DocumentScope):
     optional_manual_answer: str | None = None
     optional_ground_truth: str | None = None
     gold_chunk_ids: list[str] | None = None
+    stale_chunk_ids: list[str] | None = None
     type: CaseType = "factoid"
+    # A pack case: the backend restores its documents and trap metadata (gold, stale, type, ground truth).
+    pack_id: str | None = None
+    test_id: str | None = None
 
 
 class TestCaseIn(BaseModel):

@@ -218,3 +218,18 @@ def test_async_batch_failure_is_reported(client, alice, bob, fake_engine):
     }
     # Other users cannot see the job.
     assert client.get(f"/api/runs/{started['batch_id']}/progress", headers=bob).status_code == 404
+
+
+def test_query_with_pack_case_restores_trap_metadata(client, alice, fake_engine):
+    resp = client.post("/api/evaluate/query", headers=alice, json={"query": "What is the monthly fee?", "pack_id": "banking", "test_id": "bk_01"})
+    assert resp.status_code == 200, resp.text
+    q = fake_engine.last_query
+    assert q["ground_truth"] == "5 USD" and q["case_type"] == "factoid" and q["test_id"] == "bk_01" and q["document_ids"]
+
+    client.post("/api/evaluate/query", headers=alice, json={
+        "query": "x", "document_ids": q["document_ids"], "stale_chunk_ids": ["chk_old"], "gold_chunk_ids": ["chk_new"], "type": "stale",
+    })
+    assert fake_engine.last_query["stale_chunk_ids"] == ["chk_old"] and fake_engine.last_query["case_type"] == "stale"
+
+    missing = client.post("/api/evaluate/query", headers=alice, json={"query": "x", "pack_id": "banking", "test_id": "nope"})
+    assert missing.status_code == 404
