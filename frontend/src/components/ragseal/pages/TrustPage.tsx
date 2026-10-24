@@ -1,3 +1,4 @@
+import { TabbedPanes } from '../shared/TabbedPanes';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FlaskConical, Scale, Shuffle } from 'lucide-react';
 import { ApiError, HealthResponse } from '../../../lib/api';
@@ -174,9 +175,13 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
-      <AgreementSection agreement={agreement} error={agreementErr} />
-
-      <div className="grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+      <TabbedPanes
+        panes={[
+          { id: 'humans', label: 'Humans', content: <AgreementSection agreement={agreement} error={agreementErr} /> },
+          {
+            id: 'types',
+            label: 'Failure types',
+            content: (
         <Panel
           title="Failure types: predicted vs true"
           note={confusion?.n != null ? `${confusion.n} cases with a known failure type` : 'injected failures with known types'}
@@ -194,7 +199,12 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
             </EmptyState>
           )}
         </Panel>
-
+            ),
+          },
+          {
+            id: 'stability',
+            label: 'Stability',
+            content: (
         <Panel title="Stability" note="same answers, different grading model or order">
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-2.5">
@@ -219,7 +229,11 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
             )}
           </div>
         </Panel>
-      </div>
+            ),
+          },
+          { id: 'external', label: 'External', content: <ExternalValidation /> },
+        ]}
+      />
     </div>
   );
 };
@@ -458,3 +472,35 @@ const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value
     <span className="tabular-nums text-[var(--ink)]">{value}</span>
   </div>
 );
+
+// RAGTruth check: numbers from backend/data/ragtruth_report.json (n=48 answers with
+// third-party human hallucination labels, judged by groq qwen/qwen3.8-27b).
+const ExternalValidation: React.FC = () => (
+  <Panel title="Checked against outside human labels" note="RAGTruth · Niu et al., ACL 2024 · MIT licence">
+    <div className="flex flex-col gap-5">
+      <p className="max-w-[760px] text-[13.5px] leading-relaxed text-[var(--ink-2)]">
+        Our own labels come from our team. To check RAGSeal against people we don&apos;t know, we ran its faithfulness check on
+        a balanced sample of RAGTruth answers whose hallucinations were marked by the dataset&apos;s human annotators.
+      </p>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[
+          ['Recall', '91.7%', '22 of 24 hallucinations caught'],
+          ['Precision', '73.3%', '8 of 24 clean answers flagged'],
+          ['F1', '0.815', 'answer level'],
+          ['Sample', '48', '24 hallucinated · 24 clean'],
+        ].map(([k, v, n]) => (
+          <div key={k} className="rounded-xl border border-[var(--rule)] bg-[var(--panel)] p-4">
+            <div className="text-[12px] text-[var(--ink-2)]">{k}</div>
+            <div className="mt-1 text-[26px] font-semibold tabular-nums text-[var(--ink)]">{v}</div>
+            <div className="mt-0.5 text-[12px] text-[var(--ink-2)]">{n}</div>
+          </div>
+        ))}
+      </div>
+      <p className="text-[12px] text-[var(--ink-2)]">
+        Tuned for recall: it would rather flag a clean answer for review than miss a made-up one. Source:{' '}
+        <span className="font-mono">github.com/ParticleMedia/RAGTruth</span>, test split, seed 13.
+      </p>
+    </div>
+  </Panel>
+);
+

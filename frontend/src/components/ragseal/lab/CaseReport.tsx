@@ -1,3 +1,4 @@
+import { TabbedPanes } from '../shared/TabbedPanes';
 import React from 'react';
 import { Check, X } from 'lucide-react';
 import { cn } from '../../../lib/utils';
@@ -158,7 +159,14 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
         </div>
       </section>
 
-      {/* Evidence beside answer */}
+      {/* Evidence beside answer (the main view), then the replay proof on its own tab */}
+      <TabbedPanes
+        fill
+        panes={[
+          {
+            id: 'answer',
+            label: 'Answer & evidence',
+            content: (
       <section className="grid min-h-0 flex-1 grid-cols-2 gap-4">
         <Pane title="Text the bot was given" note={`${chunks.length} passages`} delay={120}>
           {mainChunks.map((c) => (
@@ -189,12 +197,31 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
             )}
           </p>
           <ClaimList claims={m.faithfulness?.claims} />
-          {result.replay && <ReplayProof replay={result.replay} before={accuracy} />}
           {result.root_cause?.recommended_action && !result.replay && (
             <p className="text-xs text-[var(--ink-2)]">Fix: {result.root_cause.recommended_action}</p>
           )}
         </Pane>
       </section>
+            ),
+          },
+          ...(result.replay
+            ? [
+                {
+                  id: 'replay',
+                  label: 'Replay proof',
+                  content: (
+                    <div className="mx-auto w-full max-w-[860px]">
+                      <ReplayProof replay={result.replay} before={accuracy} />
+                      {result.root_cause?.recommended_action && (
+                        <p className="mt-3 text-[13px] text-[var(--ink-2)]">Fix: {result.root_cause.recommended_action}</p>
+                      )}
+                    </div>
+                  ),
+                },
+              ]
+            : []),
+        ]}
+      />
     </div>
     </KeyFigures.Provider>
   );
