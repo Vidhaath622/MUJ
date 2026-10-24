@@ -30,26 +30,33 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// Story order: understand it, try it, dig into one answer, bring your own docs, run at scale,
-// then prove the checker itself can be trusted.
-const NAV: { group: string; items: NavItem[] }[] = [
+// The user's journey: start, test a bot, find what broke, then trust the verdict.
+const NAV: { group: string; step?: number; items: NavItem[] }[] = [
+  { group: 'Start', items: [{ id: 'overview', label: 'Start here', hint: 'What RAGSeal does, in one story', icon: LayoutDashboard }] },
   {
-    group: 'Use it',
+    group: 'Test a bot',
+    step: 1,
     items: [
-      { id: 'overview', label: 'Start here', hint: 'What RAGSeal does, in one picture', icon: LayoutDashboard },
       { id: 'bots', label: 'Try a chatbot', hint: 'Ask a bot; every reply gets checked', icon: MessagesSquare },
-      { id: 'diagnose', label: 'Diagnose answers', hint: 'See why a single answer went wrong', icon: ScanSearch },
       { id: 'testsets', label: 'Documents & questions', hint: 'Upload a document, generate test questions', icon: FlaskConical },
-      { id: 'impact', label: 'Change impact', hint: 'What a document update breaks for users today', icon: Radar },
       { id: 'runs', label: 'Run a full test', hint: 'Check every question in a pack at once', icon: PlayCircle },
     ],
   },
   {
-    group: 'Trust the checker',
+    group: 'Find what broke',
+    step: 2,
+    items: [
+      { id: 'diagnose', label: 'Diagnose answers', hint: 'See why a single answer went wrong', icon: ScanSearch },
+      { id: 'impact', label: 'Change impact', hint: 'What a document update breaks for users today', icon: Radar },
+      { id: 'compare', label: 'Compare versions', hint: 'Did a change make the bot better or worse?', icon: GitCompareArrows },
+    ],
+  },
+  {
+    group: 'Trust the verdict',
+    step: 3,
     items: [
       { id: 'label', label: 'Label answers', hint: 'Humans mark answers right or wrong', icon: Tags },
-      { id: 'trust', label: 'Can you trust the checker?', hint: 'Does RAGSeal agree with humans?', icon: ListChecks },
-      { id: 'compare', label: 'Compare versions', hint: 'Did a change make the bot better or worse?', icon: GitCompareArrows },
+      { id: 'trust', label: 'Checker trust', hint: 'Does RAGSeal agree with humans?', icon: ListChecks },
       { id: 'seal', label: 'The Seal', hint: 'A certificate and badge for a tested bot', icon: Stamp },
     ],
   },
@@ -64,7 +71,7 @@ export const ROUTE_TITLE: Record<Route, string> = {
   testsets: 'Documents & questions',
   impact: 'Change impact',
   label: 'Label answers',
-  trust: 'Can you trust the checker?',
+  trust: 'Checker trust',
   compare: 'Compare versions',
   seal: 'The Seal',
   learn: 'How it works',
@@ -152,15 +159,26 @@ export const AppShell: React.FC<AppShellProps> = ({
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2.5 pb-4 pt-2 lg:px-3">
-        {NAV.map((g) => (
-          <div key={g.group} className="mb-5">
-            <div className="mb-1.5 hidden px-2.5 text-[11px] font-medium text-[var(--muted)] lg:block">{g.group}</div>
-            <ul className="space-y-0.5">
+        {NAV.map((g, gi) => (
+          <div key={g.group} className={cn('relative', g.step ? 'mb-4' : 'mb-3', g.group === 'Learn' && 'mt-2 border-t border-[var(--rule)] pt-3')}>
+            {g.step && (
+              <div className="mb-1.5 hidden items-center gap-2 px-2.5 lg:flex">
+                <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-[var(--rule)] bg-[var(--panel)] text-[10px] font-semibold tabular-nums text-[var(--ink-1)]">
+                  {g.step}
+                </span>
+                <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--muted)]">{g.group}</span>
+              </div>
+            )}
+            {/* Connector line linking the three steps */}
+            {g.step && g.step < 3 && NAV[gi + 1]?.step && (
+              <span aria-hidden className="pointer-events-none absolute -bottom-4 left-[19px] top-[22px] hidden w-px bg-[var(--rule)] lg:block" />
+            )}
+            <ul className={cn('relative space-y-0.5', g.step && 'lg:pl-[18px]')}>
               {g.items.map((item) => {
                 const active = route === item.id;
                 const Icon = item.icon;
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} className="relative">
                     <a
                       href={`#/${item.id}`}
                       onClick={(e) => {
@@ -171,14 +189,26 @@ export const AppShell: React.FC<AppShellProps> = ({
                       data-tour={`nav-${item.id}`}
                       title={`${item.label}: ${item.hint}`}
                       className={cn(
-                        'flex h-9 items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors lg:justify-start',
+                        'group relative flex h-9 items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-[background-color,color] duration-200 lg:justify-start',
                         active
-                          ? 'bg-[var(--panel-3)] text-[var(--ink)] shadow-[inset_0_1px_0_rgba(27,27,24,0.04)]'
-                          : 'text-[var(--ink-2)] hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] hover:text-[var(--ink)]'
+                          ? 'bg-[var(--panel-3)] font-medium text-[var(--ink)]'
+                          : 'text-[var(--ink-2)] hover:bg-[color:color-mix(in_srgb,var(--ink)_4%,transparent)] hover:text-[var(--ink)]'
                       )}
                     >
-                      <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-[var(--ink)]' : 'text-[var(--muted)]')} />
-                      <span className="hidden truncate lg:inline">{item.label}</span>
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-[var(--accent)] transition-all duration-300',
+                          active ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
+                        )}
+                      />
+                      <Icon
+                        className={cn(
+                          'h-4 w-4 shrink-0 transition-colors duration-200',
+                          active ? 'text-[var(--accent)]' : 'text-[var(--muted)] group-hover:text-[var(--ink-1)]'
+                        )}
+                      />
+                      <span className="hidden whitespace-nowrap lg:inline">{item.label}</span>
                     </a>
                   </li>
                 );

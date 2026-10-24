@@ -133,7 +133,7 @@ export const StartStory: React.FC<StartStoryProps> = ({ token, latest, onOpenPac
   }
 
   return (
-    <section ref={sectionRef} style={{ height: height * (CHAPTERS + 1), position: 'relative' }}>
+    <section ref={sectionRef} style={{ height: height + height * CHAPTERS * 0.5, position: 'relative' }}>
       <div className="sticky top-0 overflow-hidden" style={{ height, background: 'var(--paper)' }}>
         {hero ? (
           <Stage c={chapter} hero={hero} docs={docs} height={height} />
