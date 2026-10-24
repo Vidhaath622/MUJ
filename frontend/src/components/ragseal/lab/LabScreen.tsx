@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Loader2, Play } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { failureLabel } from '../shared/taxonomy';
 import { PackId } from '../../../types/ragseal';
 import { CaseReport } from './CaseReport';
 import { CountUp } from './motion';
@@ -180,7 +181,13 @@ const CaseRow: React.FC<{ c: LabCase; active: boolean; onClick: () => void }> = 
           </span>
           <span className="mt-0.5 flex gap-2 text-[11px] text-[#7D838C]">
             <span className="font-mono">{c.test_id}</span>
-            {v && <span style={{ color: v.color }}>{v.label}</span>}
+            {v && (
+              <span style={{ color: v.color }}>
+                {c.result?.root_cause?.failure_type && c.result.root_cause.failure_type !== 'CLEAN_PASS'
+                  ? failureLabel(c.result.root_cause.failure_type)
+                  : v.label}
+              </span>
+            )}
             {c.type && c.type !== 'factoid' && <span>· {c.type} trap</span>}
           </span>
         </span>

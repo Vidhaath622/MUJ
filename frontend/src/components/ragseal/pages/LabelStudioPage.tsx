@@ -4,9 +4,9 @@ import { cn } from '../../../lib/utils';
 import { PackId } from '../../../types/ragseal';
 import { TopBarControls } from '../shell/AppShell';
 import { PASS, RED, tint } from '../lab/verdict';
-import { errorText, getLabelQueue, LabelItem, postLabel } from '../shared/apiExtra';
-import { FAILURE_TYPES, STAGE_COLOR } from '../shared/taxonomy';
-import { EmptyState, ErrorBanner, LoadState, PackSwitcher } from '../shared/ui';
+import { errorText, getLabelQueue, getProgress, LabelItem, listRuns, postLabel, RunProgress } from '../shared/apiExtra';
+import { FAILURE_TYPES, FailureType, failureLabel, STAGE_COLOR } from '../shared/taxonomy';
+import { EmptyState, ErrorBanner, fmtDuration, LoadState, PackSwitcher } from '../shared/ui';
 
 const LABELERS = ['Sarthak', 'Vidhaath'];
 const LABELER_KEY = 'ragseal.labeler';
@@ -26,6 +26,14 @@ function saveLabeler(name: string | null) {
   } catch {
     // private mode: the name just isn't remembered
   }
+}
+
+/** The backend's accepted failure types, in its order, with our labels and stages. */
+function typesFrom(ids: string[] | undefined): FailureType[] {
+  if (!ids?.length) return FAILURE_TYPES.filter((f) => f.id !== 'OTHER');
+  return ids.map(
+    (id) => FAILURE_TYPES.find((f) => f.id === id) ?? { id, label: failureLabel(id), stage: 'none', hint: '' }
+  );
 }
 
 interface LabelStudioPageProps {
@@ -49,6 +57,11 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [types, setTypes] = useState<FailureType[]>(() => typesFrom(undefined));
+  // A newer run of this pack still in progress: labelling waits for it, so both people
+  // label the full question set and not an older, smaller run.
+  const [waitingFor, setWaitingFor] = useState<RunProgress | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     if (!token || !labeler) return;
@@ -57,21 +70,54 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
     setLoadError(null);
     setDone({});
     setPickingType(false);
-    getLabelQueue(packId, labeler, token)
-      .then((q) => {
+    (async () => {
+      try {
+        const [q, runs] = await Promise.all([getLabelQueue(packId, labeler, token), listRuns(token)]);
         if (cancelled) return;
+        setTypes(typesFrom(q.failure_types));
+        const queueRun = runs.find((r) => r.batch_id === q.batch_id);
+        const newer = runs
+          .filter((r) => r.pack_id === packId && r.status === 'running')
+          .filter((r) => !queueRun || r.created_at > queueRun.created_at)
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+        // Labels already on the queue's run mean labelling has begun there: stay on it.
+        if (newer && !q.labeled && (q.total ?? 0) < (newer.total_evaluated ?? Infinity)) {
+          const p = await getProgress(newer.batch_id, token);
+          if (cancelled) return;
+          setWaitingFor(p);
+          setItems([]);
+          return;
+        }
+        setWaitingFor(null);
         setItems(q.items);
         const already: Record<string, string> = {};
         q.items.forEach((it) => it.labeled && (already[it.test_id] = 'labeled'));
         setDone(already);
         const firstOpen = q.items.findIndex((it) => !it.labeled);
         setIndex(firstOpen === -1 ? 0 : firstOpen);
-      })
-      .catch((err) => !cancelled && setLoadError(err));
+      } catch (err) {
+        if (!cancelled) setLoadError(err);
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [token, labeler, packId]);
+  }, [token, labeler, packId, reload]);
+
+  // While waiting, re-check every 5 s; the queue loads itself once the run is done.
+  useEffect(() => {
+    if (!waitingFor || !token) return;
+    const id = window.setTimeout(async () => {
+      try {
+        const p = await getProgress(waitingFor.batch_id, token);
+        if (p.status === 'running') setWaitingFor(p);
+        else setReload((r) => r + 1);
+      } catch {
+        setReload((r) => r + 1);
+      }
+    }, 5000);
+    return () => window.clearTimeout(id);
+  }, [waitingFor, token]);
 
   const item = items?.[index];
   const labeledCount = Object.keys(done).length;
@@ -122,9 +168,9 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
       if (e.metaKey || e.ctrlKey || e.altKey || !item) return;
       if (pickingType) {
         const n = Number(e.key);
-        if (n >= 1 && n <= FAILURE_TYPES.length) {
+        if (n >= 1 && n <= types.length) {
           e.preventDefault();
-          submit(false, FAILURE_TYPES[n - 1].id);
+          submit(false, types[n - 1].id);
         } else if (e.key === 'Escape' || e.key === 'Backspace') {
           setPickingType(false);
         }
@@ -145,7 +191,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [item, items, pickingType, submit, advance]);
+  }, [item, items, pickingType, submit, advance, types]);
 
   const knownAnswer = item?.ground_truth ?? item?.ground_truth_answer;
 
@@ -177,6 +223,10 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
         <div className="p-6">
           <LoadState loading={!loadError} error={loadError} what="the labeling queue" />
         </div>
+      ) : waitingFor ? (
+        <div className="p-6">
+          <WaitingForRun p={waitingFor} />
+        </div>
       ) : items.length === 0 ? (
         <div className="p-6">
           <EmptyState title="Nothing to label for this pack">
@@ -198,7 +248,11 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
                 <h2 className="mt-2 text-[22px] font-semibold leading-snug tracking-[-0.02em] text-white">{item.question}</h2>
 
                 <div className="mt-6 text-xs text-[#8A9099]">Known answer</div>
-                <p className="mt-1 text-[15px] leading-relaxed text-[#C9CDD3]">{knownAnswer || '— (none given)'}</p>
+                <p className="mt-1 text-[15px] leading-relaxed text-[#C9CDD3]">
+                  {item.expected_abstain
+                    ? 'Not in the documents. The right reply is to say so, not to answer.'
+                    : knownAnswer || '— (none given)'}
+                </p>
 
                 <div className="mt-6 text-xs text-[#8A9099]">Model answer</div>
                 <p className="mt-1 overflow-y-auto whitespace-pre-wrap text-[17px] leading-relaxed tracking-[-0.01em] text-[#F4F5F6]">
@@ -241,6 +295,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
             </div>
 
             <ActionBar
+              types={types}
               picking={pickingType}
               saving={saving}
               onCorrect={() => submit(true, null)}
@@ -305,6 +360,7 @@ const Key: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 const ActionBar: React.FC<{
+  types: FailureType[];
   picking: boolean;
   saving: boolean;
   onCorrect: () => void;
@@ -313,15 +369,15 @@ const ActionBar: React.FC<{
   onCancel: () => void;
   onSkip: () => void;
   onBack: () => void;
-}> = ({ picking, saving, onCorrect, onWrong, onType, onCancel, onSkip, onBack }) => {
-  const groups = useMemo(
-    () => [
-      { stage: 'Retriever', items: FAILURE_TYPES.map((f, i) => ({ ...f, key: i + 1 })).filter((f) => f.stage === 'retriever') },
-      { stage: 'Generator', items: FAILURE_TYPES.map((f, i) => ({ ...f, key: i + 1 })).filter((f) => f.stage === 'generator') },
-      { stage: '', items: FAILURE_TYPES.map((f, i) => ({ ...f, key: i + 1 })).filter((f) => f.stage === 'none') },
-    ],
-    []
-  );
+}> = ({ types, picking, saving, onCorrect, onWrong, onType, onCancel, onSkip, onBack }) => {
+  const groups = useMemo(() => {
+    const keyed = types.map((f, i) => ({ ...f, key: i + 1 }));
+    return [
+      { stage: 'Retriever', items: keyed.filter((f) => f.stage === 'retriever') },
+      { stage: 'Generator', items: keyed.filter((f) => f.stage === 'generator') },
+      { stage: '', items: keyed.filter((f) => f.stage !== 'retriever' && f.stage !== 'generator') },
+    ].filter((g) => g.items.length);
+  }, [types]);
 
   if (picking) {
     return (
@@ -407,3 +463,26 @@ const BigChoice: React.FC<{
     <Key>{hotkey}</Key>
   </button>
 );
+
+const WaitingForRun: React.FC<{ p: RunProgress }> = ({ p }) => {
+  const frac = p.total ? Math.min(1, (p.done ?? 0) / p.total) : 0;
+  return (
+    <div className="lab-panel mx-auto max-w-xl rounded-2xl p-7">
+      <h2 className="text-lg font-semibold tracking-[-0.01em]">Waiting for this pack's run to finish</h2>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-[#8A9099]">
+        A run over the full question set is still scoring answers. Labelling starts on that run so both of you label the
+        same answers. This page refreshes on its own.
+      </p>
+      <div className="mt-5 flex items-baseline justify-between text-[13px]">
+        <span className="font-mono text-xs text-[#8A9099]">{p.batch_id}</span>
+        <span className="tabular-nums text-[#C9CDD3]">
+          {p.done ?? 0} / {p.total ?? '—'} answers
+          {p.eta_ms != null && <span className="text-[#8A9099]"> · about {fmtDuration(p.eta_ms)} left</span>}
+        </span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#16181C]">
+        <div className="h-full rounded-full bg-[#F4F5F6] transition-[width] duration-700" style={{ width: `${frac * 100}%` }} />
+      </div>
+    </div>
+  );
+};

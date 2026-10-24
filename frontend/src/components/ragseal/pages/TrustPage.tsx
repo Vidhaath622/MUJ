@@ -9,14 +9,17 @@ import {
   errorText,
   getAgreement,
   getConfusion,
+  getStability,
+  judgePool,
   listRuns,
   NotAvailable,
-  runStability,
+  RunProgress,
   Stability,
   startInjectionRun,
+  startStability,
 } from '../shared/apiExtra';
 import { failureLabel } from '../shared/taxonomy';
-import { EmptyState, ErrorBanner, fmtNum, GhostButton, LoadState, Metric, Panel, PrimaryButton } from '../shared/ui';
+import { EmptyState, ErrorBanner, fmtDuration, fmtNum, GhostButton, LoadState, Metric, Panel, PrimaryButton } from '../shared/ui';
 
 /** PS: hand-label 150+ question-answer pairs with two people agreeing. */
 const LABEL_TARGET = 150;
@@ -37,24 +40,96 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
   const [stabilityErr, setStabilityErr] = useState<unknown>(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const timer = useRef<number | null>(null);
+  const [injectProgress, setInjectProgress] = useState<RunProgress | null>(null);
+  const [stabilityProgress, setStabilityProgress] = useState<RunProgress | null>(null);
+  const confusionTimer = useRef<number | null>(null);
+  const stabilityTimer = useRef<number | null>(null);
 
-  const primaryJudge = (health?.models?.judge?.name ?? health?.judge_model ?? 'openai/gpt-oss-120b');
-  const [judgeA, setJudgeA] = useState(primaryJudge);
-  const [judgeB, setJudgeB] = useState('qwen3:8b');
-  useEffect(() => setJudgeA(primaryJudge), [primaryJudge]);
+  // The backend's default pair; the judge-swap result is also the evidence that overflow
+  // to the second judge is safe. Names are "provider:model".
+  const pool = judgePool(health);
+  const defaultA = poolName(pool.members.find((m) => m.role === 'primary')) ?? 'groq:openai/gpt-oss-120b';
+  const defaultB = poolName(pool.members.find((m) => m.role === 'overflow')) ?? 'groq:qwen/qwen3.8-27b';
+  const [judgeA, setJudgeA] = useState(defaultA);
+  const [judgeB, setJudgeB] = useState(defaultB);
+  useEffect(() => setJudgeA(defaultA), [defaultA]);
+  useEffect(() => setJudgeB(defaultB), [defaultB]);
+
+  useEffect(
+    () => () => {
+      if (confusionTimer.current) window.clearTimeout(confusionTimer.current);
+      if (stabilityTimer.current) window.clearTimeout(stabilityTimer.current);
+    },
+    []
+  );
+
+  // Poll the confusion matrix until its injection run is done (HTTP 202 while running).
+  const pollConfusion = useCallback(
+    (runId?: string) => {
+      if (!token) return;
+      const tick = async () => {
+        try {
+          const c = await getConfusion(token, runId);
+          if (c.status === 'running') {
+            setInjecting(true);
+            setInjectProgress(c.progress ?? null);
+            confusionTimer.current = window.setTimeout(tick, 3000);
+            return;
+          }
+          setInjecting(false);
+          setInjectProgress(null);
+          if (c.status === 'failed') setError(`Failure-injection run failed: ${c.error ?? 'unknown error'}`);
+          setConfusion(c);
+          setConfusionErr(null);
+        } catch (err) {
+          setInjecting(false);
+          setInjectProgress(null);
+          if (err instanceof ApiError && err.status === 404) setConfusion({ labels: [], matrix: [] });
+          else setConfusionErr(err);
+        }
+      };
+      tick();
+    },
+    [token]
+  );
+
+  const pollStability = useCallback(
+    (id: string, quietIfMissing: boolean) => {
+      if (!token) return;
+      const tick = async () => {
+        try {
+          const st = await getStability(id, token);
+          if (st.status === 'running') {
+            setChecking(true);
+            setStabilityProgress(st.progress ?? null);
+            stabilityTimer.current = window.setTimeout(tick, 3000);
+            return;
+          }
+          setChecking(false);
+          setStabilityProgress(null);
+          if (st.status === 'failed') setError(`Stability check failed: ${st.error ?? 'unknown error'}`);
+          else setStability(st);
+          setStabilityErr(null);
+        } catch (err) {
+          setChecking(false);
+          setStabilityProgress(null);
+          // No check has been run yet: keep the explainer instead of an error.
+          if (quietIfMissing) return;
+          if (err instanceof NotAvailable) setStabilityErr(err);
+          else setError(errorText(err));
+        }
+      };
+      tick();
+    },
+    [token]
+  );
 
   useEffect(() => {
     if (!token) return;
     getAgreement(token).then(setAgreement).catch(setAgreementErr);
-    getConfusion(token)
-      .then(setConfusion)
-      // 404 with a detail = endpoint exists but nothing has been run yet.
-      .catch((err) => (err instanceof ApiError && err.status === 404 ? setConfusion({ labels: [], matrix: [] }) : setConfusionErr(err)));
-    return () => {
-      if (timer.current) window.clearTimeout(timer.current);
-    };
-  }, [token]);
+    pollConfusion();
+    pollStability('latest', true);
+  }, [token, pollConfusion, pollStability]);
 
   const runInjection = useCallback(async () => {
     if (!token) return;
@@ -62,57 +137,38 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
     setError(null);
     try {
       const { run_id } = await startInjectionRun(token);
-      // The injection run may finish later; poll until the matrix for it is ready.
-      const tick = async () => {
-        try {
-          const c = await getConfusion(token, run_id || undefined);
-          if (c.matrix?.length) {
-            setConfusion(c);
-            setConfusionErr(null);
-            setInjecting(false);
-            return;
-          }
-        } catch (err) {
-          if (err instanceof NotAvailable) {
-            setConfusionErr(err);
-            setInjecting(false);
-            return;
-          }
-        }
-        timer.current = window.setTimeout(tick, 3000);
-      };
-      tick();
+      pollConfusion(run_id || undefined);
     } catch (err) {
       if (err instanceof NotAvailable) setConfusionErr(err);
       else setError(errorText(err));
       setInjecting(false);
     }
-  }, [token]);
+  }, [token, pollConfusion]);
 
   const runStabilityCheck = useCallback(async () => {
     if (!token) return;
     setChecking(true);
     setError(null);
     try {
-      const runs = (await listRuns(token)).filter((r) => (r.status ?? 'done') === 'done');
+      // Stability is measured on a finished pack run (not a fault-injection run).
+      const runs = (await listRuns(token)).filter((r) => (r.status ?? 'done') === 'done' && r.pack_id !== 'injection');
       const latest = runs.sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
       if (!latest) throw new Error('Run a pack first; stability is measured on a finished run.');
-      setStability(await runStability(latest.batch_id, [judgeA, judgeB], token));
-      setStabilityErr(null);
+      const { stability_id } = await startStability(latest.batch_id, token, { judges: [judgeA, judgeB] });
+      pollStability(stability_id, false);
     } catch (err) {
       if (err instanceof NotAvailable) setStabilityErr(err);
       else setError(errorText(err));
-    } finally {
       setChecking(false);
     }
-  }, [token, judgeA, judgeB]);
+  }, [token, judgeA, judgeB, pollStability]);
 
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
       <TopBarControls>
         <GhostButton onClick={runInjection} disabled={injecting || !token}>
           <FlaskConical className="h-3.5 w-3.5 text-[#8A9099]" />
-          {injecting ? 'Injecting failures…' : 'Run failure-injection test'}
+          {injecting ? injectLabel(injectProgress) : 'Run failure-injection test'}
         </GhostButton>
       </TopBarControls>
 
@@ -127,6 +183,8 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
         >
           {confusion?.matrix?.length ? (
             <ConfusionMatrix c={confusion} />
+          ) : injecting ? (
+            <ProgressNote what="Planting failures and diagnosing them" p={injectProgress} />
           ) : confusionErr || !confusion ? (
             <LoadState loading={!confusionErr} error={confusionErr} what="the confusion matrix" />
           ) : (
@@ -147,7 +205,9 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
               {!checking && <Scale className="h-3.5 w-3.5" />}
               Swap judge and shuffle
             </PrimaryButton>
-            {stability ? (
+            {checking ? (
+              <ProgressNote what="Re-scoring with both judges and shuffled orders" p={stabilityProgress} />
+            ) : stability ? (
               <StabilityResult s={stability} />
             ) : stabilityErr ? (
               <LoadState error={stabilityErr} what="stability" />
@@ -176,10 +236,21 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
   const hh = agreement.human_human ?? {};
   const pv = agreement.pipeline_vs_consensus ?? {};
   return (
-    <Panel raised title="Agreement with human labels" note={`${n} of ${LABEL_TARGET}+ answers labeled by both people`}>
+    <Panel
+      raised
+      title="Agreement with human labels"
+      note={`${n} of ${LABEL_TARGET}+ answers labeled by both people${agreement.labelers?.length ? ` · ${agreement.labelers.join(', ')}` : ''}`}
+    >
       <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
         <Metric big label="Pipeline agrees with humans" value={pct(pv.agreement)} sub={`Cohen's κ ${fmtNum(pv.kappa)}`} color={tone(pv.agreement)} />
-        <Metric big label="Humans agree with each other" value={pct(hh.agreement)} sub={`Cohen's κ ${fmtNum(hh.cohen_kappa)}`} />
+        <Metric
+          big
+          label="Humans agree with each other"
+          value={pct(hh.agreement)}
+          sub={`Cohen's κ ${fmtNum(hh.cohen_kappa)}${
+            hh.failure_type_n ? ` · same failure type ${pct(hh.failure_type_agreement)} of ${hh.failure_type_n}` : ''
+          }`}
+        />
         <Metric
           big
           label="False pass"
@@ -195,13 +266,20 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
           style={{ width: `${Math.min(100, (n / LABEL_TARGET) * 100)}%`, background: n >= LABEL_TARGET ? PASS : '#F4F5F6' }}
         />
       </div>
+      <p className="mt-2 text-xs text-[#6F757E]">
+        {agreement.n_labels ?? 0} labels on {agreement.n_items_labeled ?? 0} answers so far. Pipeline numbers use only the{' '}
+        {pv.n ?? 0} answers where both people agree.
+      </p>
       {!!agreement.disagreements?.length && (
         <div className="mt-5 border-t border-[#17191D] pt-4">
-          <div className="mb-2 text-xs text-[#8A9099]">Where the pipeline and the humans disagree</div>
+          <div className="mb-2 text-xs text-[#8A9099]">Disagreements ({agreement.disagreements.length})</div>
           <ul className="space-y-1.5 text-[13px]">
             {agreement.disagreements.slice(0, 4).map((d) => (
-              <li key={d.test_id} className="flex gap-3">
+              <li key={`${d.batch_id}-${d.test_id}-${d.kind}`} className="flex gap-3">
                 <span className="w-16 shrink-0 font-mono text-xs text-[#8A9099]">{d.test_id}</span>
+                <span className="shrink-0 text-xs" style={{ color: d.kind === 'human_vs_human' ? AMBER : RED }}>
+                  {d.kind === 'human_vs_human' ? 'humans split' : 'pipeline differs'}
+                </span>
                 <span className="min-w-0 flex-1 truncate text-[#C9CDD3]">{d.question ?? d.note}</span>
                 <span className="shrink-0 text-xs text-[#8A9099]">
                   humans <span className="text-[#E8EAED]">{d.humans ?? '—'}</span> · pipeline{' '}
@@ -213,6 +291,36 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
         </div>
       )}
     </Panel>
+  );
+};
+
+function poolName(m?: { name: string; provider?: string }): string | undefined {
+  return m ? `${m.provider ?? 'groq'}:${m.name}` : undefined;
+}
+
+function injectLabel(p: RunProgress | null): string {
+  return p?.total ? `Injecting failures… ${p.done ?? 0}/${p.total}` : 'Injecting failures…';
+}
+
+const ProgressNote: React.FC<{ what: string; p: RunProgress | null }> = ({ what, p }) => {
+  const frac = p?.total ? Math.min(1, (p.done ?? 0) / p.total) : null;
+  return (
+    <div className="flex flex-col gap-2.5 py-2">
+      <div className="flex items-baseline justify-between text-[13px]">
+        <span className="text-[#C9CDD3]">{what}…</span>
+        <span className="tabular-nums text-[#8A9099]">
+          {p?.total ? `${p.done ?? 0} / ${p.total}` : 'starting'}
+          {p?.eta_ms != null && ` · ${fmtDuration(p.eta_ms)} left`}
+        </span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-[#16181C]">
+        <div
+          className={frac == null ? 'h-full w-1/3 animate-pulse rounded-full bg-[#3A3E45]' : 'h-full rounded-full bg-[#F4F5F6] transition-[width] duration-700'}
+          style={frac == null ? undefined : { width: `${frac * 100}%` }}
+        />
+      </div>
+      <p className="text-xs text-[#6F757E]">This shares the judge's rate limit with other runs, so it can take a few minutes.</p>
+    </div>
   );
 };
 
@@ -232,6 +340,14 @@ const ConfusionMatrix: React.FC<{ c: Confusion }> = ({ c }) => {
           {pct(c.accuracy)}
         </span>
         <span className="text-[13px] text-[#8A9099]">of failures named correctly</span>
+        {c.stage_accuracy != null && (
+          <span className="ml-auto text-[13px] text-[#8A9099]">
+            right stage blamed{' '}
+            <span className="font-semibold tabular-nums" style={{ color: tone(c.stage_accuracy) }}>
+              {pct(c.stage_accuracy)}
+            </span>
+          </span>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="border-separate border-spacing-[3px] text-[11px]">
@@ -317,6 +433,7 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
           ))}
           <Row label="Verdict agreement" value={pct(s.judge_swap?.verdict_agreement)} />
           <Row label="Verdict κ" value={fmtNum(s.judge_swap?.verdict_kappa)} />
+          <Row label="Cases compared" value={s.judge_swap?.n ?? s.n_cases ?? '—'} />
         </div>
       </div>
       <div>
@@ -327,6 +444,7 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
           <Row label="Largest score change" value={fmtNum(s.shuffle?.max_delta)} />
           <Row label="Mean score change" value={fmtNum(s.shuffle?.mean_delta, 3)} />
           <Row label="Cases that moved" value={s.shuffle?.unstable_cases ?? '—'} />
+          <Row label="Verdicts that changed" value={s.shuffle?.verdict_changes ?? '—'} />
           <Row label="Tolerance" value={fmtNum(s.shuffle?.threshold)} />
         </div>
       </div>

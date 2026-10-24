@@ -54,6 +54,20 @@ export function errorText(err: unknown): string {
   return 'Something went wrong talking to the backend.';
 }
 
+// ---------- Health extras ----------
+
+export interface JudgeMember {
+  name: string;
+  provider?: string;
+  role?: 'primary' | 'overflow' | string;
+}
+
+/** /api/health fields api.ts doesn't type yet: the judge pool and how many API keys feed it. */
+export function judgePool(health: unknown): { members: JudgeMember[]; keys: number | null } {
+  const h = (health ?? {}) as { judge_pool?: JudgeMember[]; judge_api_keys?: number };
+  return { members: h.judge_pool ?? [], keys: h.judge_api_keys ?? null };
+}
+
 // ---------- Runs (P1) ----------
 
 export interface RunTiming {
@@ -159,6 +173,8 @@ export interface LabelItem {
   question: string;
   ground_truth?: string | null;
   ground_truth_answer?: string | null;
+  /** True for questions the documents can't answer: the right reply is to abstain. */
+  expected_abstain?: boolean;
   generated_answer?: string;
   retrieved_chunks?: LabelChunk[];
   labeled?: boolean;
@@ -168,6 +184,11 @@ export interface LabelQueue {
   items: LabelItem[];
   labeled?: number;
   total?: number;
+  /** The run every labeller of this pack works on; null when the pack has no finished run. */
+  batch_id?: string | null;
+  /** The failure types the backend accepts in POST /labels (same ids as root_cause.failure_type). */
+  failure_types?: string[];
+  message?: string;
 }
 
 export async function getLabelQueue(packId: string, labeler: string, token: string): Promise<LabelQueue> {
@@ -190,8 +211,19 @@ export async function postLabel(label: LabelInput, token: string): Promise<void>
 }
 
 export interface Agreement {
+  pack_id?: string | null;
+  n_labels?: number;
+  n_items_labeled?: number;
   n_double_labeled?: number;
-  human_human?: { agreement?: number | null; cohen_kappa?: number | null };
+  labelers?: string[];
+  human_human?: {
+    agreement?: number | null;
+    cohen_kappa?: number | null;
+    n?: number;
+    /** Among answers both people called wrong: how often they picked the same failure type. */
+    failure_type_agreement?: number | null;
+    failure_type_n?: number;
+  };
   pipeline_vs_consensus?: {
     agreement?: number | null;
     kappa?: number | null;
@@ -199,7 +231,15 @@ export interface Agreement {
     false_fail?: number;
     n?: number;
   };
-  disagreements?: { test_id: string; question?: string; humans?: string; pipeline?: string; note?: string }[];
+  disagreements?: {
+    test_id: string;
+    batch_id?: string;
+    question?: string;
+    humans?: string;
+    pipeline?: string | null;
+    kind?: 'human_vs_human' | 'pipeline_vs_consensus';
+    note?: string | null;
+  }[];
 }
 
 export async function getAgreement(token: string, packId?: string): Promise<Agreement> {
@@ -210,13 +250,34 @@ export async function getAgreement(token: string, packId?: string): Promise<Agre
 
 // ---------- Failure taxonomy + confusion matrix (P4) ----------
 
+export interface ConfusionCase {
+  test_id: string;
+  question?: string;
+  true_failure_type?: string;
+  predicted_failure_type?: string;
+  category?: string;
+  stage?: string;
+  answer?: string;
+}
+
 export interface Confusion {
-  run_id?: string;
+  run_id?: string | null;
+  /** "running" comes back as HTTP 202 with progress; "done" carries the matrix. */
+  status?: 'running' | 'done' | 'failed';
+  progress?: RunProgress | null;
+  error?: string | null;
+  message?: string;
   labels: string[];
   matrix: number[][];
   per_class?: Record<string, { precision?: number | null; recall?: number | null; support?: number }>;
   accuracy?: number | null;
+  /** Coarser score: did it blame the right stage (retriever vs generator)? */
+  stage_accuracy?: number | null;
   n?: number;
+  n_per_type?: number;
+  judge_model?: string;
+  timing?: RunTiming;
+  cases?: ConfusionCase[];
 }
 
 export async function startInjectionRun(token: string, nPerType = 5, packId?: string): Promise<{ run_id: string; status?: string }> {
@@ -230,40 +291,63 @@ export async function startInjectionRun(token: string, nPerType = 5, packId?: st
 export async function getConfusion(token: string, runId?: string): Promise<Confusion> {
   const qs = runId ? `?run_id=${runId}` : '';
   const { body } = await call<Confusion>(`/trust/confusion${qs}`, token);
-  return body;
+  // A running or failed run has no matrix yet.
+  return { ...body, labels: body.labels ?? [], matrix: body.matrix ?? [] };
 }
 
 // ---------- Stability (P5) ----------
 
 export interface Stability {
+  stability_id?: string;
+  /** "running" comes back as HTTP 202 with progress. */
+  status?: 'running' | 'done' | 'failed';
+  progress?: RunProgress | null;
+  error?: string | null;
+  created_at?: string;
   batch_id?: string;
   judges?: string[];
+  n_cases?: number;
   judge_swap?: {
     correlation?: Record<string, number | null>;
     verdict_kappa?: number | null;
     verdict_agreement?: number | null;
+    n?: number;
+    disagreements?: { test_id?: string; judge_a?: string; judge_b?: string }[];
   };
   shuffle?: {
     runs?: number;
     max_delta?: number | null;
     mean_delta?: number | null;
     unstable_cases?: number;
-    stable?: boolean;
+    verdict_changes?: number;
+    stable?: boolean | null;
     threshold?: number;
+    cases?: { test_id?: string; max_delta: number; verdict_changed: boolean; stable: boolean }[];
   };
-  stable?: boolean;
+  stable?: boolean | null;
 }
 
-export async function runStability(
+/** Stability is a few hundred judge calls, so it runs in the background: start, then poll. */
+export async function startStability(
   batchId: string,
-  judges: string[],
   token: string,
-  shuffles = 3
-): Promise<Stability> {
-  const { body } = await call<Stability>('/trust/stability', token, {
+  opts: { judges?: string[]; shuffles?: number; maxCases?: number } = {}
+): Promise<{ stability_id: string; status: string }> {
+  const { body } = await call<{ stability_id: string; status: string }>('/trust/stability', token, {
     method: 'POST',
-    body: JSON.stringify({ batch_id: batchId, judges, shuffles }),
+    body: JSON.stringify({
+      batch_id: batchId,
+      ...(opts.judges ? { judges: opts.judges } : {}),
+      shuffles: opts.shuffles ?? 3,
+      max_cases: opts.maxCases ?? 20,
+    }),
   });
+  return body;
+}
+
+/** `id` may be "latest" for the most recent check. */
+export async function getStability(id: string, token: string): Promise<Stability> {
+  const { body } = await call<Stability>(`/trust/stability/${id}`, token);
   return body;
 }
 

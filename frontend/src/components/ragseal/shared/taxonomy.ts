@@ -1,7 +1,7 @@
 // Fine-grained failure types (Phase 2: diagnose 5+ kinds of failure). Same ids as the
 // backend's root_cause.failure_type; `stage` says which component is to blame.
 
-export type Stage = 'retriever' | 'generator' | 'both' | 'none';
+export type Stage = 'retriever' | 'generator' | 'both' | 'none' | 'unknown';
 
 export interface FailureType {
   id: string;
@@ -23,7 +23,10 @@ export const FAILURE_TYPES: FailureType[] = [
 ];
 
 export const FAILURE_LABEL: Record<string, string> = Object.fromEntries(
-  [...FAILURE_TYPES.map((f) => [f.id, f.label]), ['CLEAN_PASS', 'Correct'], ['PASS', 'Correct']] as [string, string][]
+  [...FAILURE_TYPES.map((f) => [f.id, f.label]), ['CLEAN_PASS', 'Correct'], ['PASS', 'Correct'], ['UNRESOLVED', 'Unresolved']] as [
+    string,
+    string,
+  ][]
 );
 
 export const STAGE_COLOR: Record<Stage, string> = {
@@ -31,6 +34,15 @@ export const STAGE_COLOR: Record<Stage, string> = {
   generator: '#F47783',
   both: '#F47783',
   none: '#9AA0A8',
+  unknown: '#9AA0A8',
+};
+
+export const STAGE_LABEL: Record<string, string> = {
+  retriever: 'Retriever at fault',
+  generator: 'Generator at fault',
+  both: 'Both at fault',
+  none: 'No fault',
+  unknown: 'Cause unclear',
 };
 
 export function failureLabel(id: string): string {

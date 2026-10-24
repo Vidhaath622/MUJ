@@ -63,6 +63,10 @@ export interface LabResult {
     category?: string;
     summary?: string;
     recommended_action?: string;
+    /** Phase 2 fine-grained type (WRONG_CHUNK, STALE_SOURCE, …); absent on older runs. */
+    failure_type?: string;
+    failure_type_text?: string;
+    stage?: string;
   };
   replay?: {
     answer?: string;
