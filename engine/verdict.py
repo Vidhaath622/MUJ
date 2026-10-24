@@ -160,6 +160,17 @@ def decide(f: Facts) -> Verdict:
                 "Check the ground-truth label against the gold chunk.",
             )
         # Gold retrieved but the answer is not faithful: replay decides how strong the evidence is.
+        if f.replay_ran and f.replay_correct and (f.stale_retrieved or f.distractor_retrieved):
+            # Replay proved the misleading chunk mattered, so retrieval shares the blame with the
+            # unsupported claims: a fix by replay outranks the unsupported-claim signal.
+            misleading = "an outdated version of the fact" if f.stale_retrieved else "a look-alike passage from another document"
+            return Verdict(
+                "COMPOUND_FAILURE",
+                f"The retriever also returned {misleading}, and the answer makes claims the context does not support."
+                " With only the gold chunk the generator answered correctly.",
+                "Filter superseded or look-alike documents (or rank the current version first) and use a stricter extraction prompt.",
+                "Replay with only the gold chunk fixed the answer, so the misleading retrieved chunk caused the failure.",
+            )
         if f.replay_ran and f.replay_correct:
             effect = "With only the gold chunk the answer was correct, so the extra retrieved chunks distracted the generator."
             action = "Retrieve fewer, better chunks (rerank or lower top-k) and use a stricter extraction prompt."

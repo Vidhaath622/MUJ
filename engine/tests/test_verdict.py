@@ -100,3 +100,18 @@ from engine.verdict import classify_failure
 )
 def test_failure_taxonomy(overrides, category, expected):
     assert classify_failure(facts(**overrides), category) == expected
+
+
+def test_replay_fix_outranks_unsupported_claim_when_stale_chunk_retrieved():
+    # imp_04: stale v1 chunk retrieved, answer adds an unsupported claim, replay with only the gold chunk fixes it.
+    f = facts(faithful=False, correct=False, stale_retrieved=True, replay_ran=True, replay_correct=True)
+    assert needs_replay(facts(faithful=False, correct=False, stale_retrieved=True))
+    verdict = decide(f)
+    assert verdict.category == "COMPOUND_FAILURE"
+    assert classify_failure(f, verdict.category) == ("STALE_SOURCE", "both")
+    # Faithful to the stale chunk and fixed by replay: a pure retrieval failure.
+    g = facts(correct=False, stale_retrieved=True, replay_ran=True, replay_correct=True)
+    assert decide(g).category == "RETRIEVAL_FAILURE" and classify_failure(g, "RETRIEVAL_FAILURE") == ("STALE_SOURCE", "retriever")
+    # Without a misleading chunk, a replay fix still leaves the generator at fault.
+    h = facts(faithful=False, correct=False, replay_ran=True, replay_correct=True)
+    assert decide(h).category == "GENERATION_HALLUCINATION"

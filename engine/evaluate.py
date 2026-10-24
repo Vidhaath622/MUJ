@@ -351,3 +351,57 @@ def summarize_batch(results: list[dict]) -> dict:
 
 
 __all__ = ["Evaluator", "TestCase", "summarize_batch", "ModelUnavailable"]
+
+
+def rederive(result: dict, distractor_document_ids: list[str] | None = None) -> dict:
+    """Recompute a stored result's verdict and failure type from its stored facts: no model calls.
+
+    Used when the verdict rules change after runs were made.
+    """
+    from .config import THRESHOLDS
+
+    if result.get("error"):
+        return result
+    metrics = result["metrics"]
+
+    def passed(name: str) -> bool | None:
+        score = metrics[name]["score"]
+        return None if score is None else score >= THRESHOLDS[name]
+
+    retrieved = result.get("retrieved_chunk_ids") or []
+    chunks = result.get("retrieved_chunks") or []
+    replay = result.get("replay")
+    unanswerable = bool(result.get("expected_abstain"))
+    facts = Facts(
+        has_ground_truth=bool(result.get("ground_truth")) or unanswerable,
+        unanswerable=unanswerable,
+        abstained=is_abstention(result["generated_answer"]),
+        gold_known=bool(result.get("gold_chunk_ids")),
+        gold_retrieved=bool(result.get("gold_retrieved")),
+        relevant_context=bool(passed("context_relevance")),
+        faithful=passed("faithfulness"),
+        correct=passed("answer_accuracy"),
+        stale_retrieved=bool(set(result.get("stale_chunk_ids") or []) & set(retrieved)),
+        replay_ran=replay is not None,
+        replay_correct=None if replay is None or replay.get("answer_accuracy") is None else replay["answer_accuracy"] >= THRESHOLDS["answer_accuracy"],
+        replay_failed=replay is not None and replay.get("answer_accuracy") is None,
+        contradicted_claims=any(c.get("verdict") == "contradicted" for c in metrics["faithfulness"].get("claims", [])),
+        distractor_retrieved=bool(chunks) and chunks[0].get("document_id") in set(distractor_document_ids or []),
+    )
+    verdict = decide(facts)
+    failure_type, stage = classify_failure(facts, verdict.category)
+    out = dict(result)
+    out["root_cause"] = {
+        **result["root_cause"],
+        "category": verdict.category,
+        "summary": verdict.summary,
+        "recommended_action": verdict.recommended_action,
+        "failure_type": failure_type,
+        "stage": stage,
+        "failure_type_text": FAILURE_TYPE_TEXT[failure_type],
+    }
+    if replay is not None:
+        out["replay"] = {**replay, "verdict_effect": verdict.verdict_effect or replay.get("verdict_effect")}
+    if "category" in result:
+        out["category"] = verdict.category
+    return out
