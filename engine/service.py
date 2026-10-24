@@ -95,6 +95,15 @@ class Engine:
         if fallback is not None:
             ready, reason = fallback.ready()
             roles["judge_fallback"] = {"name": fallback.model, "provider": fallback.provider, "ready": ready, "error": reason}
+        usage, seen = [], set()
+        for member in members or []:
+            client = member.client
+            if id(client) in seen or not hasattr(client, "usage"):
+                continue
+            seen.add(id(client))
+            for model, tokens in sorted(client.usage.items()):
+                usage.append({"key": client.label, "model": model, "tokens_since_start": tokens,
+                              "daily_cap": client.daily_caps.get(model)})
         judge_ready = roles["judge"]["ready"]
         return {
             "engine_ready": all(r["ready"] for name, r in roles.items() if name != "judge_fallback"),
@@ -104,6 +113,8 @@ class Engine:
             "judge_model": self.judge.model,
             "judge_provider": self.judge.provider,
             "judge_pool": roles_pool if members else None,
+            # Tokens this process sent per API key and model; daily_cap is Groq's own figure from its last 429.
+            "judge_token_usage": usage,
             "judge_api_keys": sum(1 for m in (members or []) if any(m is p for p in getattr(self.judge, "primary", []))) or None,
             "generator_model": self.generator.model,
             "generator_provider": self.generator.provider,
@@ -512,20 +523,26 @@ class Engine:
 
     # ------------------------------------------------------------ stability
 
-    def judge_model(self, spec: str) -> ChatModel:
-        """A single judge model from "provider:model" (or a bare model name, looked up in the judge pool)."""
+    def judge_models(self, spec: str) -> list[ChatModel]:
+        """Every API key's copy of one judge model, from "provider:model" (or a bare model name in the pool)."""
         from .config import PROVIDERS
-        from .llm import OllamaClient, _client
+        from .llm import OllamaClient, OpenAICompatClient, _client
 
         provider, _, model = spec.partition(":")
         if provider not in PROVIDERS:
             member = next((m for m in getattr(self.judge, "members", []) if m.model == spec), None)
             if member is None:
                 raise NotFound(f"unknown judge {spec!r}: use provider:model, e.g. groq:openai/gpt-oss-120b")
-            return ChatModel(member.client, member.model)
+            provider, model = member.provider, member.model
         if not model:
             raise NotFound(f"judge {spec!r} has no model name")
-        return ChatModel(_client(provider, self.settings, OllamaClient(self.settings)), model)
+        clients = [_client(provider, self.settings, OllamaClient(self.settings))]
+        if provider == "groq":
+            clients += [
+                OpenAICompatClient("groq", "https://api.groq.com/openai/v1", key, self.settings, json_mode=True)
+                for key in self.settings.groq_extra_keys
+            ]
+        return [ChatModel(c, model) for c in clients]
 
     def stability(
         self,
@@ -538,15 +555,18 @@ class Engine:
     ) -> dict:
         from .stability import run_stability
 
-        judges = judges or [f"{self.judge.provider}:{self.judge.model}", "groq:qwen/qwen3.8-27b"]
+        if not judges:
+            primary = f"{self.judge.provider}:{self.judge.model}"
+            other = "groq:openai/gpt-oss-120b" if primary != "groq:openai/gpt-oss-120b" else "groq:qwen/qwen3.8-27b"
+            judges = [primary, other]
         if len(judges) != 2:
             raise ValueError("stability needs exactly two judges")
-        models = (self.judge_model(judges[0]), self.judge_model(judges[1]))
-        for model in models:
-            ready, reason = model.ready()
+        pools = (self.judge_models(judges[0]), self.judge_models(judges[1]))
+        for pool in pools:
+            ready, reason = pool[0].ready()
             if not ready:
-                raise ModelUnavailable(f"judge {model.provider}:{model.model} is not available: {reason}")
-        return run_stability(self, owner_id, batch, models, shuffles=shuffles, max_cases=max_cases, progress=progress)
+                raise ModelUnavailable(f"judge {pool[0].provider}:{pool[0].model} is not available: {reason}")
+        return run_stability(self, owner_id, batch, pools, shuffles=shuffles, max_cases=max_cases, progress=progress)
 
     # ------------------------------------------------------- RAG versions
 

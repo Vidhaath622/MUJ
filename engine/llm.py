@@ -162,6 +162,7 @@ class OpenAICompatClient:
     """NVIDIA NIM and Groq both speak the OpenAI chat-completions protocol."""
 
     hosted = True
+    _count: dict[str, int] = {}
 
     def __init__(self, name: str, base_url: str, api_key: str, settings: Settings, json_mode: bool):
         self.name = name
@@ -170,6 +171,10 @@ class OpenAICompatClient:
         self._api_key = api_key
         self._http = httpx.Client(base_url=base_url.rstrip("/"), timeout=settings.request_timeout_s)
         self._catalog: tuple[float, set[str]] | None = None
+        OpenAICompatClient._count[name] = OpenAICompatClient._count.get(name, 0) + 1
+        self.label = f"{name}#{OpenAICompatClient._count[name]}"
+        self.usage: dict[str, int] = {}
+        self.daily_caps: dict[str, dict] = {}
 
     def list_models(self) -> set[str]:
         """The provider's live catalog, cached for five minutes. Hosted catalogs retire models without notice."""
@@ -190,6 +195,12 @@ class OpenAICompatClient:
     def has_model(self, model: str) -> bool:
         return model in self.list_models()
 
+    def _note_daily_cap(self, model: str | None, body: str) -> None:
+        """Groq states the per-day token cap and usage only in the text of a 429."""
+        match = re.search(r"tokens per day \(TPD\): Limit (\d+), Used (\d+)", body)
+        if model and match:
+            self.daily_caps[model] = {"limit": int(match.group(1)), "used": int(match.group(2)), "seen_at": time.strftime("%H:%M:%S")}
+
     def _post(self, path: str, payload: dict, patient: bool = True) -> dict:
         last_error = "no attempt made"
         for attempt in range(8 if patient else 3):
@@ -202,6 +213,8 @@ class OpenAICompatClient:
             if resp.status_code in (429, 500, 502, 503, 504):
                 # Free tiers rate-limit per minute; retry-after says how long to wait.
                 last_error = f"HTTP {resp.status_code}" + (" (rate limited)" if resp.status_code == 429 else "")
+                if resp.status_code == 429:
+                    self._note_daily_cap(payload.get("model"), resp.text)
                 if resp.status_code == 429 and not patient:
                     # The judge pool routes around the limit instead of sleeping on it.
                     # A daily token cap asks for minutes or hours: the pool must see the real wait to
@@ -237,6 +250,7 @@ class OpenAICompatClient:
         start = time.perf_counter()
         data = self._post("/chat/completions", payload, patient)
         latency = int((time.perf_counter() - start) * 1000)
+        self.usage[model] = self.usage.get(model, 0) + int((data.get("usage") or {}).get("total_tokens", 0))
         text = data["choices"][0]["message"].get("content") or ""
         return Generation(text=_strip_thinking(text), model=model, latency_ms=latency)
 

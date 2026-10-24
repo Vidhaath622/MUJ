@@ -87,7 +87,7 @@ def run_stability(
     engine,
     owner_id: str,
     batch: dict,
-    judges: tuple[ChatModel, ChatModel],
+    judges: tuple,  # two ChatModels, or two lists of ChatModels (one per API key)
     shuffles: int = 3,
     max_cases: int = 20,
     threshold: float = 0.15,
@@ -99,7 +99,9 @@ def run_stability(
     if len(results) > max_cases:
         results = rng.sample(results, max_cases)
     cache = engine.settings.data_dir / "judge_cache.sqlite"
-    judge_a, judge_b = (Judge(m, cache, max_wait_s=120) for m in judges)
+    # Each judge is one model on every API key it has (separate rate limits, one cache).
+    pools = [list(j) if isinstance(j, (list, tuple)) else [j] for j in judges]
+    judge_a, judge_b = (Judge(pool[0], cache, replicas=tuple(pool[1:]), max_wait_s=600) for pool in pools)
     total = len(results) * (2 + shuffles)
     done = 0
 
@@ -171,7 +173,7 @@ def run_stability(
     max_delta = max((c["max_delta"] for c in per_case), default=None)
     unstable = [c for c in per_case if not c["stable"]]
     verdict_agreement = round(sum(a == b for a, b in zip(verdicts_a, verdicts_b)) / len(pairs), 3) if pairs else None
-    judge_names = [f"{m.provider}:{m.model}" for m in judges]
+    judge_names = [f"{pool[0].provider}:{pool[0].model}" for pool in pools]
     disagreeing = [
         {"test_id": r.get("test_id"), "judge_a": a["verdict"], "judge_b": b["verdict"]}
         for (a, b), r in zip(swapped, results) if a and b and a["verdict"] != b["verdict"]
