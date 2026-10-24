@@ -43,24 +43,22 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
   backendHealth,
 }) => {
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-[#07090e]/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-[#17191D] bg-[#08090B]/85 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-6 px-6">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-teal-400" />
-          <span className="text-[15px] font-semibold tracking-tight text-white">
-            RAG<span className="text-teal-400">Seal</span>
-          </span>
-          <span className="hidden text-xs text-slate-500 2xl:inline">Retriever and generator, tested apart</span>
+          <ShieldCheck className="h-[22px] w-[22px] text-[#E8EAED]" strokeWidth={1.6} />
+          <span className="text-[15px] font-semibold tracking-[-0.01em] text-white">RAGSeal</span>
+          <span className="hidden text-xs text-[#7D838C] 2xl:inline">Retriever and generator, tested apart</span>
         </div>
 
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex items-center gap-1 text-[13px]">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => onSelectTab(t.id)}
               className={cn(
-                'rounded-md px-3 py-1.5 transition-colors',
-                activeTab === t.id ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+                'rounded-lg px-3 py-1.5 transition-colors',
+                activeTab === t.id ? 'bg-[#16181C] text-white' : 'text-[#8A9099] hover:text-[#E8EAED]'
               )}
             >
               {t.label}
@@ -69,14 +67,16 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
         </nav>
 
         {activeTab === 'lab' && (
-          <div className="flex items-center rounded-lg border border-slate-800 p-0.5 text-sm">
+          <div className="flex items-center gap-0.5 rounded-[10px] border border-[#1C1F24] p-[3px] text-[13px]">
             {PACKS.map((p) => (
               <button
                 key={p.id}
                 onClick={() => onSelectPack(p.id)}
                 className={cn(
-                  'rounded-md px-3 py-1 transition-colors',
-                  activePack === p.id ? 'bg-teal-500/15 text-teal-200' : 'text-slate-400 hover:text-slate-200'
+                  'rounded-[7px] px-3 py-[5px] transition-colors',
+                  activePack === p.id
+                    ? 'bg-[#1C1F24] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
+                    : 'text-[#8A9099] hover:text-[#E8EAED]'
                 )}
               >
                 {p.label}
@@ -85,7 +85,7 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
           </div>
         )}
 
-        <div className="ml-auto flex items-center gap-2 text-sm">
+        <div className="ml-auto flex items-center gap-1 text-[13px]">
           <ModelStatus live={isLiveBackend} health={backendHealth} />
           <ToolButton onClick={onOpenDocVault} icon={<Database className="h-3.5 w-3.5" />}>
             Documents
@@ -109,9 +109,9 @@ const ToolButton: React.FC<{ onClick: () => void; icon: React.ReactNode; childre
 }) => (
   <button
     onClick={onClick}
-    className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[#B4B9C0] transition-colors hover:bg-[#16181C] hover:text-white"
   >
-    <span className="text-slate-500">{icon}</span>
+    <span className="text-[#7D838C]">{icon}</span>
     <span className="hidden lg:inline">{children}</span>
   </button>
 );
@@ -120,8 +120,8 @@ const ToolButton: React.FC<{ onClick: () => void; icon: React.ReactNode; childre
 const ModelStatus: React.FC<{ live: boolean; health?: HealthResponse | null }> = ({ live, health }) => {
   if (!live || !health) {
     return (
-      <span className="flex items-center gap-1.5 rounded-md border border-rose-500/40 px-2.5 py-1 text-xs text-rose-300">
-        <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+      <span className="mr-2 flex items-center gap-2 text-xs text-[#F47783]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#F47783]" />
         Backend offline
       </span>
     );
@@ -132,14 +132,18 @@ const ModelStatus: React.FC<{ live: boolean; health?: HealthResponse | null }> =
   const judgeName = (judge?.name ?? health.judge_model ?? 'judge').split('/').pop();
   return (
     <span
-      className="flex items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-800 px-2.5 py-1 text-xs text-slate-400"
+      className="mr-2 flex items-center gap-2 whitespace-nowrap text-xs text-[#8A9099]"
       title={[gen?.error, judge?.error, health.engine_error].filter(Boolean).join(' · ') || undefined}
     >
-      <span className={cn('h-1.5 w-1.5 rounded-full', ready ? 'bg-emerald-400' : 'bg-amber-400')} />
-      <span className="font-mono text-slate-300">{gen?.name ?? health.generator_model}</span>
-      <span className="text-slate-600">judged by</span>
-      <span className="font-mono text-slate-300">{judgeName}</span>
-      {judge?.provider && <span className="text-slate-500">({judge.provider})</span>}
+      <span
+        className={cn(
+          'h-1.5 w-1.5 rounded-full',
+          ready ? 'bg-[#3DD68C] shadow-[0_0_0_3px_rgba(61,214,140,0.15)]' : 'bg-[#F5A524] shadow-[0_0_0_3px_rgba(245,165,36,0.15)]'
+        )}
+      />
+      <span className="font-mono text-[#C9CDD3]">{gen?.name ?? health.generator_model}</span>
+      <span>judged by</span>
+      <span className="font-mono text-[#C9CDD3]">{judgeName}</span>
     </span>
   );
 };
