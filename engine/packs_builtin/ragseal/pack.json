@@ -1,0 +1,198 @@
+{
+  "pack_id": "ragseal",
+  "name": "RAGSeal guide",
+  "description": "RAGSeal's own documentation (product overview, metric contract, how it works) so RAGSeal can be asked about itself, with every answer X-rayed by RAGSeal.",
+  "demo_data": false,
+  "documents": [
+    {
+      "file": "ragseal_overview.md",
+      "source": "docs/product_brief.md (product sections)"
+    },
+    {
+      "file": "ragseal_how_it_works.md",
+      "source": "written from the engine code"
+    },
+    {
+      "file": "ragseal_metrics_contract.md",
+      "source": "docs/api_contract.md section 1"
+    }
+  ],
+  "risk_rules": [
+    "Do not invent prices, customers or features that the documentation does not state."
+  ],
+  "test_cases": [
+    {
+      "test_id": "rs_01",
+      "question": "How does RAGSeal decide that the retriever was at fault?",
+      "ground_truth_answer": "It re-runs the generator with only the gold chunk; if that replay answers correctly, the retriever was at fault",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "If the replay is correct, the retriever was at fault."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_02",
+      "question": "Which existing tools does RAGSeal name as prior art?",
+      "ground_truth_answer": "Ragas, RAGChecker, TruLens, DeepEval and ARES",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Prior art exists: Ragas, RAGChecker, TruLens, DeepEval, ARES."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_03",
+      "question": "Which model is the generator under test in RAGSeal?",
+      "ground_truth_answer": "llama3.2:3b, a small local model run through Ollama",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "The generator under test is llama3.2:3b, a small local model that runs through Ollama at temperature 0 with a fixed seed of 42."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_04",
+      "question": "What is RAGSeal's pass threshold for faithfulness?",
+      "ground_truth_answer": "0.75",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "The pass thresholds are 0.70 for context relevance, 0.75 for faithfulness and 0.70 for answer accuracy."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_05",
+      "question": "What verdict does RAGSeal give when the gold chunk was missed and the replay with it is also wrong?",
+      "ground_truth_answer": "COMPOUND_FAILURE",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "If the gold chunk was missed and the replay is also wrong, the verdict is COMPOUND_FAILURE."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_06",
+      "question": "What should a RAG system do when the documents do not answer the question?",
+      "ground_truth_answer": "Abstain; making something up counts as a hallucination",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "For unanswerable questions the correct behaviour is to abstain; making something up counts as a hallucination."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_07",
+      "question": "How many chunks does RAGSeal retrieve for each question?",
+      "ground_truth_answer": "The top 4 chunks by cosine similarity",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "For each question RAGSeal retrieves the top 4 chunks by cosine similarity."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_08",
+      "question": "How many judge calls does RAGSeal need per test case?",
+      "ground_truth_answer": "One merged judge call, plus one more if a replay is run",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "Each case needs one merged judge call that scores relevance, checks every claim and compares the answer with the ground truth together."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_09",
+      "question": "What happens in RAGSeal when every hosted judge has used up its rate limit?",
+      "ground_truth_answer": "A live question falls back to the local qwen3:8b judge, and the result says so",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "If every hosted judge has used up its rate limit, a live question falls back to the local qwen3:8b judge, and the result says so."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_10",
+      "question": "Which embedding model does RAGSeal use?",
+      "ground_truth_answer": "nomic-embed-text, run locally through Ollama",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "Chunks are embedded with the nomic-embed-text model, which runs locally through Ollama."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_11",
+      "question": "What does RAGSeal show when a score is just below its pass threshold?",
+      "ground_truth_answer": "REVIEW (amber) for scores up to 0.15 below the threshold, instead of FAIL",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "A score up to 0.15 below its threshold is shown as REVIEW instead of FAIL."
+        }
+      ],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_12",
+      "question": "What is the pass threshold for context relevance in the API contract?",
+      "ground_truth_answer": "0.70 or higher passes",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_metrics_contract.md",
+          "quote": "Does the retrieved chunk contain information needed to answer the query?"
+        }
+      ],
+      "note": "The contract states the threshold on the next line; the gold chunk covers both.",
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_13",
+      "question": "How much does RAGSeal cost per month?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "hand"
+    },
+    {
+      "test_id": "rs_14",
+      "question": "Which companies use RAGSeal in production?",
+      "ground_truth_answer": "",
+      "type": "unanswerable",
+      "gold": [],
+      "origin": "hand"
+    }
+  ]
+}
