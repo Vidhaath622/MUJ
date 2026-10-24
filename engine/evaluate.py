@@ -101,6 +101,7 @@ class Evaluator:
 
     def evaluate(self, owner_id: str, case: TestCase, document_ids: list[str]) -> dict:
         started = time.perf_counter()
+        self.judge.start_tracking()
         if case.manual_answer:
             retrieved = self.rag.retrieve(owner_id, case.question, document_ids)
             answer, citations, gen_ms = case.manual_answer, [], 0
@@ -205,8 +206,7 @@ class Evaluator:
             "retrieved_chunk_ids": retrieved_ids,
             "gold_retrieved": gold_retrieved,
             "replay": replay,
-            "evaluation_mode": self.judge.mode,
-            "judge_model": self.judge.model,
+            **self.judge.used(),
             "generator_model": self.rag.generator_model,
             "generation_ms": gen_ms,
             "duration_ms": int((time.perf_counter() - started) * 1000),

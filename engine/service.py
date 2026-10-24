@@ -56,7 +56,7 @@ class Engine:
             models = build_models(self.settings)
             generator = generator or models.generator
             embedder = embedder or models.embedder
-            judge = judge or Judge(models.judge, self.settings.data_dir / "judge_cache.sqlite")
+            judge = judge or Judge(models.judge, self.settings.data_dir / "judge_cache.sqlite", fallback=models.judge_fallback)
         self.generator = generator
         self.embedder = embedder
         self.judge = judge
@@ -72,9 +72,13 @@ class Engine:
         for role, model in (("generator", self.generator), ("embeddings", self.embedder), ("judge", self.judge.chat_model)):
             ready, reason = model.ready()
             roles[role] = {"name": model.model, "provider": model.provider, "ready": ready, "error": reason}
+        fallback = getattr(self.judge, "fallback", None)
+        if fallback is not None:
+            ready, reason = fallback.ready()
+            roles["judge_fallback"] = {"name": fallback.model, "provider": fallback.provider, "ready": ready, "error": reason}
         judge_ready = roles["judge"]["ready"]
         return {
-            "engine_ready": all(r["ready"] for r in roles.values()),
+            "engine_ready": all(r["ready"] for name, r in roles.items() if name != "judge_fallback"),
             "models": roles,
             # "unavailable" tells the UI that no judge can run, rather than showing stale or made-up scores.
             "evaluation_mode": self.judge.mode if judge_ready else "unavailable",
@@ -241,6 +245,8 @@ class Engine:
             "judge_agreement": agreement,
             "evaluation_mode": self.judge.mode,
             "judge_model": self.judge.model,
+            "judge_models_used": sorted({m for ev in evaluations for m in ev.get("judge_models_used", [])}),
+            "judge_fallback_cases": sum(bool(ev.get("judge_fallback_used")) for ev in evaluations),
             "generator_model": self.generator.model,
             "duration_ms": int((time.perf_counter() - started) * 1000),
             "results": results,

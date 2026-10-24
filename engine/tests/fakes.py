@@ -84,6 +84,12 @@ class FakeJudge:
     def ready(self):
         return True, None
 
+    def start_tracking(self):
+        pass
+
+    def used(self):
+        return {"judge_model": self.model, "evaluation_mode": self.mode, "judge_models_used": [f"fake:{self.model}"], "judge_fallback_used": False}
+
     @staticmethod
     def _numbers(text: str) -> set[str]:
         return set(re.findall(r"\d+(?:\.\d+)?", text))

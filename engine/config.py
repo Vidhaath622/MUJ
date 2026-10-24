@@ -77,6 +77,17 @@ class Settings:
             raise ValueError(f"{PROVIDER_ENV[role]}={choice!r} is not supported for the {role}")
         return choice
 
+    def judge_fallback_provider(self, primary: str) -> str | None:
+        """RAGSEAL_JUDGE_FALLBACK_PROVIDER: auto (local Ollama behind a hosted judge) | none | a provider name."""
+        choice = _env("RAGSEAL_JUDGE_FALLBACK_PROVIDER", "auto").lower()
+        if choice == "none":
+            return None
+        if choice == "auto":
+            return "ollama" if primary != "ollama" else None
+        if choice not in PROVIDERS:
+            raise ValueError(f"RAGSEAL_JUDGE_FALLBACK_PROVIDER={choice!r} is not a provider")
+        return choice if choice != primary else None
+
     def model_for(self, role: str, provider: str) -> str:
         env_name, default = MODEL_DEFAULTS[(role, provider)]
         return _env(env_name, default)

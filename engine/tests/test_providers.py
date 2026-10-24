@@ -49,3 +49,47 @@ def test_missing_key_reports_unavailable_instead_of_faking(monkeypatch, tmp_path
     assert "NVIDIA_API_KEY" in status["models"]["judge"]["error"]
     with pytest.raises(ModelUnavailable):
         engine.judge.ask("system", "user", {"type": "object"})
+
+
+class _Model:
+    """Minimal ChatModel stand-in: returns a fixed JSON reply or raises ModelUnavailable."""
+
+    def __init__(self, name, hosted, reply=None):
+        self.model, self.provider, self.hosted, self.reply = name, "x", hosted, reply
+
+    def ready(self):
+        return True, None
+
+    def chat(self, messages, schema=None, num_predict=512):
+        from engine.llm import Generation
+
+        if self.reply is None:
+            raise ModelUnavailable("rate limited")
+        return Generation(self.reply, self.model, 1)
+
+
+def test_judge_falls_back_and_says_so(tmp_path):
+    from engine.llm import Judge
+
+    judge = Judge(_Model("hosted-judge", True), tmp_path / "c.sqlite", fallback=_Model("local-judge", False, '{"score": 1}'))
+    judge.start_tracking()
+    assert judge.ask("s", "u", {"type": "object"}) == {"score": 1}
+    used = judge.used()
+    assert used["judge_model"] == "local-judge"
+    assert used["evaluation_mode"] == "local"
+    assert used["judge_fallback_used"] is True
+
+
+def test_judge_without_fallback_raises(tmp_path):
+    from engine.llm import Judge
+
+    judge = Judge(_Model("hosted-judge", True), tmp_path / "c.sqlite")
+    with pytest.raises(ModelUnavailable):
+        judge.ask("s", "u", {"type": "object"})
+
+
+def test_fallback_provider_setting(monkeypatch):
+    assert Settings().judge_fallback_provider("groq") == "ollama"
+    assert Settings().judge_fallback_provider("ollama") is None
+    monkeypatch.setenv("RAGSEAL_JUDGE_FALLBACK_PROVIDER", "none")
+    assert Settings().judge_fallback_provider("groq") is None

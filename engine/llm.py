@@ -299,13 +299,22 @@ class JudgeCache:
 
 
 class Judge:
-    """JSON-returning judge with a disk cache, on whichever provider the settings choose."""
+    """JSON-returning judge with a disk cache.
 
-    def __init__(self, chat_model: ChatModel, cache_path: Path):
+    If the primary (usually hosted) judge stays unavailable after its retries, for
+    example a free-tier rate limit, the call goes to the fallback (usually local
+    Ollama) instead. Every call records which model answered, so results can say
+    exactly who judged them.
+    """
+
+    def __init__(self, chat_model: ChatModel, cache_path: Path, fallback: ChatModel | None = None):
         self.chat_model = chat_model
+        self.fallback = fallback
         self.cache = JudgeCache(cache_path)
         self.calls = 0
         self.cache_hits = 0
+        self.fallback_calls = 0
+        self._used: list[ChatModel] = []
 
     @property
     def mode(self) -> str:
@@ -319,20 +328,34 @@ class Judge:
     def provider(self) -> str:
         return self.chat_model.provider
 
-    def ask(self, system: str, user: str, schema: dict) -> dict:
-        key = JudgeCache.key(self.provider, self.model, system, user, json.dumps(schema, sort_keys=True))
+    def start_tracking(self) -> None:
+        self._used = []
+
+    def used(self) -> dict:
+        """Who judged since start_tracking(): judge_model, evaluation_mode and the list of models."""
+        models = list(dict.fromkeys(self._used)) or [self.chat_model]
+        return {
+            "judge_model": " + ".join(m.model for m in models),
+            "evaluation_mode": "hosted" if any(m.hosted for m in models) else "local",
+            "judge_models_used": [f"{m.provider}:{m.model}" for m in models],
+            "judge_fallback_used": any(m is not self.chat_model for m in models),
+        }
+
+    def _ask_model(self, chat_model: ChatModel, system: str, user: str, schema: dict) -> dict:
+        key = JudgeCache.key(chat_model.provider, chat_model.model, system, user, json.dumps(schema, sort_keys=True))
         cached = self.cache.get(key)
         if cached is not None:
             self.cache_hits += 1
+            self._used.append(chat_model)
             return cached
-        self.calls += 1
         messages = [
             {"role": "system", "content": system + "\nRespond with one JSON object only, matching this JSON schema: " + json.dumps(schema)},
             {"role": "user", "content": user},
         ]
         last_error: Exception | None = None
         for _ in range(2):
-            raw = self.chat_model.chat(messages, schema=schema, num_predict=800).text
+            self.calls += 1
+            raw = chat_model.chat(messages, schema=schema, num_predict=800).text
             try:
                 result = _parse_json(raw)
             except JudgeError as exc:
@@ -340,9 +363,19 @@ class Judge:
                 continue
             if isinstance(result, dict):
                 self.cache.put(key, result)
+                self._used.append(chat_model)
                 return result
             last_error = JudgeError(f"judge returned {type(result).__name__}, expected an object")
         raise last_error or JudgeError("judge failed")
+
+    def ask(self, system: str, user: str, schema: dict) -> dict:
+        try:
+            return self._ask_model(self.chat_model, system, user, schema)
+        except ModelUnavailable:
+            if self.fallback is None or not self.fallback.ready()[0]:
+                raise
+        self.fallback_calls += 1
+        return self._ask_model(self.fallback, system, user, schema)
 
 
 # ------------------------------------------------------------------ factory
@@ -386,6 +419,7 @@ class Models:
     generator: ChatModel
     judge: ChatModel
     embedder: EmbedModel
+    judge_fallback: ChatModel | None = None
 
 
 def build_models(settings: Settings) -> Models:
@@ -400,8 +434,12 @@ def build_models(settings: Settings) -> Models:
     gen_provider = settings.provider_for("generator")
     judge_provider = settings.provider_for("judge")
     embed_provider = settings.provider_for("embeddings")
+    fallback_provider = settings.judge_fallback_provider(judge_provider)
     return Models(
         generator=ChatModel(client(gen_provider), settings.model_for("generator", gen_provider)),
         judge=ChatModel(client(judge_provider), settings.model_for("judge", judge_provider)),
         embedder=EmbedModel(client(embed_provider), settings.model_for("embeddings", embed_provider)),
+        judge_fallback=(
+            ChatModel(client(fallback_provider), settings.model_for("judge", fallback_provider)) if fallback_provider else None
+        ),
     )
