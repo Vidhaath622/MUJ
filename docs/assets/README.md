@@ -1,19 +1,16 @@
-# Documentation Assets & Screenshots
+# Screenshots
 
-This directory stores visual assets and screenshots referenced in the root `README.md` and project documentation.
+Captures of the running app (1440×900 at 1.5×, light theme, real data from the demo runs), used by the root `README.md`.
 
-> **Note for Sarthak / Presentation Team**: Add high-resolution PNG captures (1280x800 or similar 16:10 / 16:9 aspect ratio) matching the expected filenames below.
-
-## Expected Screenshots
-
-| Filename | Expected UI Screen / Component | Used In |
-|---|---|---|
-| `hero.png` | Complete Overview / Hero banner showing the RAGSeal diagnostic interface | `README.md` Hero section |
-| `bots.png` | Bots under test page with live X-ray breakdown | `README.md` Features table |
-| `diagnose.png` | Deep-dive diagnostic view with Tri-Score breakdown & counterfactual replay | `README.md` Features table |
-| `impact.png` | Change Impact Radar showing document diff and affected questions | `README.md` Features table |
-| `trust.png` | Evaluator Trust dashboard (human agreement, confusion matrix, judge stability) | `README.md` Features table |
-| `seal.png` | The Seal trust certificate and verification badge view | `README.md` Features table |
-
----
-*Maintained by Team Monster Energy (HYPNEXIS'26).*
+| File | Page |
+|---|---|
+| `hero.png` | Start here: the scroll story at its verdict (replay proof + RETRIEVAL FAILURE stamp) |
+| `bots.png` | Try a chatbot, with the live X-ray |
+| `diagnose.png` | Diagnose answers |
+| `testsets.png` | Documents & questions |
+| `impact.png` | Change impact radar |
+| `runs.png` | Run a full test |
+| `labels.png` | Label answers |
+| `trust.png` | Checker trust |
+| `compare.png` | Compare versions |
+| `seal.png` | The Seal |
