@@ -42,7 +42,23 @@
 
 ---
 
-## 2. Tech Stack & Architecture Decisions
+## 3. Team Structure & AI Agent Workflow
+
+| Member | Focus Area | Tools / AI Setup | Dedicated Workspace / Directory | Git Branch |
+| :--- | :--- | :--- | :--- | :--- |
+| **Member 1 (Vidhaath)** | Frontend UI & Interactive Visuals | **Antigravity** | `/frontend` | `vidhaath/ui-frontend` |
+| **Member 2 (Sarthak) - Track A** | Backend API, Routing & Storage | **Claude Agent 1** | `/backend` | `sarthak/backend-api` |
+| **Member 2 (Sarthak) - Track B** | Core Engine, ML Logic & Algorithms | **Claude Agent 2** | `/engine` (or `/core`) | `sarthak/core-engine` |
+| **Member 3 & 4** | PPT Pitch Deck, Datasets, QA & Pitch | Slides, Docs, Postman | `/docs` | `team/presentation-docs` |
+
+### Why This Setup Maximizes Hackathon Speed:
+- **Zero File Overlap**: Antigravity never touches `/backend` or `/engine`; Claude never touches `/frontend`. Git merges are 100% clean.
+- **Member 2 Parallelism**: Member 2 runs two terminal sessions/instances of Claude—one writing APIs, the other writing core algorithms.
+- **Human Presentation Moat**: Members 3 & 4 ensure the 3:00 AM PPT deck and demo script are polished while developers code continuously.
+
+---
+
+## 4. Tech Stack & Architecture Decisions
 *(To be populated once finalized with the user)*
 - **Frontend**: TBD
 - **Backend**: TBD
@@ -52,31 +68,35 @@
 
 ---
 
-## 3. Progress & Milestones
+## 5. Progress & Milestones
 
 ### Completed
 - [x] Initialized and verified Git repository connection (`origin/main`).
 - [x] Created `memory.md` persistent context tracker for long-term memory across sessions.
+- [x] Researched official HYPNEXIS'26 website and captured all 15 problem statements.
+- [x] Configured team structure with Member 2 running dual Claude agents + Antigravity on frontend.
 
 ### In Progress / Next Up
-- [ ] Finalize hackathon theme / problem statement and core features.
-- [ ] Determine tech stack & project scaffolding.
-- [ ] Scaffold base project structure and configure environment.
-- [ ] Build core MVP features for judging criteria.
+- [ ] Select final problem statement during lunch break (Recommend `AI-03` or `HM-02`).
+- [ ] Write `docs/api_contract.md` defining data schemas so all 3 agents can code in parallel.
+- [ ] Scaffold `/frontend`, `/backend`, and `/engine` directories.
+- [ ] Hit 5:15 PM first integration checkpoint.
 
 ---
 
-## 4. Key Work Log & Session History
+## 6. Key Work Log & Session History
 
 | Timestamp | Phase / Action | Details |
 | :--- | :--- | :--- |
 | `2026-10-24 11:07` | Workspace Setup | Verified git configuration for repo `https://github.com/Vidhaath622/MUJ`. |
 | `2026-10-24 11:17` | Persistent Memory | Created `memory.md` to persist project decisions, architecture, and task state. |
 | `2026-10-24 11:43` | Schedule Logged | Captured HYPNEXIS'26 official schedule into memory. Identified 3:00 AM R1 evaluation deadline and 6:15 PM surprise problem release. |
+| `2026-10-24 12:00` | Problem Statements Fetched | Parsed all 15 official problem statements across 6 tracks directly from `hypnexismuj.com`. |
+| `2026-10-24 12:28` | Team Role Matrix | Structured dual-Claude allocation for Member 2 + Antigravity for Member 1. |
 
 ---
 
-## 5. Agent Instructions for Context Resets
+## 7. Agent Instructions for Context Resets
 When starting a new session or after context window compaction:
 1. Read [memory.md](file:///Users/root1/hackathon/memory.md) immediately to restore state, active tasks, and tech stack details.
 2. Review `git status` and recent commits to understand workspace state.
