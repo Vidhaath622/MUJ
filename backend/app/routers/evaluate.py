@@ -41,6 +41,7 @@ def evaluate_query(
         case_type=body.type if "type" in body.model_fields_set else case.get("type", body.type),
         stale_chunk_ids=body.stale_chunk_ids or case.get("stale_chunk_ids"),
         test_id=body.test_id,
+        distractor_document_ids=pack["distractor_document_ids"] if body.pack_id and "distractor_document_ids" in pack else None,
     )
     db.save_evaluation(user.id, result)
     return result

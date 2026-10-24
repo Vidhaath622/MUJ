@@ -83,7 +83,7 @@ class FakeEngine:
         }
 
     def evaluate_query(self, owner_id, query, document_ids, ground_truth=None, manual_answer=None, gold_chunk_ids=None,
-                       case_type="factoid", stale_chunk_ids=None, test_id=None):
+                       case_type="factoid", stale_chunk_ids=None, test_id=None, distractor_document_ids=None):
         self.last_query = {"ground_truth": ground_truth, "gold_chunk_ids": gold_chunk_ids, "case_type": case_type,
                            "stale_chunk_ids": stale_chunk_ids, "test_id": test_id, "document_ids": list(document_ids)}
         self.calls.append(("evaluate_query", owner_id, query, tuple(document_ids), case_type))
