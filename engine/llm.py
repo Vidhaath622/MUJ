@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 import sqlite3
 import threading
@@ -24,6 +25,9 @@ from typing import Any
 import httpx
 
 from .config import Settings
+
+
+log = logging.getLogger("ragseal.judge")
 
 
 class ModelUnavailable(RuntimeError):
@@ -204,6 +208,9 @@ class OpenAICompatClient:
                 continue
             if resp.status_code in (401, 403):
                 raise ModelUnavailable(f"{self.name} rejected the API key (HTTP {resp.status_code})")
+            if resp.status_code == 400 and ("json_validate_failed" in resp.text or "failed_generation" in resp.text):
+                # The model answered, just not with valid JSON: a bad reply, not a provider outage.
+                raise JudgeError(f"{self.name} returned invalid JSON (HTTP 400)")
             if resp.status_code >= 400:
                 raise ModelUnavailable(f"{self.name} error {resp.status_code}: {resp.text[:300]}")
             return resp.json()
@@ -411,10 +418,10 @@ class Judge:
         ]
         last_error: Exception | None = None
         for _ in range(2):
-            raw = member.chat(messages, schema=schema, num_predict=800, patient=False).text
-            with self._lock:
-                self.calls += 1
             try:
+                raw = member.chat(messages, schema=schema, num_predict=800, patient=False).text
+                with self._lock:
+                    self.calls += 1
                 result = _parse_json(raw)
             except JudgeError as exc:
                 last_error = exc
@@ -476,8 +483,17 @@ class Judge:
                 last_error = exc
                 continue
             except ModelUnavailable as exc:
+                log.warning("judge %s:%s unavailable for this call: %s", member.provider, member.model, exc)
                 broken.add(id(member))
                 last_error = exc
+                continue
+            except JudgeError as exc:
+                # Two unreadable replies from this member: let another model try before giving up.
+                log.warning("judge %s:%s gave unreadable output: %s", member.provider, member.model, exc)
+                broken.add(id(member))
+                last_error = exc
+                if not any(id(m) not in broken for m in self.members):
+                    raise
                 continue
             finally:
                 slot.release()
