@@ -9,6 +9,8 @@ from app.engine_bridge import ModelUnavailable, NotFound
 
 class FakeEngine:
     def __init__(self):
+        self.batch_error = None
+        self.batch_delay = 0
         self.docs: dict[tuple[str, str], dict] = {}
         self.uploads: list[tuple[str, str, bytes]] = []
         self.calls: list[tuple] = []
@@ -81,14 +83,23 @@ class FakeEngine:
             "judge_model": "qwen3:8b",
         }
 
-    def evaluate_query(self, owner_id, query, document_ids, ground_truth=None, manual_answer=None, gold_chunk_ids=None, case_type="factoid"):
+    def evaluate_query(self, owner_id, query, document_ids, ground_truth=None, manual_answer=None, gold_chunk_ids=None,
+                       case_type="factoid", stale_chunk_ids=None, test_id=None, distractor_document_ids=None):
+        self.last_query = {"ground_truth": ground_truth, "gold_chunk_ids": gold_chunk_ids, "case_type": case_type,
+                           "stale_chunk_ids": stale_chunk_ids, "test_id": test_id, "document_ids": list(document_ids)}
         self.calls.append(("evaluate_query", owner_id, query, tuple(document_ids), case_type))
         if self.raise_on_eval:
             raise self.raise_on_eval
         self._check(owner_id, document_ids)
         return self._evaluation(query, ground_truth)
 
-    def evaluate_batch(self, owner_id, document_ids, test_cases, pack_id=None, progress=None):
+    def evaluate_batch(self, owner_id, document_ids, test_cases, pack_id=None, progress=None, batch_id=None, concurrency=None):
+        if self.batch_error is not None:
+            raise self.batch_error
+        if self.batch_delay:
+            import time
+
+            time.sleep(self.batch_delay)
         self.calls.append(("evaluate_batch", owner_id, tuple(document_ids), len(test_cases), pack_id))
         self.last_batch_cases = test_cases
         self._check(owner_id, document_ids)
@@ -98,8 +109,10 @@ class FakeEngine:
             item.update(test_id=case.get("test_id") or f"tc_{i:02d}", category="CLEAN_PASS",
                         context_relevance=0.9, faithfulness=1.0, answer_accuracy=None)
             results.append(item)
+            if progress:
+                progress(i, len(test_cases), 0)
         return {
-            "batch_id": "batch_" + uuid.uuid4().hex[:8],
+            "batch_id": batch_id or "batch_" + uuid.uuid4().hex[:8],
             "pack_id": pack_id,
             "document_ids": document_ids,
             "created_at": "2026-10-24T12:00:00Z",
@@ -127,3 +140,66 @@ class FakeEngine:
         doc = self.ingest(owner_id, "fees_v2.md", b"Monthly fee is 5 USD.", pack_id)
         cases = [{"test_id": "bk_01", "question": "What is the monthly fee?", "ground_truth_answer": "5 USD", "type": "factoid"}]
         return {"pack_id": pack_id, "document_ids": [doc["document_id"]], "test_cases": cases}
+
+    def injection_run(self, owner_id, pack_ids=None, n_per_type=5, progress=None, batch_id=None):
+        results = []
+        for i, (true, pred) in enumerate([("WRONG_CHUNK", "WRONG_CHUNK"), ("HALLUCINATION", "IGNORED_CONTEXT")], start=1):
+            item = self._evaluation(f"q{i}", "gt")
+            item.update(test_id=f"inj_{i}", true_failure_type=true)
+            item["root_cause"] = {"category": "X", "failure_type": pred, "stage": "retriever"}
+            results.append(item)
+            if progress:
+                progress(i, 2, 0)
+        return {"batch_id": batch_id, "pack_id": None, "kind": "injection", "total_evaluated": 2, "aggregates": {"pass_rate": 0.0},
+                "results": results, "n_per_type": n_per_type, "injected_packs": pack_ids or ["banking"],
+                "confusion": {"labels": ["WRONG_CHUNK", "IGNORED_CONTEXT", "HALLUCINATION"], "matrix": [[1, 0, 0], [0, 0, 0], [0, 1, 0]],
+                              "per_class": {}, "accuracy": 0.5, "n": 2}}
+
+    def stability(self, owner_id, batch, judges=None, shuffles=3, max_cases=20, progress=None):
+        if progress:
+            progress(1, 1, 0)
+        return {"batch_id": batch["batch_id"], "judges": judges or ["groq:a", "groq:b"], "n_cases": 1,
+                "judge_swap": {"correlation": {"faithfulness": 1.0}, "verdict_agreement": 1.0, "verdict_kappa": 1.0, "n": 1},
+                "shuffle": {"runs": shuffles, "max_delta": 0.0, "stable": True}, "stable": True}
+
+    def profiles(self):
+        return [{"id": "v1", "name": "v1", "params": {"top_k": 4}}, {"id": "v2", "name": "v2", "params": {"top_k": 2}}]
+
+    def run_profile(self, owner_id, pack_id, profile_id, progress=None, batch_id=None):
+        pack = self.load_pack(owner_id, pack_id)
+        batch = self.evaluate_batch(owner_id, pack["document_ids"], pack["test_cases"], pack_id=pack_id, progress=progress, batch_id=batch_id)
+        if profile_id == "v2":
+            for result in batch["results"]:
+                result["root_cause"] = {"category": "RETRIEVAL_FAILURE"}
+        return {**batch, "profile": profile_id, "failed_cases": 0}
+
+    def compare(self, base_results, candidate_results, base, candidate):
+        base_pass = {r["test_id"]: r["root_cause"]["category"] == "CLEAN_PASS" for r in base_results}
+        flips = [
+            {"test_id": r["test_id"], "pack_id": r.get("pack_id"),
+             "direction": "pass_to_fail" if base_pass[r["test_id"]] else "fail_to_pass"}
+            for r in candidate_results
+            if base_pass.get(r["test_id"]) != (r["root_cause"]["category"] == "CLEAN_PASS")
+        ]
+        return {"base": base, "candidate": candidate, "n": len(candidate_results), "flips": flips,
+                "pass_to_fail": sum(f["direction"] == "pass_to_fail" for f in flips)}
+
+    def load_pack_summary(self, pack_id):
+        if pack_id != "banking":
+            raise NotFound(f"pack {pack_id} not found")
+        return {"pack_id": pack_id, "test_case_count": 1, "filenames": {}}
+
+    def rejudge(self, owner_id, batch, progress=None):
+        if progress:
+            progress(1, 1, 0)
+        return {**batch, "rejudged": {"judge": "groq:openai/gpt-oss-120b"}}
+
+    def impact(self, owner_id, old_document_id, new_document_id, max_tests=10, progress=None):
+        if progress:
+            progress(1, 1, 0)
+        return {"old_document": {"document_id": old_document_id}, "new_document": {"document_id": new_document_id},
+                "summary": {"unchanged": 1, "changed": 1, "added": 0, "removed": 0, "tests": 1, "at_risk": 1},
+                "changes": [{"kind": "changed", "old": "fee $35", "new": "fee $25", "numbers_changed": [{"old": "35", "new": "25"}]}],
+                "tests": [{"test_id": "imp_01", "question": "fee?", "answer": "$35", "verdict": "RETRIEVAL_FAILURE",
+                           "failure_type": "STALE_SOURCE", "at_risk": True}],
+                "at_risk": 1, "judge_model": "fake"}

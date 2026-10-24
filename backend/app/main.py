@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .db import Database
 from .errors import register_error_handlers
-from .routers import auth, documents, evaluate, health, packs, rag, runs, synthetic
+from .jobs import BatchJobs
+from .routers import auth, compare, documents, evaluate, health, impact, labels, packs, rag, runs, synthetic, trust
 from .security import DEMO_EMAIL, DEMO_PASSWORD, hash_password
 from .settings import load_settings
 
@@ -25,11 +26,13 @@ def create_app() -> FastAPI:
     settings = load_settings()
     db = Database(settings.db_path)
     _seed_demo_user(db)
+    db.fail_interrupted_runs()
 
     app = FastAPI(title="RAGSeal API", version="2.0.0")
     app.state.settings = settings
     app.state.db = db
     app.state.engine = None  # built lazily by deps.get_engine
+    app.state.jobs = BatchJobs()
 
     app.add_middleware(
         CORSMiddleware,
@@ -38,7 +41,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     register_error_handlers(app)
-    for module in (health, auth, documents, rag, evaluate, synthetic, packs, runs):
+    for module in (health, auth, documents, rag, evaluate, synthetic, packs, runs, labels, trust, compare, impact):
         app.include_router(module.router, prefix="/api")
     return app
 

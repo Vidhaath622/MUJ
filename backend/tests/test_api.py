@@ -118,12 +118,13 @@ def test_batch_saves_run_and_lists_it(client, alice, bob):
 
     runs = client.get("/api/runs", headers=alice).json()
     assert [r["batch_id"] for r in runs] == [second["batch_id"], first["batch_id"]]
-    assert set(runs[0]) == {"batch_id", "pack_id", "created_at", "total_evaluated", "pass_rate"}
+    assert set(runs[0]) == {"batch_id", "pack_id", "created_at", "total_evaluated", "pass_rate", "status", "overall_score", "timing"}
+    assert runs[0]["status"] == "done"
     assert runs[0]["total_evaluated"] == 1
     assert runs[0]["pass_rate"] == 1.0
 
     full = client.get(f"/api/runs/{first['batch_id']}", headers=alice).json()
-    assert full == first
+    assert full == {**first, "status": "done"}
 
     assert client.get("/api/runs", headers=bob).json() == []
     assert client.get(f"/api/runs/{first['batch_id']}", headers=bob).status_code == 404
@@ -178,3 +179,57 @@ def test_cors_allows_vite_dev_origin(client):
         headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "GET"},
     )
     assert resp.headers.get("access-control-allow-origin") == "http://localhost:5173"
+
+
+def _wait_for(client, headers, batch_id, timeout=5.0):
+    import time
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        progress = client.get(f"/api/runs/{batch_id}/progress", headers=headers).json()
+        if progress["status"] != "running":
+            return progress
+        time.sleep(0.05)
+    raise AssertionError("batch did not finish")
+
+
+def test_async_batch_reports_progress_then_result(client, alice, fake_engine):
+    resp = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking", "async": True})
+    assert resp.status_code == 202, resp.text
+    started = resp.json()
+    assert started["status"] == "running" and started["total"] == 1
+    progress = _wait_for(client, alice, started["batch_id"])
+    assert progress["status"] == "done" and progress["done"] == progress["total"] == 1 and progress["eta_ms"] == 0
+    full = client.get(f"/api/runs/{started['batch_id']}", headers=alice)
+    assert full.status_code == 200 and full.json()["batch_id"] == started["batch_id"]
+    runs = client.get("/api/runs", headers=alice).json()
+    assert runs[0]["batch_id"] == started["batch_id"] and runs[0]["status"] == "done"
+
+
+def test_async_batch_failure_is_reported(client, alice, bob, fake_engine):
+    from app.engine_bridge import ModelUnavailable
+
+    fake_engine.batch_error = ModelUnavailable("judge down")
+    started = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking", "async": True}).json()
+    progress = _wait_for(client, alice, started["batch_id"])
+    assert progress["status"] == "failed" and "judge down" in progress["error"]
+    assert client.get(f"/api/runs/{started['batch_id']}", headers=alice).json() == {
+        "batch_id": started["batch_id"], "status": "failed", "error": "judge down",
+    }
+    # Other users cannot see the job.
+    assert client.get(f"/api/runs/{started['batch_id']}/progress", headers=bob).status_code == 404
+
+
+def test_query_with_pack_case_restores_trap_metadata(client, alice, fake_engine):
+    resp = client.post("/api/evaluate/query", headers=alice, json={"query": "What is the monthly fee?", "pack_id": "banking", "test_id": "bk_01"})
+    assert resp.status_code == 200, resp.text
+    q = fake_engine.last_query
+    assert q["ground_truth"] == "5 USD" and q["case_type"] == "factoid" and q["test_id"] == "bk_01" and q["document_ids"]
+
+    client.post("/api/evaluate/query", headers=alice, json={
+        "query": "x", "document_ids": q["document_ids"], "stale_chunk_ids": ["chk_old"], "gold_chunk_ids": ["chk_new"], "type": "stale",
+    })
+    assert fake_engine.last_query["stale_chunk_ids"] == ["chk_old"] and fake_engine.last_query["case_type"] == "stale"
+
+    missing = client.post("/api/evaluate/query", headers=alice, json={"query": "x", "pack_id": "banking", "test_id": "nope"})
+    assert missing.status_code == 404
