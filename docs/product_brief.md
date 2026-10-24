@@ -23,7 +23,7 @@ Order of build: core flow end to end, then replay verdict, then packs, then logi
 2. **We check our own judge.** 30-50 answers labelled by hand; the dashboard shows how often the judge agrees with humans, with counts.
 3. **Industry packs.** The same RAG needs different tests per business. Packs: Recruitment, Banking, Healthcare (fictional documents). Each pack has documents, tricky questions and risk rules.
 4. **Trap questions.** Old vs new policy versions (staleness), questions with no answer in the documents (should abstain), distractor documents (noise).
-5. **Local-first.** Everything runs on the laptop through Ollama. Documents never leave the machine. A hosted judge (Groq) is an optional switch.
+5. **Local-first RAG.** The RAG under test (generator and embeddings) runs on the laptop through Ollama, so documents are indexed and answered locally. The judge runs on Groq by default for speed and quality, and can be switched to fully local.
 
 ## Honesty rules (judges will probe)
 - Every number on screen must come from the backend. No fake counters, scores or latency. Use empty states before a run.
@@ -53,16 +53,18 @@ For unanswerable questions the correct behaviour is to abstain; making something
 
 Each pack: about 5 documents, 10-15 test cases with gold chunk IDs, including at least one stale-version, one unanswerable and one distractor case. Members 3 and 4 own pack content in `/docs/packs` or hand it to the engine owner.
 
-## Models (Local & NVIDIA NIM Hosted Options)
-- **Hosted / Cloud Preview via NVIDIA NIM** (Recommended for fast demo & sub-second judging without laptop thermal throttling; see `docs/nvidia_nim_apis.md`):
-  - Generator under test: `meta/llama-3.2-3b-instruct` (or `meta/llama-3.1-8b-instruct`) via `https://integrate.api.nvidia.com/v1`
-  - Judge / Reasoner: `meta/llama-3.3-70b-instruct` or `deepseek-ai/deepseek-r1`
-  - NeMo Retriever Embeddings: `nvidia/nv-embedqa-e5-v5`
-  - Reranker: `nvidia/nemotron-3.5-rerank-8b`
-- **Local Fallback (Ollama)**:
-  - Generator under test: `llama3.2:3b` (small on purpose, so failures are visible)
-  - Judge: `qwen3:8b` locally; optional Groq `llama-3.3-70b-versatile` if `GROQ_API_KEY` is set
-  - Embeddings: `nomic-embed-text`
+## Models (verified against live catalogs, Oct 24 evening)
+| Role | Default | Fallbacks |
+|---|---|---|
+| Generator under test | Ollama `llama3.2:3b`, local (small on purpose, so failures are visible) | none needed |
+| Embeddings | Ollama `nomic-embed-text`, local | NIM `nvidia/llama-3.2-nv-embedqa-1b-v1` |
+| Judge | Groq `openai/gpt-oss-120b` | NIM `mistralai/mistral-large-2-instruct`, then Ollama local |
+
+- Each role can be set in `backend/.env` with `RAGSEAL_GENERATOR_PROVIDER`, `RAGSEAL_JUDGE_PROVIDER`, `RAGSEAL_EMBED_PROVIDER`. `/api/health` checks hosted models against the live model list.
+- If no judge can run, `evaluation_mode` is `"unavailable"`. There is no mock judge anywhere.
+- Retired, do not use: Groq `llama-3.3-70b-versatile`; NIM `meta/llama-3.x-*` and `nvidia/nv-embedqa-e5-v5` (HTTP 410 since Aug 2026). Model names in `docs/nvidia_nim_apis.md` are out of date.
+- Measured so far: evaluate/query takes 1-4 s; ask takes about 0.4 s warm.
+- Pitch line: the small generator sometimes answers with only a citation ("[1]"). RAGSeal scores that as a non-answer, which is exactly the kind of failure we exist to catch.
 - Every judge call is cached so reruns are instant.
 
 ## Login and saved work

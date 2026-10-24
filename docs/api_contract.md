@@ -362,3 +362,8 @@ export interface JudgeAgreement { agreement: number; n: number; false_pass: numb
   * `retrieved_chunks[].similarity: number`, `.document_id: string`, `.cited: boolean`
   * `TestCase.type: 'factoid' | 'unanswerable' | 'stale' | 'distractor'`
 * **Human labels for judge agreement:** `labels.json`, created with the engine's label CLI. Members 3 and 4 do the labelling. Until labels exist, `judge_agreement` is `null`; show "Not measured yet", not a number.
+
+### 4.10 Batch by pack (preferred for packs)
+* `POST /api/evaluate/batch` accepts `{ "pack_id": "banking" }` with no `document_id` or `test_cases`. The backend loads the pack's documents and all its cases, including `gold_chunk_ids`, `stale_chunk_ids` and `type`, so replay and trap cases work.
+* If `test_cases` are sent by hand, each may include `gold_chunk_ids`, `stale_chunk_ids` and `type`, exactly as returned by `POST /api/packs/{id}/load`.
+* Errors on every endpoint return `{ "detail": "..." }` with 401, 404, 422 or 503. See `docs/frontend_integration_notes.md`.
