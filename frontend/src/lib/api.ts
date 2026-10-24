@@ -1,4 +1,4 @@
-import { EvaluationResult, BatchSummary, PackId, AuthUser } from '../types/ragseal';
+import { EvaluationResult, BatchSummary, PackId, AuthUser, ReleaseDecision } from '../types/ragseal';
 
 export const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -48,6 +48,33 @@ export interface PackItemResponse {
   demo_data?: boolean;
   risk_rules?: string[];
   source?: string;
+}
+
+export interface LoadedPackTestCase {
+  test_id: string;
+  question: string;
+  ground_truth_answer: string;
+  source_chunk_id?: string | null;
+  gold_chunk_ids: string[];
+  stale_chunk_ids: string[];
+  context_snippet: string;
+  type: string;
+  note?: string;
+}
+
+export interface LoadedPackDocument {
+  document_id: string;
+  filename: string;
+  chunk_count: number;
+}
+
+export interface LoadedPackResponse {
+  pack_id: PackId;
+  name: string;
+  demo_data: boolean;
+  document_ids: string[];
+  documents: LoadedPackDocument[];
+  test_cases: LoadedPackTestCase[];
 }
 
 export interface RunHistoryItem {
@@ -159,7 +186,7 @@ export async function fetchPacks(token?: string): Promise<PackItemResponse[]> {
   return await res.json();
 }
 
-export async function loadPackBackend(packId: string, token: string): Promise<any> {
+export async function loadPackBackend(packId: string, token: string): Promise<LoadedPackResponse> {
   const res = await fetch(`${API_BASE_URL}/packs/${packId}/load`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
@@ -193,10 +220,13 @@ export async function askRag(
 
 export async function evaluateLiveQuery(
   query: string,
-  documentId: string,
+  documentIds: string | string[],
   groundTruth?: string,
+  goldChunkIds?: string[],
+  caseType?: string,
   token?: string
 ): Promise<EvaluationResult> {
+  const docIdsArray = Array.isArray(documentIds) ? documentIds : [documentIds];
   const res = await fetch(`${API_BASE_URL}/evaluate/query`, {
     method: 'POST',
     headers: {
@@ -205,15 +235,43 @@ export async function evaluateLiveQuery(
     },
     body: JSON.stringify({
       query,
-      document_id: documentId,
+      document_ids: docIdsArray,
       optional_ground_truth: groundTruth || null,
+      gold_chunk_ids: goldChunkIds || null,
+      type: caseType || 'factoid',
     }),
   });
   if (!res.ok) {
     const detail = await extractErrorDetail(res);
     throw new ApiError(res.status, detail);
   }
-  return await res.json();
+  const data = await res.json();
+
+  // Normalize release gate if missing from backend
+  if (!data.release && data.root_cause) {
+    const cat = data.root_cause.category;
+    let decision: ReleaseDecision = 'BLOCK';
+    if (cat === 'CLEAN_PASS') decision = 'SHIP';
+    else if (cat === 'NEEDS_REVIEW' || cat === 'UNRESOLVED') decision = 'REVIEW';
+
+    data.release = {
+      decision,
+      rule: cat === 'CLEAN_PASS' ? 'All metrics exceed confidence thresholds' : `Failure detected: ${cat}`,
+      evidence: [data.root_cause.summary || ''],
+    };
+  }
+
+  // Ensure retrieved_chunks have required fields
+  if (Array.isArray(data.retrieved_chunks)) {
+    data.retrieved_chunks = data.retrieved_chunks.map((c: any) => ({
+      ...c,
+      document_name: c.document_name || c.filename || 'Document',
+      relevance_score: c.relevance_score ?? c.similarity ?? 0.8,
+      is_relevant: c.is_relevant ?? (c.relevance_score > 0.5),
+    }));
+  }
+
+  return data;
 }
 
 /**

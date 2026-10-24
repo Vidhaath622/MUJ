@@ -27,6 +27,7 @@ import {
   fetchRunHistory, 
   fetchRunDetail,
   loadPackBackend, 
+  LoadedPackResponse,
   HealthResponse,
   ApiError 
 } from './lib/api';
@@ -34,11 +35,13 @@ import {
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'lab' | 'story' | 'components'>('lab');
   const [activePackId, setActivePackId] = useState<PackId>('recruitment');
-  const [activeCaseId, setActiveCaseId] = useState<string>('case_01');
-  const [selectedDocId, setSelectedDocId] = useState<string>('doc_ats_03');
+  const [activeCaseId, setActiveCaseId] = useState<string>('rec_01');
+  const [selectedDocId, setSelectedDocId] = useState<string>('');
   const [isLiveBackend, setIsLiveBackend] = useState<boolean>(true);
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [loadedPack, setLoadedPack] = useState<LoadedPackResponse | null>(null);
+  const [packDocIds, setPackDocIds] = useState<string[]>([]);
   const [liveEvaluation, setLiveEvaluation] = useState<EvaluationResult | null>(null);
   const [liveBatchSummary, setLiveBatchSummary] = useState<BatchSummary | null>(null);
   const [isBatchEvaluating, setIsBatchEvaluating] = useState<boolean>(false);
@@ -59,7 +62,7 @@ export const App: React.FC = () => {
     name: 'Lead Evaluator',
   });
 
-  // Check health and auto-login on startup
+  // Check health, auto-login, load default pack ('recruitment') and evaluate initial case live
   useEffect(() => {
     let mounted = true;
     const initBackend = async () => {
@@ -75,10 +78,47 @@ export const App: React.FC = () => {
           if (auth) {
             setAuthToken(auth.access_token);
             setCurrentUser(auth.user);
-            // Fetch real run history from GET /api/runs
-            const runs = await fetchRunHistory(auth.access_token);
-            if (runs && runs.length > 0) {
-              setServerRunHistory(runs);
+
+            // 1. Fetch real run history from GET /api/runs
+            fetchRunHistory(auth.access_token).then((runs) => {
+              if (mounted && runs && runs.length > 0) setServerRunHistory(runs);
+            }).catch(() => {});
+
+            // 2. Load the initial pack ('recruitment') from backend
+            try {
+              const packData = await loadPackBackend('recruitment', auth.access_token);
+              if (!mounted) return;
+              setLoadedPack(packData);
+              setPackDocIds(packData.document_ids);
+              if (packData.document_ids.length > 0) {
+                setSelectedDocId(packData.document_ids[0]);
+              }
+              if (packData.test_cases.length > 0) {
+                const firstCase = packData.test_cases[0];
+                setActiveCaseId(firstCase.test_id);
+
+                // Run live evaluation for the first case so dashboard is 100% state-grounded from moment 1
+                try {
+                  const initialEval = await evaluateLiveQuery(
+                    firstCase.question,
+                    packData.document_ids,
+                    firstCase.ground_truth_answer,
+                    firstCase.gold_chunk_ids,
+                    firstCase.type,
+                    auth.access_token
+                  );
+                  if (mounted && initialEval) {
+                    setLiveEvaluation(initialEval);
+                    setLiveNotification(`Connected to FastAPI backend. Loaded ${packData.name} (${packData.document_ids.length} docs, ${packData.test_cases.length} cases) — evaluated ${firstCase.test_id} live.`);
+                  }
+                } catch (evalErr: any) {
+                  const msg = evalErr instanceof ApiError ? `Backend (${evalErr.status}): ${evalErr.detail}` : (evalErr.message || 'Evaluation error');
+                  if (mounted) setLiveNotification(`Loaded ${packData.name}. Notice: ${msg}`);
+                }
+              }
+            } catch (packErr: any) {
+              const msg = packErr instanceof ApiError ? `Backend (${packErr.status}): ${packErr.detail}` : (packErr.message || 'Pack load error');
+              if (mounted) setLiveNotification(`Notice: ${msg}`);
             }
           }
         } catch (err: any) {
@@ -94,37 +134,97 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Current active industry pack
-  const currentPack = INDUSTRY_PACKS[activePackId] || INDUSTRY_PACKS.recruitment;
+  // Base pack from local mock catalog
+  const basePack = INDUSTRY_PACKS[activePackId] || INDUSTRY_PACKS.recruitment;
+
+  // Active pack merged with backend metadata when available
+  const currentPack = {
+    ...basePack,
+    ...(loadedPack ? {
+      name: loadedPack.name || basePack.name,
+      documents: loadedPack.documents.map((d, idx) => {
+        const baseDoc = basePack.documents.find(bd => bd.filename === d.filename) || basePack.documents[idx];
+        return {
+          ...baseDoc,
+          document_id: d.document_id,
+          filename: d.filename,
+          chunk_count: d.chunk_count,
+          chunks: baseDoc?.chunks || [],
+        };
+      }),
+    } : {}),
+  };
 
   // Active evaluation case (prefers live query result, then active pack case)
   const currentEvaluation: EvaluationResult = 
     liveEvaluation || currentPack.cases[activeCaseId] || Object.values(currentPack.cases)[0];
 
-  // Derive starter questions from current pack cases
-  const starterQuestions: StarterQuestionItem[] = Object.entries(currentPack.cases).map(([key, c]) => ({
-    label: c.query.slice(0, 24) + '...',
-    caseId: key,
-    question: c.query,
-    docId: c.document_id,
-    type: c.root_cause.category,
-  }));
+  // Derive starter questions from loaded real test cases, or fallback to mock
+  const starterQuestions: StarterQuestionItem[] = loadedPack?.test_cases?.length
+    ? loadedPack.test_cases.map((tc) => ({
+        label: tc.question.length > 28 ? tc.question.slice(0, 26) + '...' : tc.question,
+        caseId: tc.test_id,
+        question: tc.question,
+        docId: loadedPack.document_ids[0] || '',
+        type: tc.type,
+      }))
+    : Object.entries(currentPack.cases).map(([key, c]) => ({
+        label: c.query.slice(0, 24) + '...',
+        caseId: key,
+        question: c.query,
+        docId: c.document_id,
+        type: c.root_cause.category,
+      }));
 
   // Handle switching pack
-  const handleSelectPack = (packId: PackId) => {
+  const handleSelectPack = async (packId: PackId) => {
     setActivePackId(packId);
     setLiveEvaluation(null);
     setLiveBatchSummary(null);
     setLiveNotification(null);
     setBatchError(null);
-    const newPack = INDUSTRY_PACKS[packId] || INDUSTRY_PACKS.recruitment;
-    const firstCaseKey = Object.keys(newPack.cases)[0];
-    setActiveCaseId(firstCaseKey);
-    setSelectedDocId(newPack.documents[0]?.document_id || '');
 
-    // Notify backend pack loader if authenticated
+    const base = INDUSTRY_PACKS[packId] || INDUSTRY_PACKS.recruitment;
+    const firstCaseKey = Object.keys(base.cases)[0];
+    setActiveCaseId(firstCaseKey);
+    setSelectedDocId(base.documents[0]?.document_id || '');
+
     if (authToken) {
-      loadPackBackend(packId, authToken).catch(() => {});
+      try {
+        const packData = await loadPackBackend(packId, authToken);
+        setLoadedPack(packData);
+        setPackDocIds(packData.document_ids);
+        if (packData.document_ids.length > 0) {
+          setSelectedDocId(packData.document_ids[0]);
+        }
+        if (packData.test_cases.length > 0) {
+          const firstCase = packData.test_cases[0];
+          setActiveCaseId(firstCase.test_id);
+
+          // Evaluate first case live
+          try {
+            setIsEvaluating(true);
+            const liveRes = await evaluateLiveQuery(
+              firstCase.question,
+              packData.document_ids,
+              firstCase.ground_truth_answer,
+              firstCase.gold_chunk_ids,
+              firstCase.type,
+              authToken
+            );
+            setLiveEvaluation(liveRes);
+            setLiveNotification(`Loaded ${packData.name} (${packData.document_ids.length} docs, ${packData.test_cases.length} cases) — evaluated ${firstCase.test_id} live.`);
+          } catch (evalErr: any) {
+            const msg = evalErr instanceof ApiError ? `Backend (${evalErr.status}): ${evalErr.detail}` : (evalErr.message || 'Evaluation error');
+            setLiveNotification(`Loaded ${packData.name}. Notice: ${msg}`);
+          } finally {
+            setIsEvaluating(false);
+          }
+        }
+      } catch (err: any) {
+        const msg = err instanceof ApiError ? `Backend (${err.status}): ${err.detail}` : (err.message || 'Pack load failed');
+        setLiveNotification(`Notice: ${msg}`);
+      }
     }
   };
 
@@ -133,36 +233,49 @@ export const App: React.FC = () => {
     setIsEvaluating(true);
     setLiveNotification(null);
 
-    // If live backend is enabled and token is active, try calling real POST /api/evaluate/query
+    // If live backend is enabled and token is active, call real POST /api/evaluate/query
     if (isLiveBackend && authToken) {
       try {
-        const liveRes = await evaluateLiveQuery(query, selectedDocId, groundTruth, authToken);
+        // Find matching test case to pass ground truth, gold chunk IDs and case type
+        const activeTestCase = loadedPack?.test_cases.find(
+          (tc) => tc.test_id === activeCaseId || tc.question.trim().toLowerCase() === query.trim().toLowerCase()
+        );
+
+        const docIdsToSearch = (packDocIds.length > 0) 
+          ? packDocIds 
+          : (loadedPack?.document_ids?.length ? loadedPack.document_ids : currentPack.documents.map(d => d.document_id));
+
+        const liveRes = await evaluateLiveQuery(
+          query,
+          docIdsToSearch,
+          groundTruth || activeTestCase?.ground_truth_answer,
+          activeTestCase?.gold_chunk_ids,
+          activeTestCase?.type || 'factoid',
+          authToken
+        );
+
         if (liveRes) {
           setLiveEvaluation(liveRes);
-          setLiveNotification('Evaluated live via FastAPI (POST /api/evaluate/query)');
+          setLiveNotification(
+            liveRes.replay 
+              ? `Evaluated live with causal gold replay (${liveRes.root_cause.category})`
+              : `Evaluated live via FastAPI (POST /api/evaluate/query)`
+          );
           setIsEvaluating(false);
           return;
         }
       } catch (err: any) {
+        setIsEvaluating(false);
         const msg = err instanceof ApiError ? `Backend (${err.status}): ${err.detail}` : (err.message || 'Evaluation error');
-        setLiveNotification(`${msg} — displayed state-grounded pack evaluation.`);
+        // Note #2 & Note #3: Display actual backend error! Never fall back to mock data on error!
+        setLiveNotification(`Evaluation Error: ${msg}`);
+        return;
       }
     }
 
-    // Graceful fallback to calibrated benchmark case
-    setTimeout(() => {
-      setIsEvaluating(false);
-      setLiveEvaluation(null);
-      const matchedCaseKey = Object.keys(currentPack.cases).find(
-        (key) => currentPack.cases[key].query.toLowerCase() === query.toLowerCase()
-      );
-      if (matchedCaseKey) {
-        setActiveCaseId(matchedCaseKey);
-      }
-      if (isLiveBackend && !backendHealth?.engine_ready) {
-        setLiveNotification('Backend connected at localhost:8000. Engine running local mode — displayed state-grounded pack evaluation.');
-      }
-    }, 400);
+    // If offline / no token:
+    setIsEvaluating(false);
+    setLiveNotification('Backend offline or not authenticated. Please ensure backend is running at localhost:8000.');
   };
 
   /**
@@ -204,25 +317,66 @@ export const App: React.FC = () => {
   };
 
   // Handler for clicking starter questions inside PromptBox
-  const handleSelectStarter = (_question: string, caseId?: string, docId?: string) => {
-    setLiveEvaluation(null);
+  const handleSelectStarter = async (_question: string, caseId?: string, docId?: string) => {
     setLiveNotification(null);
     if (caseId) setActiveCaseId(caseId);
     if (docId) setSelectedDocId(docId);
+
+    // If caseId is from loadedPack, automatically run the live evaluation!
+    if (isLiveBackend && authToken && caseId && loadedPack) {
+      const tc = loadedPack.test_cases.find((c) => c.test_id === caseId);
+      if (tc) {
+        setIsEvaluating(true);
+        try {
+          const liveRes = await evaluateLiveQuery(
+            tc.question,
+            loadedPack.document_ids,
+            tc.ground_truth_answer,
+            tc.gold_chunk_ids,
+            tc.type,
+            authToken
+          );
+          setLiveEvaluation(liveRes);
+          setLiveNotification(`Evaluated ${tc.test_id} (${tc.type}) live: ${liveRes.root_cause.category}`);
+        } catch (err: any) {
+          const msg = err instanceof ApiError ? `Backend (${err.status}): ${err.detail}` : (err.message || 'Evaluation error');
+          setLiveNotification(`Evaluation Error: ${msg}`);
+        } finally {
+          setIsEvaluating(false);
+        }
+      }
+    }
   };
 
   // Handler for selecting synthetic test question
   const handleSelectSyntheticQuestion = (_q: SyntheticTestCase) => {
     setLiveEvaluation(null);
-    setActiveCaseId('case_01');
+    setActiveCaseId('rec_01');
     setActiveTab('lab');
   };
 
   // Handler for clicking a row in batch table -> opens in Trace Inspector
   const handleSelectCaseFromBatch = (caseId: string) => {
-    setLiveEvaluation(null);
     setActiveCaseId(caseId);
     setActiveTab('lab');
+
+    // If batch results contain this case, set it directly to liveEvaluation
+    if (liveBatchSummary && (liveBatchSummary as any).results) {
+      const found = (liveBatchSummary as any).results.find((r: any) => r.test_id === caseId);
+      if (found) {
+        setLiveEvaluation(found);
+        setLiveNotification(`Inspecting batch result for ${caseId} (${found.root_cause?.category || 'evaluated'})`);
+        return;
+      }
+    }
+
+    // Otherwise evaluate it live if it's in loadedPack
+    if (isLiveBackend && authToken && loadedPack) {
+      const tc = loadedPack.test_cases.find((c) => c.test_id === caseId);
+      if (tc) {
+        handleSelectStarter(tc.question, tc.test_id);
+      }
+    }
   };
 
   // Handler for loading previous run from history
