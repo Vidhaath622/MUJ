@@ -4,6 +4,8 @@ import { RootCausePanel } from './components/ragseal/RootCausePanel';
 import { BatchSummarySection } from './components/ragseal/BatchSummarySection';
 import { DocumentVaultModal } from './components/ragseal/DocumentVaultModal';
 import { SyntheticGeneratorModal } from './components/ragseal/SyntheticGeneratorModal';
+import { AuthModal } from './components/ragseal/AuthModal';
+import { HowItWorksStory } from './components/ragseal/HowItWorksStory';
 import { ComponentLibraryTab } from './components/showcase/ComponentLibraryTab';
 
 // Components directly from the Component Library:
@@ -12,93 +14,69 @@ import { MetricCard } from './components/domain/metric-card';
 import { DiffViewer } from './components/domain/diff-viewer';
 
 import { 
-  MOCK_ATS_DOCUMENTS, 
-  MOCK_EVALUATION_CASES, 
-  MOCK_BATCH_SUMMARY, 
-  MOCK_SYNTHETIC_QUESTIONS 
-} from './data/mockAtsDataset';
-import { SyntheticTestCase, EvaluationResult } from './types/ragseal';
+  INDUSTRY_PACKS, 
+  MOCK_RUN_HISTORY 
+} from './data/mockPacksDataset';
+import { MOCK_SYNTHETIC_QUESTIONS } from './data/mockAtsDataset';
+import { PackId, AuthUser, SyntheticTestCase, EvaluationResult } from './types/ragseal';
 
 export const App: React.FC = () => {
-  const [activeView, setActiveView] = useState<'cockpit' | 'batch' | 'components'>('cockpit');
+  const [activeTab, setActiveTab] = useState<'lab' | 'story' | 'components'>('lab');
+  const [activePackId, setActivePackId] = useState<PackId>('recruitment');
   const [activeCaseId, setActiveCaseId] = useState<string>('case_01');
   const [selectedDocId, setSelectedDocId] = useState<string>('doc_ats_03');
   const [isLiveBackend, setIsLiveBackend] = useState<boolean>(false);
   const [isDocVaultOpen, setIsDocVaultOpen] = useState<boolean>(false);
   const [isSyntheticOpen, setIsSyntheticOpen] = useState<boolean>(false);
+  const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+
+  // Default logged in user per contract: demo@ragseal.dev
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>({
+    id: 'usr_seeded_demo',
+    email: 'demo@ragseal.dev',
+    name: 'Lead Evaluator',
+  });
+
+  // Current active industry pack
+  const currentPack = INDUSTRY_PACKS[activePackId] || INDUSTRY_PACKS.recruitment;
 
   // Active evaluation case
   const currentEvaluation: EvaluationResult = 
-    MOCK_EVALUATION_CASES[activeCaseId] || MOCK_EVALUATION_CASES['case_01'];
+    currentPack.cases[activeCaseId] || Object.values(currentPack.cases)[0];
 
-  // Starter benchmark questions
-  const starterQuestions: StarterQuestionItem[] = [
-    {
-      label: 'Experience Threshold',
-      caseId: 'case_01',
-      question: 'What is the required experience threshold in the currently approved job description?',
-      docId: 'doc_ats_03',
-      type: 'CLEAN_PASS',
-    },
-    {
-      label: 'Notice Period & Buyout',
-      caseId: 'case_02',
-      question: 'Does the candidate resume document notice period and buyout eligibility?',
-      docId: 'doc_ats_02',
-      type: 'RETRIEVAL_FAILURE',
-    },
-    {
-      label: 'Certifications Check',
-      caseId: 'case_03',
-      question: "Which cloud and orchestration certifications are documented in candidate C-002's resume?",
-      docId: 'doc_ats_02',
-      type: 'GENERATION_HALLUCINATION',
-    },
-    {
-      label: 'Compensation & Band',
-      caseId: 'case_04',
-      question: "What is Priya Sharma's compensation expectation and does it fit the L4 salary band?",
-      docId: 'doc_ats_02',
-      type: 'COMPOUND_FAILURE',
-    },
-    {
-      label: 'Managerial Experience',
-      caseId: 'case_05',
-      question: 'Does candidate C-002 have prior managerial experience leading teams of 10 or more engineers?',
-      docId: 'doc_ats_02',
-      type: 'CLEAN_PASS',
-    },
-    {
-      label: 'Policy Version Conflict',
-      caseId: 'case_06',
-      question: 'What is the minimum years of experience required for the L4 role according to current policy?',
-      docId: 'doc_ats_01',
-      type: 'GENERATION_HALLUCINATION',
-    },
-    {
-      label: 'Citation Mismatch',
-      caseId: 'case_07',
-      question: 'Which distributed caching and messaging technologies has candidate Priya Sharma worked with?',
-      docId: 'doc_ats_02',
-      type: 'GENERATION_HALLUCINATION',
-    },
-  ];
+  // Derive starter questions from current pack cases
+  const starterQuestions: StarterQuestionItem[] = Object.entries(currentPack.cases).map(([key, c]) => ({
+    label: c.query.slice(0, 24) + '...',
+    caseId: key,
+    question: c.query,
+    docId: c.document_id,
+    type: c.root_cause.category,
+  }));
+
+  // Handle switching pack
+  const handleSelectPack = (packId: PackId) => {
+    setActivePackId(packId);
+    const newPack = INDUSTRY_PACKS[packId] || INDUSTRY_PACKS.recruitment;
+    const firstCaseKey = Object.keys(newPack.cases)[0];
+    setActiveCaseId(firstCaseKey);
+    setSelectedDocId(newPack.documents[0]?.document_id || '');
+  };
 
   // Handler for running query from PromptBox
   const handleRunQuery = (query: string, groundTruth?: string) => {
     setIsEvaluating(true);
     setTimeout(() => {
       setIsEvaluating(false);
-      // If matches one of our known benchmark cases, activate that case
-      const matchedCaseKey = Object.keys(MOCK_EVALUATION_CASES).find(
-        (key) => MOCK_EVALUATION_CASES[key].query.toLowerCase() === query.toLowerCase()
+      // If matches one of our known benchmark cases in current pack, activate that case
+      const matchedCaseKey = Object.keys(currentPack.cases).find(
+        (key) => currentPack.cases[key].query.toLowerCase() === query.toLowerCase()
       );
       if (matchedCaseKey) {
         setActiveCaseId(matchedCaseKey);
       }
       if (groundTruth) {
-        // Ground truth comparison
+        // User provided manual ground truth
       }
     }, 700);
   };
@@ -110,22 +88,23 @@ export const App: React.FC = () => {
   };
 
   // Handler for selecting synthetic test question
-  const handleSelectSyntheticQuestion = (q: SyntheticTestCase) => {
-    if (q.source_chunk_id.startsWith('chk_pol')) {
-      setSelectedDocId('doc_ats_01');
-    } else if (q.source_chunk_id.startsWith('chk_res')) {
-      setSelectedDocId('doc_ats_02');
-    } else {
-      setSelectedDocId('doc_ats_03');
-    }
+  const handleSelectSyntheticQuestion = (_q: SyntheticTestCase) => {
     setActiveCaseId('case_01');
-    setActiveView('cockpit');
+    setActiveTab('lab');
   };
 
   // Handler for clicking a row in batch table -> opens in Trace Inspector
   const handleSelectCaseFromBatch = (caseId: string) => {
     setActiveCaseId(caseId);
-    setActiveView('cockpit');
+    setActiveTab('lab');
+  };
+
+  // Handler for loading previous run from history
+  const handleLoadRun = (batchId: string) => {
+    const runItem = MOCK_RUN_HISTORY.find(r => r.batch_id === batchId);
+    if (runItem) {
+      handleSelectPack(runItem.pack_id);
+    }
   };
 
   return (
@@ -136,20 +115,34 @@ export const App: React.FC = () => {
         onToggleLiveBackend={() => setIsLiveBackend(!isLiveBackend)}
         onOpenDocVault={() => setIsDocVaultOpen(true)}
         onOpenSyntheticGenerator={() => setIsSyntheticOpen(true)}
-        onRunBatchSuite={() => setActiveView('batch')}
-        activeView={activeView}
-        onSelectView={setActiveView}
-        isEvaluating={isEvaluating}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        currentUser={currentUser}
+        activePack={activePackId}
+        onSelectPack={handleSelectPack}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
       />
 
       {/* Main Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
-        {/* VIEW 1: Single-Screen Trace Inspector Command Center */}
-        {activeView === 'cockpit' && (
+        {/* TAB 1: "Lab" (The working RAG app + Automated QA layer) */}
+        {activeTab === 'lab' && (
           <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Pack Description Strip */}
+            <div className="p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white uppercase">{currentPack.name}</span>
+                <span className="text-neutral-500">•</span>
+                <span className="text-neutral-400">{currentPack.description}</span>
+              </div>
+              <div className="text-neutral-500 text-[11px]">
+                {currentPack.trap_description}
+              </div>
+            </div>
+
             {/* 1. Component Library: PromptBox */}
             <PromptBox
-              documents={MOCK_ATS_DOCUMENTS.map(d => ({
+              documents={currentPack.documents.map(d => ({
                 document_id: d.document_id,
                 filename: d.filename,
                 chunk_count: d.chunk_count,
@@ -203,41 +196,51 @@ export const App: React.FC = () => {
               />
             </div>
 
-            {/* 3. Decoupled Root-Cause Panel (internally using DiagnosticBadge from Component Library) */}
+            {/* 3. Decoupled Root-Cause Panel with Replay Experiment */}
             <RootCausePanel
               diagnosis={currentEvaluation.root_cause}
               release={currentEvaluation.release}
               evaluationMode={currentEvaluation.evaluation_mode}
               evaluationId={currentEvaluation.evaluation_id}
               latencyMs={currentEvaluation.latency_ms}
+              replay={currentEvaluation.replay}
+              originalAnswer={currentEvaluation.generated_answer}
             />
 
-            {/* 4. Component Library: DiffViewer (Side-by-Side Trace View) */}
+            {/* 4. Component Library: DiffViewer (Trace View & Gold Replay Hero) */}
             <DiffViewer
               query={currentEvaluation.query}
               retrievedChunks={currentEvaluation.retrieved_chunks}
               generatedAnswer={currentEvaluation.generated_answer}
               groundTruth={currentEvaluation.ground_truth}
               hallucinatedClaims={currentEvaluation.metrics.faithfulness.hallucinated_claims}
-              groundTruthChunkIds={currentEvaluation.ground_truth_chunk_ids}
+              groundTruthChunkIds={currentEvaluation.gold_chunk_ids || currentEvaluation.ground_truth_chunk_ids}
               documentName={currentEvaluation.document_name}
+              replay={currentEvaluation.replay}
             />
+
+            {/* 5. Batch Dashboard (Recharts failure distribution & Judge Agreement) */}
+            <div className="pt-4 border-t border-neutral-800/80">
+              <BatchSummarySection
+                batch={currentPack.batchSummary}
+                selectedCaseId={activeCaseId}
+                onSelectCase={handleSelectCaseFromBatch}
+                runHistory={MOCK_RUN_HISTORY}
+                onLoadRun={handleLoadRun}
+              />
+            </div>
           </div>
         )}
 
-        {/* VIEW 2: Batch Test Suite & Failure Breakdown Chart (using EvaluationTable from Component Library) */}
-        {activeView === 'batch' && (
+        {/* TAB 2: "How It Works" (Scroll storytelling pipeline walkthrough & diagram) */}
+        {activeTab === 'story' && (
           <div className="animate-in fade-in duration-200">
-            <BatchSummarySection
-              batch={MOCK_BATCH_SUMMARY}
-              selectedCaseId={activeCaseId}
-              onSelectCase={handleSelectCaseFromBatch}
-            />
+            <HowItWorksStory />
           </div>
         )}
 
-        {/* VIEW 3: Component Library & Design System Showcase */}
-        {activeView === 'components' && (
+        {/* TAB 3: Component Library & Design System Showcase */}
+        {activeTab === 'components' && (
           <div className="animate-in fade-in duration-200">
             <ComponentLibraryTab />
           </div>
@@ -248,7 +251,7 @@ export const App: React.FC = () => {
       <footer className="border-t border-neutral-900 bg-[#06080d] py-5 px-4 text-xs font-mono text-neutral-400">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-neutral-200">RAGSeal</span>
+            <span className="font-bold text-neutral-200">RAGSeal v2.0</span>
             <span className="text-neutral-500">•</span>
             <span>Problem Statement AI-04: RAG Evaluation Pipeline</span>
             <span className="text-neutral-500">•</span>
@@ -257,25 +260,34 @@ export const App: React.FC = () => {
           <div className="flex items-center gap-3 text-neutral-400">
             <span>Honesty Rule: All numbers state-grounded</span>
             <span className="text-neutral-500">•</span>
-            <span>Built 100% with Component Library Primitives</span>
+            <span>Causal Replay Isolation Active</span>
           </div>
         </div>
       </footer>
 
-      {/* Modal 1: Document Vault & Chunk Inspector (using FileDropzone from Component Library) */}
+      {/* Modal 1: Document Vault & Chunk Inspector */}
       <DocumentVaultModal
         isOpen={isDocVaultOpen}
         onClose={() => setIsDocVaultOpen(false)}
-        documents={MOCK_ATS_DOCUMENTS}
+        documents={currentPack.documents}
       />
 
-      {/* Modal 2: Synthetic Test-Question Generator (Deliverable 2) */}
+      {/* Modal 2: Synthetic Test-Question Generator */}
       <SyntheticGeneratorModal
         isOpen={isSyntheticOpen}
         onClose={() => setIsSyntheticOpen(false)}
         questions={MOCK_SYNTHETIC_QUESTIONS}
-        documents={MOCK_ATS_DOCUMENTS}
+        documents={currentPack.documents}
         onSelectQuestion={handleSelectSyntheticQuestion}
+      />
+
+      {/* Modal 3: User Auth / Session Modal */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        currentUser={currentUser}
+        onLogin={setCurrentUser}
+        onLogout={() => setCurrentUser(null)}
       />
     </div>
   );

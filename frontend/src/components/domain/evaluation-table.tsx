@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { DiagnosticBadge, RootCauseCategory } from './diagnostic-badge';
+import { DiagnosticBadge } from './diagnostic-badge';
+import { RootCauseCategory, MetricStatus } from '../../types/ragseal';
 import { cn } from '../../lib/utils';
 import { ChevronRight, ListFilter } from 'lucide-react';
 
@@ -11,11 +12,12 @@ export interface EvaluationItem {
   query: string;
   retrieverScore: number;
   faithfulnessScore: number;
-  accuracyScore: number;
+  accuracyScore: number | null;
   diagnosis: RootCauseCategory;
   latencyMs?: number;
-  status?: 'PASS' | 'FAIL';
+  status?: MetricStatus;
   summaryNote?: string;
+  type?: string;
 }
 
 export interface EvaluationTableProps {
@@ -37,6 +39,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
     if (selectedFilter === 'ALL') return true;
     if (selectedFilter === 'PASS') return item.status === 'PASS';
     if (selectedFilter === 'FAIL') return item.status === 'FAIL';
+    if (selectedFilter === 'REVIEW') return item.status === 'REVIEW';
     return item.diagnosis === selectedFilter;
   });
 
@@ -52,7 +55,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
 
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
-          {['ALL', 'PASS', 'FAIL', 'CLEAN_PASS', 'RETRIEVAL_FAILURE', 'GENERATION_HALLUCINATION', 'COMPOUND_FAILURE'].map((f) => (
+          {['ALL', 'PASS', 'FAIL', 'REVIEW', 'CLEAN_PASS', 'RETRIEVAL_FAILURE', 'GENERATION_HALLUCINATION', 'COMPOUND_FAILURE', 'NEEDS_REVIEW'].map((f) => (
             <button
               key={f}
               onClick={() => setSelectedFilter(f)}
@@ -86,7 +89,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
               const isSelected = selectedId === item.id;
               const retPass = item.retrieverScore >= 0.7;
               const faithPass = item.faithfulnessScore >= 0.75;
-              const accPass = item.accuracyScore >= 0.7;
+              const accPass = item.accuracyScore !== null ? item.accuracyScore >= 0.7 : null;
 
               return (
                 <tr
@@ -124,9 +127,15 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
                   </td>
 
                   <td className="py-3.5 px-3 text-center font-mono">
-                    <span className={cn('font-bold', accPass ? 'text-emerald-400' : 'text-rose-400')}>
-                      {(item.accuracyScore * 100).toFixed(0)}%
-                    </span>
+                    {item.accuracyScore === null ? (
+                      <span className="text-amber-400 font-medium text-[11px] bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-900/60">
+                        REVIEW (No GT)
+                      </span>
+                    ) : (
+                      <span className={cn('font-bold', accPass ? 'text-emerald-400' : 'text-rose-400')}>
+                        {(item.accuracyScore * 100).toFixed(0)}%
+                      </span>
+                    )}
                   </td>
 
                   <td className="py-3.5 px-4">
@@ -135,7 +144,10 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
 
                   <td className="py-3.5 px-3 text-center">
                     {item.status && (
-                      <Badge variant={item.status === 'PASS' ? 'success' : 'danger'} size="sm">
+                      <Badge
+                        variant={item.status === 'PASS' ? 'success' : item.status === 'REVIEW' ? 'warning' : 'danger'}
+                        size="sm"
+                      >
                         {item.status}
                       </Badge>
                     )}

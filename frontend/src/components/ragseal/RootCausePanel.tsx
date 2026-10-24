@@ -6,9 +6,12 @@ import {
   Wrench, 
   ShieldCheck, 
   ShieldAlert, 
-  ShieldX
+  ShieldX,
+  FlaskConical,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
-import { RootCauseCategory, ReleaseDecision, RootCauseDiagnosis, ReleaseGate, EvaluationMode } from '../../types/ragseal';
+import { RootCauseCategory, ReleaseDecision, RootCauseDiagnosis, ReleaseGate, EvaluationMode, Replay } from '../../types/ragseal';
 
 interface RootCausePanelProps {
   diagnosis: RootCauseDiagnosis;
@@ -16,14 +19,18 @@ interface RootCausePanelProps {
   evaluationMode?: EvaluationMode;
   evaluationId?: string;
   latencyMs?: number;
+  replay?: Replay | null;
+  originalAnswer?: string;
 }
 
 export const RootCausePanel: React.FC<RootCausePanelProps> = ({
   diagnosis,
   release,
-  evaluationMode = 'llm',
+  evaluationMode = 'local',
   evaluationId,
   latencyMs,
+  replay,
+  originalAnswer,
 }) => {
   const getReleaseConfig = (decision: ReleaseDecision) => {
     switch (decision) {
@@ -56,7 +63,7 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
   return (
     <Card
       variant="default"
-      className="relative overflow-hidden border border-neutral-800 bg-[#0c1017]/95 p-5 md:p-6 shadow-xl"
+      className="relative overflow-hidden border border-neutral-800 bg-[#0c1017]/95 p-5 md:p-6 shadow-xl space-y-4"
     >
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         {/* Left: Category & Explanation */}
@@ -89,7 +96,7 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
 
           {/* Evidence Notes if any */}
           {diagnosis.evidence_notes && diagnosis.evidence_notes.length > 0 && (
-            <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400">
+            <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 flex-wrap">
               <span className="text-neutral-500">Evidence notes:</span>
               {diagnosis.evidence_notes.map((note, idx) => (
                 <span key={idx} className="bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800 text-neutral-300">
@@ -140,6 +147,55 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
           </div>
         </div>
       </div>
+
+      {/* HERO REPLAY EXPERIMENT (When replay is available) */}
+      {replay && (
+        <div className="p-4 rounded-xl bg-purple-950/30 border border-purple-800/70 space-y-3 pt-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-purple-400" />
+              <span className="text-xs font-mono font-bold text-purple-200 uppercase tracking-wider">
+                Causal Replay Experiment (Hero Proof)
+              </span>
+              <Badge variant="neon" size="sm">
+                LAB EXPERIMENT
+              </Badge>
+            </div>
+
+            <div className="text-[11px] font-mono text-neutral-400 flex items-center gap-2">
+              <span>Replay Accuracy:</span>
+              <span className="text-purple-300 font-bold">
+                {replay.answer_accuracy ? `${(replay.answer_accuracy * 100).toFixed(0)}%` : 'N/A'}
+              </span>
+            </div>
+          </div>
+
+          <div className="text-xs text-neutral-200 bg-black/40 p-2.5 rounded-lg border border-purple-900/40 leading-relaxed font-sans">
+            <strong className="text-purple-300 font-mono">Causal Finding: </strong>
+            {replay.verdict_effect}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono pt-1">
+            {/* Original Output */}
+            <div className="p-3 rounded-lg bg-black/60 border border-neutral-800 space-y-1">
+              <span className="text-[10px] uppercase text-rose-400 font-bold flex items-center gap-1">
+                <XCircle className="w-3 h-3" />
+                Original System Output (With Retrieval Flaw):
+              </span>
+              <p className="text-neutral-300 line-clamp-3 text-[11px]">{originalAnswer || 'Original response'}</p>
+            </div>
+
+            {/* Replay Output */}
+            <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-900/50 space-y-1">
+              <span className="text-[10px] uppercase text-emerald-400 font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                Replay Output (With Forced Gold Passage Only):
+              </span>
+              <p className="text-neutral-200 line-clamp-3 text-[11px]">{replay.answer}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 };

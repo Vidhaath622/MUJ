@@ -6,18 +6,27 @@ import {
   Sparkles, 
   Wifi, 
   WifiOff, 
-  Database
+  Database,
+  User,
+  FlaskConical,
+  BookOpen,
+  Briefcase,
+  Landmark,
+  HeartPulse
 } from 'lucide-react';
+import { PackId, AuthUser } from '../../types/ragseal';
 
 interface RAGSealNavbarProps {
   isLiveBackend: boolean;
   onToggleLiveBackend: () => void;
   onOpenDocVault: () => void;
   onOpenSyntheticGenerator: () => void;
-  onRunBatchSuite: () => void;
-  activeView: 'cockpit' | 'batch' | 'components';
-  onSelectView: (view: 'cockpit' | 'batch' | 'components') => void;
-  isEvaluating?: boolean;
+  onOpenAuth: () => void;
+  currentUser: AuthUser | null;
+  activePack: PackId;
+  onSelectPack: (packId: PackId) => void;
+  activeTab: 'lab' | 'story' | 'components';
+  onSelectTab: (tab: 'lab' | 'story' | 'components') => void;
 }
 
 export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
@@ -25,9 +34,19 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
   onToggleLiveBackend,
   onOpenDocVault,
   onOpenSyntheticGenerator,
-  activeView,
-  onSelectView,
+  onOpenAuth,
+  currentUser,
+  activePack,
+  onSelectPack,
+  activeTab,
+  onSelectTab,
 }) => {
+  const packs = [
+    { id: 'recruitment' as PackId, label: 'Recruitment ATS', icon: Briefcase },
+    { id: 'banking' as PackId, label: 'Banking & Wires', icon: Landmark },
+    { id: 'healthcare' as PackId, label: 'Clinical Protocols', icon: HeartPulse },
+  ];
+
   return (
     <header className="border-b border-neutral-800 bg-[#07090e]/95 backdrop-blur-md sticky top-0 z-40 px-4 md:px-8 py-3">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -43,58 +62,52 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg font-bold text-white tracking-tight flex items-center gap-1.5">
                 RAG<span className="text-teal-400">Seal</span>
-                <span className="text-[11px] text-neutral-400 font-normal font-mono">v1.0</span>
+                <span className="text-[11px] text-neutral-400 font-normal font-mono">v2.0</span>
               </h1>
               <Badge variant="neon" size="sm">
                 AI-04
               </Badge>
               <Badge variant="outline" size="sm" className="hidden sm:inline-flex text-[10px] font-mono border-neutral-700 text-neutral-300">
-                Retriever &amp; Generator Tested Apart
+                Causal Replay Evaluation Lab
               </Badge>
             </div>
             <div className="flex items-center gap-2 text-[11px] text-neutral-400 font-mono mt-0.5">
-              <span className="text-teal-300/90 font-medium">Automated RAG QA Layer</span>
+              <span className="text-teal-300/90 font-medium">Retriever &amp; Generator Tested Apart</span>
               <span className="text-neutral-600">•</span>
-              <span className="text-neutral-400">Not a chatbot</span>
-              <span className="text-neutral-600">•</span>
-              <span className="text-neutral-400 bg-neutral-900 px-1.5 py-0.2 rounded border border-neutral-800">
-                [DEMO DATASET: ATS BENCHMARK v1]
-              </span>
+              <span className="text-neutral-400">Proves Failure Root Cause</span>
             </div>
           </div>
         </div>
 
-        {/* Navigation Tabs & Actions */}
+        {/* Navigation Tabs (Tab 1: Lab, Tab 2: How It Works, Tab 3: UI Library) */}
         <div className="flex items-center gap-2 flex-wrap justify-between md:justify-end">
-          {/* Main View Switcher */}
-          <div className="flex items-center bg-neutral-950 p-1 rounded-lg border border-neutral-800 text-xs">
+          <div className="flex items-center bg-neutral-950 p-1 rounded-lg border border-neutral-800 text-xs font-mono">
             <button
-              onClick={() => onSelectView('cockpit')}
-              className={`px-3 py-1.5 rounded-md font-medium transition ${
-                activeView === 'cockpit'
-                  ? 'bg-neutral-800 text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-neutral-200'
-              }`}
-            >
-              Trace Inspector
-            </button>
-            <button
-              onClick={() => onSelectView('batch')}
+              onClick={() => onSelectTab('lab')}
               className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 ${
-                activeView === 'batch'
-                  ? 'bg-neutral-800 text-white shadow-sm'
+                activeTab === 'lab'
+                  ? 'bg-neutral-800 text-white shadow-sm font-bold'
                   : 'text-neutral-400 hover:text-neutral-200'
               }`}
             >
-              <span>Batch Suite</span>
-              <span className="px-1.5 py-0.2 text-[10px] font-mono bg-teal-950 text-teal-300 rounded border border-teal-800">
-                n = 7
-              </span>
+              <FlaskConical className="w-3.5 h-3.5 text-teal-400" />
+              <span>Tab 1: Lab</span>
             </button>
             <button
-              onClick={() => onSelectView('components')}
+              onClick={() => onSelectTab('story')}
+              className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1.5 ${
+                activeTab === 'story'
+                  ? 'bg-purple-950 text-purple-200 shadow-sm font-bold border border-purple-800'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+              <span>Tab 2: How It Works</span>
+            </button>
+            <button
+              onClick={() => onSelectTab('components')}
               className={`px-3 py-1.5 rounded-md font-medium transition text-neutral-400 hover:text-neutral-200 ${
-                activeView === 'components' ? 'bg-neutral-800 text-white' : ''
+                activeTab === 'components' ? 'bg-neutral-800 text-white font-bold' : ''
               }`}
             >
               UI Library
@@ -109,7 +122,7 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
             className="text-xs border-neutral-800 bg-neutral-900/60 hover:bg-neutral-800 text-neutral-300 gap-1.5"
           >
             <Database className="w-3.5 h-3.5 text-neutral-400" />
-            <span className="hidden sm:inline">Corpus Vault</span> (5 docs)
+            <span className="hidden sm:inline">Corpus Vault</span>
           </Button>
 
           {/* Synthetic Question Generator */}
@@ -120,7 +133,18 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
             className="text-xs border-teal-900/40 bg-teal-950/20 hover:bg-teal-900/40 text-teal-300 gap-1.5"
           >
             <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-            <span className="hidden sm:inline">Synthetic</span> Questions
+            <span className="hidden sm:inline">Synthetic</span> Q&amp;A
+          </Button>
+
+          {/* User Account Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenAuth}
+            className="text-xs font-mono border-neutral-800 bg-neutral-900 text-neutral-300 hover:text-white gap-1.5"
+          >
+            <User className="w-3.5 h-3.5 text-teal-400" />
+            <span className="hidden md:inline">{currentUser ? currentUser.email.split('@')[0] : 'Sign In'}</span>
           </Button>
 
           {/* Backend / Mock Mode Indicator */}
@@ -147,6 +171,46 @@ export const RAGSealNavbar: React.FC<RAGSealNavbarProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Industry Pack Selector Bar (Visible in Lab tab) */}
+      {activeTab === 'lab' && (
+        <div className="max-w-7xl mx-auto pt-2.5 mt-2 border-t border-neutral-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 font-semibold">
+              Industry Packs:
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto">
+              {packs.map((p) => {
+                const isSelected = activePack === p.id;
+                const Icon = p.icon;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => onSelectPack(p.id)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-mono transition flex items-center gap-1.5 border ${
+                      isSelected
+                        ? 'bg-teal-950/80 text-teal-200 border-teal-500 font-bold shadow-sm'
+                        : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white hover:border-neutral-700'
+                    }`}
+                  >
+                    <Icon className="w-3 h-3 text-teal-400" />
+                    <span>{p.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400">
+            <span className="bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800 text-neutral-300">
+              Model: llama3.2:3b
+            </span>
+            <span className="bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800 text-neutral-300">
+              Judge: qwen3:8b (cached)
+            </span>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

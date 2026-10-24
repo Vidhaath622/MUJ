@@ -1,13 +1,15 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
-import { CheckCircle2, AlertTriangle, Flame, ShieldAlert, AlertOctagon } from 'lucide-react';
-
-export type RootCauseCategory =
-  | 'CLEAN_PASS'
-  | 'RETRIEVAL_FAILURE'
-  | 'GENERATION_HALLUCINATION'
-  | 'COMPOUND_FAILURE'
-  | 'PARTIAL_CONTEXT_MISMATCH';
+import { 
+  CheckCircle2, 
+  AlertTriangle, 
+  Flame, 
+  ShieldAlert, 
+  AlertOctagon, 
+  HelpCircle,
+  FileQuestion 
+} from 'lucide-react';
+import { RootCauseCategory } from '../../types/ragseal';
 
 export interface DiagnosticBadgeProps {
   category: RootCauseCategory;
@@ -52,8 +54,20 @@ export const DiagnosticBadge: React.FC<DiagnosticBadgeProps> = ({
       classes: 'bg-purple-950/80 text-purple-300 border-purple-800 shadow-[0_0_12px_rgba(168,85,247,0.15)]',
       dotClass: 'bg-purple-400',
     },
+    NEEDS_REVIEW: {
+      label: 'NEEDS REVIEW',
+      icon: <HelpCircle className="w-3.5 h-3.5 text-amber-400" />,
+      classes: 'bg-amber-950/60 text-amber-300 border-amber-700 shadow-[0_0_12px_rgba(245,158,11,0.12)]',
+      dotClass: 'bg-amber-400',
+    },
+    UNRESOLVED: {
+      label: 'UNRESOLVED CONFLICT',
+      icon: <FileQuestion className="w-3.5 h-3.5 text-slate-300" />,
+      classes: 'bg-slate-900 text-slate-300 border-slate-700 shadow-[0_0_12px_rgba(148,163,184,0.1)]',
+      dotClass: 'bg-slate-400',
+    },
     PARTIAL_CONTEXT_MISMATCH: {
-      label: 'PARTIAL CONTEXT MISMATCH',
+      label: 'PARTIAL MISMATCH',
       icon: <AlertOctagon className="w-3.5 h-3.5 text-sky-400" />,
       classes: 'bg-sky-950/80 text-sky-300 border-sky-800 shadow-[0_0_12px_rgba(56,189,248,0.15)]',
       dotClass: 'bg-sky-400',

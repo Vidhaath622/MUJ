@@ -3,12 +3,13 @@ import { Card } from '../ui/card';
 import { CircularProgress } from '../ui/progress';
 import { Badge } from '../ui/badge';
 import { cn } from '../../lib/utils';
-import { Search, Feather, Target, AlertTriangle } from 'lucide-react';
+import { Search, Feather, Target, AlertTriangle, HelpCircle } from 'lucide-react';
+import { MetricStatus } from '../../types/ragseal';
 
 export interface MetricCardProps {
   title: string;
   metricKey: 'context_relevance' | 'faithfulness' | 'answer_accuracy' | string;
-  score: number; // 0.0 to 1.0 or 0 to 100
+  score: number | null; // null when no ground truth available (status = REVIEW)
   threshold: number; // e.g. 0.70 or 70
   details?: string;
   target?: string;
@@ -16,7 +17,7 @@ export interface MetricCardProps {
   judgedBy?: 'model' | 'rule';
   sampleCount?: number;
   hallucinatedClaims?: string[];
-  status?: 'PASS' | 'FAIL' | 'UNCERTAIN';
+  status?: MetricStatus;
   className?: string;
 }
 
@@ -26,7 +27,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   score,
   threshold,
   details,
-  target,
   componentType,
   judgedBy = 'model',
   sampleCount = 1,
@@ -34,13 +34,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   status,
   className,
 }) => {
-  // Normalize to 0-100
-  const normalizedScore = score <= 1 ? score * 100 : score;
+  const isNullScore = score === null;
+  const normalizedScore = isNullScore ? 0 : score <= 1 ? score * 100 : score;
   const normalizedThreshold = threshold <= 1 ? threshold * 100 : threshold;
   
-  const effectiveStatus = status || (normalizedScore >= normalizedThreshold ? 'PASS' : 'FAIL');
+  const effectiveStatus: MetricStatus = status || (isNullScore ? 'REVIEW' : normalizedScore >= normalizedThreshold ? 'PASS' : 'FAIL');
   const isPass = effectiveStatus === 'PASS';
-  const isUncertain = effectiveStatus === 'UNCERTAIN';
+  const isReview = effectiveStatus === 'REVIEW' || effectiveStatus === 'UNCERTAIN';
 
   const getComponentIcon = () => {
     switch (componentType) {
@@ -61,7 +61,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         'relative overflow-hidden border p-5 transition-all hover:border-neutral-700 flex flex-col justify-between',
         isPass
           ? 'bg-neutral-900/90 border-neutral-800'
-          : isUncertain
+          : isReview
           ? 'bg-amber-950/20 border-amber-900/40'
           : 'bg-rose-950/20 border-rose-900/40',
         className
@@ -78,7 +78,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             <div>
               {componentType && (
                 <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-semibold block">
-                  Component: {componentType} {metricKey ? `• ${metricKey}` : ''}
+                  Component: {componentType} • {metricKey}
                 </span>
               )}
               <h4 className="text-sm font-bold text-white tracking-tight">
@@ -88,7 +88,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           </div>
 
           <Badge
-            variant={isPass ? 'success' : isUncertain ? 'warning' : 'danger'}
+            variant={isPass ? 'success' : isReview ? 'warning' : 'danger'}
             size="sm"
             dot
           >
@@ -99,27 +99,47 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         {/* Score & Gauge Section */}
         <div className="flex items-center justify-between gap-4 pt-1">
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-mono font-bold text-white tracking-tight">
-                {normalizedScore.toFixed(0)}%
-              </span>
-              <span className="text-xs font-mono text-neutral-400">
-                ({(normalizedScore / 100).toFixed(2)})
-              </span>
-            </div>
-            <div className="text-[11px] font-mono text-neutral-400 mt-0.5">
-              Target: &ge; {normalizedThreshold.toFixed(0)}%{target ? ` • ${target}` : ''}
-            </div>
+            {isNullScore ? (
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-base">
+                  <HelpCircle className="w-4 h-4" />
+                  <span>No Ground Truth</span>
+                </div>
+                <div className="text-[11px] font-mono text-neutral-400">
+                  Target: &ge; {normalizedThreshold.toFixed(0)}% (Awaiting Benchmark)
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-mono font-bold text-white tracking-tight">
+                    {normalizedScore.toFixed(0)}%
+                  </span>
+                  <span className="text-xs font-mono text-neutral-400">
+                    ({(normalizedScore / 100).toFixed(2)})
+                  </span>
+                </div>
+                <div className="text-[11px] font-mono text-neutral-400 mt-0.5">
+                  Target: &ge; {normalizedThreshold.toFixed(0)}%
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="shrink-0">
-            <CircularProgress
-              value={normalizedScore}
-              size={64}
-              strokeWidth={5}
-              thresholdPass={normalizedThreshold}
-              thresholdWarn={normalizedThreshold * 0.75}
-            />
+            {isNullScore ? (
+              <div className="w-16 h-16 rounded-full border-2 border-dashed border-amber-600/60 flex items-center justify-center font-mono text-xs text-amber-400 bg-amber-950/20">
+                N/A
+              </div>
+            ) : (
+              <CircularProgress
+                value={normalizedScore}
+                size={64}
+                strokeWidth={5}
+                thresholdPass={normalizedThreshold}
+                thresholdWarn={normalizedThreshold * 0.75}
+              />
+            )}
           </div>
         </div>
 

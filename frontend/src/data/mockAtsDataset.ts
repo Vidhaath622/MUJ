@@ -651,6 +651,12 @@ export const MOCK_BATCH_SUMMARY: BatchSummary = {
     GENERATION_HALLUCINATION: 3,
     COMPOUND_FAILURE: 1,
   },
+  judge_agreement: {
+    agreement: 0.86,
+    n: 30,
+    false_pass: 2,
+    false_fail: 2,
+  },
   release: {
     decision: 'BLOCK',
     rule: 'Batch pass rate (43%) < release gate standard (80%)',
