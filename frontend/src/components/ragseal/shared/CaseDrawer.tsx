@@ -21,11 +21,11 @@ export const CaseDrawer: React.FC<{
   if (!result) return null;
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="Diagnosis">
-      <button aria-label="Close diagnosis" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
-      <div className="lab-fade-up relative flex h-full w-[min(1120px,92vw)] flex-col border-l border-[#1A1D22] bg-[#08090B] shadow-2xl">
-        <div className="flex h-14 shrink-0 items-center justify-between border-b border-[#17191D] px-6">
+      <button aria-label="Close diagnosis" onClick={onClose} className="absolute inset-0 bg-[#F6F3EC] backdrop-blur-[2px]" />
+      <div className="lab-fade-up relative flex h-full w-[min(1120px,92vw)] flex-col border-l border-[#E3DED3] bg-[#F6F3EC] shadow-2xl">
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-[#E3DED3] px-6">
           <span className="text-[15px] font-semibold">Diagnosis</span>
-          <button onClick={onClose} className="rounded-md p-1.5 text-[#8A9099] hover:bg-white/[0.04] hover:text-white" aria-label="Close">
+          <button onClick={onClose} className="rounded-md p-1.5 text-[#5E5B53] hover:bg-[#1B1B18]/[0.04] hover:text-[#1B1B18]" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>

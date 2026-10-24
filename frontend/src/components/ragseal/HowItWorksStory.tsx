@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { HealthResponse, checkBackendHealth } from '../../lib/api';
 import { Panel, GhostButton } from './shared/ui';
+import { RagFigure } from './shared/RagFigure';
 import { DiagnosticBadge } from '../domain/diagnostic-badge';
 
 interface HowItWorksStoryProps {
@@ -165,26 +166,26 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-teal-400 font-semibold">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[#1F6F6A] font-semibold">
                 Architecture &amp; Methodology
               </span>
-              <span className="rounded-full bg-[#1C1F24] px-2 py-0.5 text-[10px] font-mono text-[#8A9099]">
+              <span className="rounded-full bg-[#ECE7DC] px-2 py-0.5 text-[10px] font-mono text-[#5E5B53]">
                 System Proof
               </span>
             </div>
-            <h1 className="text-2xl font-bold text-[#F4F5F6] tracking-tight mt-1.5">
+            <h1 className="text-2xl font-bold text-[#1B1B18] tracking-tight mt-1.5">
               How RAGSeal Proves Why a RAG Answer Failed
             </h1>
-            <p className="text-xs text-[#8A9099] font-mono mt-1">
+            <p className="text-xs text-[#5E5B53] font-mono mt-1">
               Component-decoupled scoring combined with controlled gold-context replay experiments.
             </p>
           </div>
 
           <GhostButton
             onClick={handleCopyPitchDiagram}
-            className="text-xs font-mono text-purple-300 hover:text-white border border-[#2A233D] bg-[#161324] hover:bg-[#201A35]"
+            className="text-xs font-mono text-[#6B4C9A] hover:text-[#1B1B18] border border-[#EFEAF5] bg-[#F3EFF7] hover:bg-[#EFEAF5]"
           >
-            {copiedDiagram ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copiedDiagram ? <Check className="w-3.5 h-3.5 text-[#1F7A4D]" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copiedDiagram ? 'Diagram Copied!' : 'Copy Pitch Deck Diagram'}</span>
           </GhostButton>
         </div>
@@ -200,28 +201,33 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
                 onClick={() => setActiveStep(s.step)}
                 className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                   isSelected
-                    ? 'bg-[#181427] border-purple-500/80 text-white shadow-lg shadow-purple-950/50'
-                    : 'bg-[#0E1013] border-[#1C1F24] text-[#8A9099] hover:border-[#2A2E35] hover:text-[#E8EAED]'
+                    ? 'bg-[#F3EFF7] border-[#6B4C9A]/40 text-[#1B1B18] shadow-lg shadow-[#6B4C9A]/10'
+                    : 'bg-[#FBF9F4] border-[#ECE7DC] text-[#5E5B53] hover:border-[#D6D0C3] hover:text-[#1B1B18]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono font-bold text-purple-400">
+                  <span className="text-[10px] font-mono font-bold text-[#6B4C9A]">
                     STEP 0{s.step}
                   </span>
-                  <Icon className="w-4 h-4 opacity-80 text-purple-300" />
+                  <Icon className="w-4 h-4 opacity-80 text-[#6B4C9A]" />
                 </div>
-                <div className="text-xs font-semibold truncate text-[#F4F5F6]">{s.title}</div>
+                <div className="text-xs font-semibold truncate text-[#1B1B18]">{s.title}</div>
               </button>
             );
           })}
         </div>
       </Panel>
 
+      {/* Fig. 1: the RAG pipeline and where RAGSeal checks it */}
+      <Panel className="p-6">
+        <RagFigure />
+      </Panel>
+
       {/* Live Engine Diagnostics Strip */}
       <Panel
         title={
           <div className="flex items-center gap-2">
-            <Server className="w-4 h-4 text-teal-400" />
+            <Server className="w-4 h-4 text-[#1F6F6A]" />
             <span>Live Engine Connection</span>
           </div>
         }
@@ -232,8 +238,8 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <span className={`inline-block h-2 w-2 rounded-full ${activeHealth ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-amber-400'}`} />
-              <span className="text-xs font-mono text-[#E8EAED]">
+              <span className={`inline-block h-2 w-2 rounded-full ${activeHealth ? 'bg-[#1F7A4D] shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-[#B26B00]'}`} />
+              <span className="text-xs font-mono text-[#1B1B18]">
                 {activeHealth ? 'FastAPI Engine Active (200 OK)' : 'Engine Disconnected (Check Local Server)'}
               </span>
             </div>
@@ -258,41 +264,41 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-            <div className="p-3 rounded-xl bg-[#0E1013] border border-[#1C1F24] space-y-1">
-              <span className="text-[10px] text-[#8A9099] uppercase block">Roundtrip Latency</span>
-              <div className="text-emerald-400 font-bold text-sm flex items-center gap-1.5">
+            <div className="p-3 rounded-xl bg-[#FBF9F4] border border-[#ECE7DC] space-y-1">
+              <span className="text-[10px] text-[#5E5B53] uppercase block">Roundtrip Latency</span>
+              <div className="text-[#1F7A4D] font-bold text-sm flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5" />
                 <span>{activeHealth?.latencyMs !== undefined ? `${activeHealth.latencyMs} ms` : 'Local Host'}</span>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#0E1013] border border-[#1C1F24] space-y-1">
-              <span className="text-[10px] text-[#8A9099] uppercase block">Evaluation Mode</span>
-              <div className="text-[#F4F5F6] font-bold text-sm capitalize">
+            <div className="p-3 rounded-xl bg-[#FBF9F4] border border-[#ECE7DC] space-y-1">
+              <span className="text-[10px] text-[#5E5B53] uppercase block">Evaluation Mode</span>
+              <div className="text-[#1B1B18] font-bold text-sm capitalize">
                 {activeHealth?.evaluation_mode || 'Local Ollama'}
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#0E1013] border border-[#1C1F24] space-y-1">
-              <span className="text-[10px] text-[#8A9099] uppercase block">Generator</span>
-              <div className="text-sky-300 font-bold text-sm truncate flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5 text-sky-400" />
+            <div className="p-3 rounded-xl bg-[#FBF9F4] border border-[#ECE7DC] space-y-1">
+              <span className="text-[10px] text-[#5E5B53] uppercase block">Generator</span>
+              <div className="text-[#2F5D8A] font-bold text-sm truncate flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-[#2F5D8A]" />
                 <span>{activeHealth?.generator_model || 'llama3.2:3b'}</span>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#0E1013] border border-[#1C1F24] space-y-1">
-              <span className="text-[10px] text-[#8A9099] uppercase block">Judge Model</span>
-              <div className="text-purple-300 font-bold text-sm truncate flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5 text-purple-400" />
+            <div className="p-3 rounded-xl bg-[#FBF9F4] border border-[#ECE7DC] space-y-1">
+              <span className="text-[10px] text-[#5E5B53] uppercase block">Judge Model</span>
+              <div className="text-[#6B4C9A] font-bold text-sm truncate flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-[#6B4C9A]" />
                 <span>{activeHealth?.judge_model || 'llama3.2:3b'}</span>
               </div>
             </div>
           </div>
 
           {showHealthJson && activeHealth && (
-            <div className="p-3.5 rounded-xl bg-black/90 border border-[#1C1F24] font-mono text-[11px] text-emerald-400 overflow-x-auto">
-              <div className="text-[#8A9099] text-[10px] mb-1">// GET http://localhost:8000/api/health</div>
+            <div className="p-3.5 rounded-xl bg-[#F6F3EC] border border-[#ECE7DC] font-mono text-[11px] text-[#1F7A4D] overflow-x-auto">
+              <div className="text-[#5E5B53] text-[10px] mb-1">// GET http://localhost:8000/api/health</div>
               <pre>{JSON.stringify(activeHealth, null, 2)}</pre>
             </div>
           )}
@@ -303,7 +309,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
       <Panel
         title={
           <div className="flex items-center gap-2">
-            <GitBranch className="w-4 h-4 text-purple-400" />
+            <GitBranch className="w-4 h-4 text-[#6B4C9A]" />
             <span>Controlled Causal Replay Architecture</span>
           </div>
         }
@@ -311,43 +317,43 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
       >
         <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs font-mono">
-            <div className="p-4 rounded-xl bg-[#0E1013] border border-[#1C1F24] space-y-1.5">
-              <span className="text-[10px] text-[#8A9099] uppercase block font-semibold">Stage 1 · Evidence Seed</span>
-              <div className="font-bold text-teal-300 text-sm">Corpus &amp; Canonical Truth</div>
-              <p className="text-[11px] text-[#8A9099] font-sans leading-relaxed pt-1">
-                Documents are chunked into vector storage. Test cases include immutable canonical gold chunk IDs (<code className="text-teal-400">chk_gold</code>).
+            <div className="p-4 rounded-xl bg-[#FBF9F4] border border-[#ECE7DC] space-y-1.5">
+              <span className="text-[10px] text-[#5E5B53] uppercase block font-semibold">Stage 1 · Evidence Seed</span>
+              <div className="font-bold text-[#1F6F6A] text-sm">Corpus &amp; Canonical Truth</div>
+              <p className="text-[11px] text-[#5E5B53] font-sans leading-relaxed pt-1">
+                Documents are chunked into vector storage. Test cases include immutable canonical gold chunk IDs (<code className="text-[#1F6F6A]">chk_gold</code>).
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#0E1013] border border-[#1C1F24] space-y-1.5">
-              <span className="text-[10px] text-[#8A9099] uppercase block font-semibold">Stage 2 · Standard RAG</span>
-              <div className="font-bold text-sky-300 text-sm">Retriever &rarr; Generator</div>
-              <p className="text-[11px] text-[#8A9099] font-sans leading-relaxed pt-1">
+            <div className="p-4 rounded-xl bg-[#FBF9F4] border border-[#ECE7DC] space-y-1.5">
+              <span className="text-[10px] text-[#5E5B53] uppercase block font-semibold">Stage 2 · Standard RAG</span>
+              <div className="font-bold text-[#2F5D8A] text-sm">Retriever &rarr; Generator</div>
+              <p className="text-[11px] text-[#5E5B53] font-sans leading-relaxed pt-1">
                 Top-k chunks retrieved. If retriever omits the gold chunk or catches a distractor/stale chunk, the candidate answer is corrupted.
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#171325] border border-purple-500/50 space-y-1.5 shadow-sm shadow-purple-950/40">
-              <span className="text-[10px] text-purple-300 uppercase block font-bold">Stage 3 · Causal Replay</span>
-              <div className="font-bold text-purple-200 text-sm">Forced Gold Injection</div>
-              <p className="text-[11px] text-purple-300/90 font-sans leading-relaxed pt-1">
-                RAGSeal isolates the components: re-runs the same query with <strong className="text-white">only the gold chunk</strong> injected. Proves causality!
+            <div className="p-4 rounded-xl bg-[#F3EFF7] border border-[#6B4C9A]/40 space-y-1.5 shadow-sm shadow-[#6B4C9A]/10">
+              <span className="text-[10px] text-[#6B4C9A] uppercase block font-bold">Stage 3 · Causal Replay</span>
+              <div className="font-bold text-[#6B4C9A] text-sm">Forced Gold Injection</div>
+              <p className="text-[11px] text-[#6B4C9A] font-sans leading-relaxed pt-1">
+                RAGSeal isolates the components: re-runs the same query with <strong className="text-[#1B1B18]">only the gold chunk</strong> injected. Proves causality!
               </p>
             </div>
           </div>
 
           {/* Verdict Truth Table */}
-          <div className="rounded-xl border border-[#1C1F24] bg-[#0E1013] p-4 space-y-3">
+          <div className="rounded-xl border border-[#ECE7DC] bg-[#FBF9F4] p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-mono uppercase tracking-wider text-[#E8EAED] font-semibold">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#1B1B18] font-semibold">
                 Scientific Verdict Decision Table
               </span>
-              <span className="text-[11px] font-mono text-[#8A9099]">Proven Decoupling Logic</span>
+              <span className="text-[11px] font-mono text-[#5E5B53]">Proven Decoupling Logic</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-mono">
-                <thead className="bg-[#14171B] text-[#8A9099] uppercase text-[10px] border-b border-[#1C1F24]">
+                <thead className="bg-[#FBF9F4] text-[#5E5B53] uppercase text-[10px] border-b border-[#ECE7DC]">
                   <tr>
                     <th className="py-2.5 px-3">Gold Chunk Retrieved?</th>
                     <th className="py-2.5 px-3">Answer Faithful?</th>
@@ -356,41 +362,41 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
                     <th className="py-2.5 px-3">Engineering Remediation</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1C1F24] text-[11px]">
+                <tbody className="divide-y divide-[#ECE7DC] text-[11px]">
                   <tr>
-                    <td className="py-3 px-3 text-emerald-400">Yes (Retrieved)</td>
-                    <td className="py-3 px-3 text-emerald-400">Yes, Faithful</td>
-                    <td className="py-3 px-3 text-[#555B66]">Not needed</td>
+                    <td className="py-3 px-3 text-[#1F7A4D]">Yes (Retrieved)</td>
+                    <td className="py-3 px-3 text-[#1F7A4D]">Yes, Faithful</td>
+                    <td className="py-3 px-3 text-[#6E6A62]">Not needed</td>
                     <td className="py-3 px-3"><DiagnosticBadge category="CLEAN_PASS" size="sm" /></td>
-                    <td className="py-3 px-3 text-[#8A9099] font-sans">None. System healthy and ready to ship.</td>
+                    <td className="py-3 px-3 text-[#5E5B53] font-sans">None. System healthy and ready to ship.</td>
                   </tr>
                   <tr>
-                    <td className="py-3 px-3 text-rose-400 font-bold">No (Omitted)</td>
-                    <td className="py-3 px-3 text-[#8A9099]">n/a</td>
-                    <td className="py-3 px-3 text-emerald-400 font-bold">Fixed &amp; Correct!</td>
+                    <td className="py-3 px-3 text-[#B3261E] font-bold">No (Omitted)</td>
+                    <td className="py-3 px-3 text-[#5E5B53]">n/a</td>
+                    <td className="py-3 px-3 text-[#1F7A4D] font-bold">Fixed &amp; Correct!</td>
                     <td className="py-3 px-3"><DiagnosticBadge category="RETRIEVAL_FAILURE" size="sm" /></td>
-                    <td className="py-3 px-3 text-[#8A9099] font-sans">Improve retrieval: raise top-k, fix chunk boundaries, or rerank.</td>
+                    <td className="py-3 px-3 text-[#5E5B53] font-sans">Improve retrieval: raise top-k, fix chunk boundaries, or rerank.</td>
                   </tr>
                   <tr>
-                    <td className="py-3 px-3 text-emerald-400">Yes (Retrieved)</td>
-                    <td className="py-3 px-3 text-rose-400 font-bold">No (Fabricated)</td>
-                    <td className="py-3 px-3 text-rose-400 font-bold">Still Hallucinates</td>
+                    <td className="py-3 px-3 text-[#1F7A4D]">Yes (Retrieved)</td>
+                    <td className="py-3 px-3 text-[#B3261E] font-bold">No (Fabricated)</td>
+                    <td className="py-3 px-3 text-[#B3261E] font-bold">Still Hallucinates</td>
                     <td className="py-3 px-3"><DiagnosticBadge category="GENERATION_HALLUCINATION" size="sm" /></td>
-                    <td className="py-3 px-3 text-[#8A9099] font-sans">Lower temperature to 0.0, inject negative abstention constraint.</td>
+                    <td className="py-3 px-3 text-[#5E5B53] font-sans">Lower temperature to 0.0, inject negative abstention constraint.</td>
                   </tr>
                   <tr>
-                    <td className="py-3 px-3 text-rose-400 font-bold">No (Omitted)</td>
-                    <td className="py-3 px-3 text-rose-400 font-bold">No (Fabricated)</td>
-                    <td className="py-3 px-3 text-rose-400">Still Wrong</td>
+                    <td className="py-3 px-3 text-[#B3261E] font-bold">No (Omitted)</td>
+                    <td className="py-3 px-3 text-[#B3261E] font-bold">No (Fabricated)</td>
+                    <td className="py-3 px-3 text-[#B3261E]">Still Wrong</td>
                     <td className="py-3 px-3"><DiagnosticBadge category="COMPOUND_FAILURE" size="sm" /></td>
-                    <td className="py-3 px-3 text-[#8A9099] font-sans">Re-index corpus and enforce strict system prompt.</td>
+                    <td className="py-3 px-3 text-[#5E5B53] font-sans">Re-index corpus and enforce strict system prompt.</td>
                   </tr>
                   <tr>
-                    <td className="py-3 px-3 text-emerald-400">Yes</td>
-                    <td className="py-3 px-3 text-emerald-400">Yes</td>
-                    <td className="py-3 px-3 text-amber-400">Answer wrong</td>
+                    <td className="py-3 px-3 text-[#1F7A4D]">Yes</td>
+                    <td className="py-3 px-3 text-[#1F7A4D]">Yes</td>
+                    <td className="py-3 px-3 text-[#B26B00]">Answer wrong</td>
                     <td className="py-3 px-3"><DiagnosticBadge category="NEEDS_REVIEW" size="sm" /></td>
-                    <td className="py-3 px-3 text-[#8A9099] font-sans">Check human ground-truth label for annotation error.</td>
+                    <td className="py-3 px-3 text-[#5E5B53] font-sans">Check human ground-truth label for annotation error.</td>
                   </tr>
                 </tbody>
               </table>
@@ -404,25 +410,25 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
         <Panel
           title={
             <div className="flex items-center gap-2">
-              <span className="text-purple-400 font-mono text-xs">Step 0{activeStep}</span>
+              <span className="text-[#6B4C9A] font-mono text-xs">Step 0{activeStep}</span>
               <span>{steps[activeStep - 1].title}</span>
             </div>
           }
           note={steps[activeStep - 1].badge}
         >
           <div className="space-y-4">
-            <p className="text-sm text-[#E8EAED] font-sans leading-relaxed">
+            <p className="text-sm text-[#1B1B18] font-sans leading-relaxed">
               {steps[activeStep - 1].description}
             </p>
 
             <div className="space-y-2 pt-1">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-[#8A9099] block font-semibold">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[#5E5B53] block font-semibold">
                 Technical Guarantees &amp; Method:
               </span>
-              <ul className="space-y-2 text-xs text-[#C9CDD3] font-mono">
+              <ul className="space-y-2 text-xs text-[#33322D] font-mono">
                 {steps[activeStep - 1].details.map((detail, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 bg-[#0E1013] p-3 rounded-xl border border-[#1C1F24]">
-                    <CheckCircle2 className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
+                  <li key={idx} className="flex items-start gap-2.5 bg-[#FBF9F4] p-3 rounded-xl border border-[#ECE7DC]">
+                    <CheckCircle2 className="w-4 h-4 text-[#1F6F6A] flex-shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{detail}</span>
                   </li>
                 ))}

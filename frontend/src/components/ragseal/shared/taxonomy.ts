@@ -32,11 +32,11 @@ export const FAILURE_LABEL: Record<string, string> = Object.fromEntries(
 );
 
 export const STAGE_COLOR: Record<Stage, string> = {
-  retriever: '#F5A524',
-  generator: '#F47783',
-  both: '#F47783',
-  none: '#9AA0A8',
-  unknown: '#9AA0A8',
+  retriever: '#B26B00',
+  generator: '#B3261E',
+  both: '#B3261E',
+  none: '#6B675E',
+  unknown: '#6B675E',
 };
 
 export const STAGE_LABEL: Record<string, string> = {

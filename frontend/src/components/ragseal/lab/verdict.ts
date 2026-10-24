@@ -10,10 +10,10 @@ export type Verdict =
   | 'NEEDS_REVIEW'
   | 'UNRESOLVED';
 
-export const PASS = '#3DD68C';
-export const AMBER = '#F5A524';
-export const RED = '#F47783';
-export const GREY = '#9AA0A8';
+export const PASS = '#1F7A4D';
+export const AMBER = '#B26B00';
+export const RED = '#B3261E';
+export const GREY = '#6B675E';
 
 export type StageState = 'ok' | 'fault' | 'neutral';
 
@@ -73,7 +73,7 @@ export const VERDICTS: Record<Verdict, VerdictStyle> = {
     label: 'Not judged',
     short: 'Unjudged',
     blame: 'The grading model could not score this case; no guess was made.',
-    color: '#6B7079',
+    color: '#6E6A62',
     severity: 4,
     stages: { retriever: 'neutral', generator: 'neutral' },
   },

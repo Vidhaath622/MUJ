@@ -121,12 +121,12 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
         <section className="lab-panel rounded-2xl p-5">
           <div className="flex flex-wrap items-stretch gap-4">
             <ProfilePicker label="Base version" value={base} onChange={setBase} profiles={profiles} />
-            <div className="flex items-center text-[#5A5F67]">
+            <div className="flex items-center text-[#6E6A62]">
               <ArrowRight className="h-5 w-5" />
             </div>
             <ProfilePicker label="Candidate version" value={candidate} onChange={setCandidate} profiles={profiles} />
             <div className="ml-auto min-w-[220px]">
-              <div className="text-xs text-[#8A9099]">Question sets</div>
+              <div className="text-xs text-[#5E5B53]">Question sets</div>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {PACKS.map((p) => {
                   const on = packs.includes(p.id);
@@ -137,7 +137,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
                       aria-pressed={on}
                       className={cn(
                         'h-8 rounded-lg border px-3 text-[13px] transition-colors',
-                        on ? 'border-[#3A3E45] bg-[#1C1F24] text-white' : 'border-[#1F2228] text-[#8A9099] hover:text-[#E8EAED]'
+                        on ? 'border-[#C9C2B3] bg-[#ECE7DC] text-[#1B1B18]' : 'border-[#E3DED3] text-[#5E5B53] hover:text-[#1B1B18]'
                       )}
                     >
                       {p.label}
@@ -147,21 +147,21 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
               </div>
             </div>
           </div>
-          {base === candidate && base && <p className="mt-3 text-xs text-[#F5A524]">Pick two different versions.</p>}
+          {base === candidate && base && <p className="mt-3 text-xs text-[#B26B00]">Pick two different versions.</p>}
         </section>
       )}
 
       {running && !finished && (
         <Panel title="Running both versions…">
-          <div className="text-[13px] text-[#8A9099]">
+          <div className="text-[13px] text-[#5E5B53]">
             {result?.progress
               ? `${result.progress.done ?? 0} / ${result.progress.total ?? '—'} questions scored`
               : 'Scoring every selected question under both versions.'}
           </div>
           {result?.progress?.total ? (
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#16181C]">
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#EFEBE2]">
               <div
-                className="h-full rounded-full bg-[#F4F5F6] transition-[width] duration-700"
+                className="h-full rounded-full bg-[#1B1B18] transition-[width] duration-700"
                 style={{ width: `${((result.progress.done ?? 0) / result.progress.total) * 100}%` }}
               />
             </div>
@@ -185,7 +185,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
             ) : (
               <table className="w-full text-[13px]">
                 <thead>
-                  <tr className="border-b border-[#17191D] text-left text-xs text-[#8A9099]">
+                  <tr className="border-b border-[#E3DED3] text-left text-xs text-[#5E5B53]">
                     <th className="px-5 py-2.5 font-normal">Question</th>
                     <th className="px-3 py-2.5 font-normal">Set</th>
                     <th className="px-3 py-2.5 font-normal">Base</th>
@@ -198,14 +198,14 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
                     const bad = f.direction === 'pass_to_fail';
                     const color = bad ? RED : PASS;
                     return (
-                      <tr key={`${f.test_id}-${f.direction}`} className="border-b border-[#14161A] last:border-0">
+                      <tr key={`${f.test_id}-${f.direction}`} className="border-b border-[#FBF9F4] last:border-0">
                         <td className="max-w-[460px] px-5 py-3">
-                          <div className="truncate text-[#E8EAED]">{f.question ?? f.test_id}</div>
-                          <div className="font-mono text-[11px] text-[#6F757E]">{f.test_id}</div>
+                          <div className="truncate text-[#1B1B18]">{f.question ?? f.test_id}</div>
+                          <div className="font-mono text-[11px] text-[#6E6A62]">{f.test_id}</div>
                         </td>
-                        <td className="px-3 py-3 text-[#8A9099]">{PACK_LABEL[f.pack_id ?? ''] ?? f.pack_id ?? '—'}</td>
-                        <td className="px-3 py-3 text-[#C9CDD3]">{f.base_verdict ? failureLabel(f.base_verdict) : '—'}</td>
-                        <td className="px-3 py-3 text-[#C9CDD3]">{f.candidate_verdict ? failureLabel(f.candidate_verdict) : '—'}</td>
+                        <td className="px-3 py-3 text-[#5E5B53]">{PACK_LABEL[f.pack_id ?? ''] ?? f.pack_id ?? '—'}</td>
+                        <td className="px-3 py-3 text-[#33322D]">{f.base_verdict ? failureLabel(f.base_verdict) : '—'}</td>
+                        <td className="px-3 py-3 text-[#33322D]">{f.candidate_verdict ? failureLabel(f.candidate_verdict) : '—'}</td>
                         <td className="px-5 py-3 text-right">
                           <span
                             className="rounded-full px-2.5 py-1 text-xs font-medium"
@@ -236,11 +236,11 @@ const ProfilePicker: React.FC<{
   const p = profiles.find((x) => x.id === value);
   return (
     <label className="block min-w-[240px] flex-1">
-      <span className="text-xs text-[#8A9099]">{label}</span>
+      <span className="text-xs text-[#5E5B53]">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 h-9 w-full rounded-[9px] border border-[#22252B] bg-[#08090B] px-3 text-[13px] text-[#E8EAED] focus:border-[#3A3E45] focus:outline-none"
+        className="mt-1.5 h-9 w-full rounded-[9px] border border-[#D6D0C3] bg-[#F6F3EC] px-3 text-[13px] text-[#1B1B18] focus:border-[#C9C2B3] focus:outline-none"
       >
         {profiles.map((x) => (
           <option key={x.id} value={x.id}>
@@ -248,7 +248,7 @@ const ProfilePicker: React.FC<{
           </option>
         ))}
       </select>
-      <span className="mt-1.5 block truncate text-xs text-[#8A9099]">
+      <span className="mt-1.5 block truncate text-xs text-[#5E5B53]">
         {p?.description ??
           (p?.params
             ? Object.entries(p.params)
@@ -267,11 +267,16 @@ const Verdict: React.FC<{ r: CompareResult; regressions: number; fixes: number }
   const worse = meaningful && delta != null && delta < 0;
   const better = meaningful && delta != null && delta > 0;
   const color = worse ? RED : better ? PASS : AMBER;
-  const headline = r.verdict ?? (worse ? 'Meaningful regression' : better ? 'Meaningful improvement' : 'No meaningful difference');
+  const VERDICT_TEXT: Record<string, string> = {
+    REGRESSION: 'Meaningful regression',
+    IMPROVEMENT: 'Meaningful improvement',
+    NO_MEANINGFUL_CHANGE: 'No meaningful difference',
+  };
+  const headline = (r.verdict && VERDICT_TEXT[r.verdict]) ?? (worse ? 'Meaningful regression' : better ? 'Meaningful improvement' : 'No meaningful difference');
   return (
     <section
       className="lab-fade-up rounded-2xl border p-6"
-      style={{ borderColor: tint(color, 0.3), background: `linear-gradient(180deg, ${tint(color, 0.06)}, ${tint(color, 0.015)}), #0D0E11` }}
+      style={{ borderColor: tint(color, 0.3), background: `linear-gradient(0deg, ${tint(color, 0.04)}, ${tint(color, 0.04)}), #FBF9F4` }}
     >
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
@@ -281,7 +286,7 @@ const Verdict: React.FC<{ r: CompareResult; regressions: number; fixes: number }
           <div className="mt-1.5 text-[36px] font-semibold leading-none tracking-[-0.035em]" style={{ color }}>
             {headline}
           </div>
-          <p className="mt-3 max-w-[56ch] text-[13px] leading-relaxed text-[#B4B9C0]">
+          <p className="mt-3 max-w-[56ch] text-[13px] leading-relaxed text-[#33322D]">
             {regressions} question{regressions === 1 ? '' : 's'} went from pass to fail and {fixes} from fail to pass.{' '}
             {meaningful
               ? 'The change is larger than chance would explain on this many questions.'

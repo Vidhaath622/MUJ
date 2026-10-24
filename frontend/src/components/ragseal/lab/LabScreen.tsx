@@ -76,7 +76,7 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) 
         <div
           aria-hidden
           className="pointer-events-none absolute -top-24 left-[30%] right-0 h-[420px] transition-[background] duration-700"
-          style={{ background: `radial-gradient(60% 100% at 60% 0%, ${tint(glow, 0.07)}, transparent 70%)` }}
+          style={{ background: 'transparent' }}
         />
       )}
 
@@ -92,11 +92,11 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) 
 
         <div className="lab-panel-flat flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
           <div className="flex items-baseline justify-between px-4 pb-2.5 pt-3.5 text-xs">
-            <h3 className="font-medium text-[#C9CDD3]">Test questions</h3>
-            <span className="text-[#8A9099]">failures first</span>
+            <h3 className="font-medium text-[#33322D]">Test questions</h3>
+            <span className="text-[#5E5B53]">failures first</span>
           </div>
           <ul className="min-h-0 flex-1 overflow-y-auto pb-1">
-            {lab.loading && <li className="px-4 py-3 text-sm text-[#8A9099]">Loading pack…</li>}
+            {lab.loading && <li className="px-4 py-3 text-sm text-[#5E5B53]">Loading pack…</li>}
             {sorted.map((c) => (
               <CaseRow key={c.test_id} c={c} active={c.test_id === selected} onClick={() => pick(c.test_id)} />
             ))}
@@ -114,9 +114,9 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) 
 
       <main className="relative flex min-h-0 flex-col gap-3">
         {lab.error && (
-          <div className="flex items-start justify-between gap-3 rounded-xl border border-[#F47783]/40 bg-[#F47783]/10 px-4 py-2.5 text-sm text-[#F9B8BF]">
+          <div className="flex items-start justify-between gap-3 rounded-xl border border-[#B3261E]/40 bg-[#B3261E]/10 px-4 py-2.5 text-sm text-[#8E1F18]">
             <span>{lab.error}</span>
-            <button onClick={lab.clearError} className="text-[#F47783] hover:text-white">
+            <button onClick={lab.clearError} className="text-[#B3261E] hover:text-[#1B1B18]">
               Dismiss
             </button>
           </div>
@@ -163,12 +163,12 @@ function severity(c: LabCase): number {
 
 const CaseRow: React.FC<{ c: LabCase; active: boolean; onClick: () => void }> = ({ c, active, onClick }) => {
   const v = c.result ? verdictStyle(verdictOf(c)) : null;
-  const color = v?.color ?? '#3A3E45';
+  const color = v?.color ?? '#C9C2B3';
   return (
     <li>
       <button
         onClick={onClick}
-        className="flex w-full items-start gap-3 border-l-2 px-4 py-2 text-left transition-colors hover:bg-white/[0.02]"
+        className="flex w-full items-start gap-3 border-l-2 px-4 py-2 text-left transition-colors hover:bg-[#1B1B18]/[0.02]"
         style={{
           borderLeftColor: active ? color : 'transparent',
           background: active ? `linear-gradient(90deg, ${tint(v?.color ?? AMBER, 0.09)}, transparent)` : undefined,
@@ -176,10 +176,10 @@ const CaseRow: React.FC<{ c: LabCase; active: boolean; onClick: () => void }> = 
       >
         <span className="mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full" style={{ background: color }} />
         <span className="min-w-0 flex-1">
-          <span className={cn('block truncate text-[13px] leading-snug', active ? 'text-white' : 'text-[#B4B9C0]')}>
+          <span className={cn('block truncate text-[13px] leading-snug', active ? 'text-[#1B1B18]' : 'text-[#33322D]')}>
             {c.question}
           </span>
-          <span className="mt-0.5 flex flex-wrap gap-x-2 whitespace-nowrap text-[11px] text-[#7D838C]">
+          <span className="mt-0.5 flex flex-wrap gap-x-2 whitespace-nowrap text-[11px] text-[#5E5B53]">
             <span className="font-mono">{c.test_id}</span>
             {v && (
               <span style={{ color: v.color }}>
@@ -212,15 +212,15 @@ const PackSummary: React.FC<{
   return (
     <section className="lab-panel rounded-2xl p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="text-xs text-[#8A9099]">
+        <div className="text-xs text-[#5E5B53]">
           {packName}{packName.endsWith('set') ? '' : ' pack'} · {total} questions
         </div>
       </div>
       <div className="mt-2.5 flex items-baseline gap-2.5">
-        <span className="text-[52px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-white">
+        <span className="text-[52px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-[#1B1B18]">
           <CountUp key={run?.batch_id} value={run?.aggregates?.pass_rate} />
         </span>
-        <span className="text-[13px] text-[#8A9099]">{run ? 'answered accurately' : 'no run yet'}</span>
+        <span className="text-[13px] text-[#5E5B53]">{run ? 'answered accurately' : 'no run yet'}</span>
       </div>
 
       {n > 0 && (
@@ -241,7 +241,7 @@ const PackSummary: React.FC<{
               </span>
             ))}
           </div>
-          <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-[#1A1D22] pt-3.5">
+          <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-[#E3DED3] pt-3.5">
             <Stat label="Retriever" value={run?.aggregates?.avg_context_relevance} />
             <Stat label="Generator" value={run?.aggregates?.avg_faithfulness} />
             <Stat label="Accuracy" value={run?.aggregates?.avg_answer_accuracy} />
@@ -253,19 +253,19 @@ const PackSummary: React.FC<{
       <button
         onClick={onRun}
         disabled={running || !total}
-        className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-[9px] bg-[#F4F5F6] text-[13px] font-semibold text-[#0A0B0D] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[#1C1F24] disabled:text-[#8A9099]"
+        className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-[9px] bg-[#1B1B18] text-[13px] font-semibold text-[#F6F3EC] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[#ECE7DC] disabled:text-[#5E5B53]"
       >
         {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3 fill-current" />}
         {running ? `Scoring ${total} questions · ${elapsed}s` : run ? 'Re-run pack' : 'Run pack'}
       </button>
       )}
       {running && (
-        <p className="mt-2 text-[11px] leading-snug text-[#8A9099]">
+        <p className="mt-2 text-[11px] leading-snug text-[#5E5B53]">
           About 10 s a question the first time; repeat runs take seconds.
         </p>
       )}
       {!running && run?.judge_model && (
-        <p className="mt-2.5 truncate text-[11px] text-[#7D838C]">
+        <p className="mt-2.5 truncate text-[11px] text-[#5E5B53]">
           Graded by <span className="font-mono">{run.judge_model.split('/').pop()}</span> · {pct(run.gold_retrieval_rate)} of questions got the right text
         </p>
       )}
@@ -275,8 +275,8 @@ const PackSummary: React.FC<{
 
 const Stat: React.FC<{ label: string; value: number | null | undefined }> = ({ label, value }) => (
   <div>
-    <dt className="text-[11px] text-[#8A9099]">{label}</dt>
-    <dd className="mt-0.5 text-[17px] font-medium tabular-nums text-[#E8EAED]">
+    <dt className="text-[11px] text-[#5E5B53]">{label}</dt>
+    <dd className="mt-0.5 text-[17px] font-medium tabular-nums text-[#1B1B18]">
       <CountUp value={value} />
     </dd>
   </div>
@@ -289,8 +289,8 @@ const AskBox: React.FC<{ busy: boolean; disabled: boolean; onAsk: (q: string) =>
     if (query && !busy) onAsk(query);
   };
   return (
-    <div className="border-t border-[#1A1D22] p-3">
-      <label className="flex h-10 items-center gap-2.5 rounded-[10px] border border-[#22252B] bg-[#08090B] px-3 transition-colors focus-within:border-[#3A3E45]">
+    <div className="border-t border-[#E3DED3] p-3">
+      <label className="flex h-10 items-center gap-2.5 rounded-[10px] border border-[#D6D0C3] bg-[#F6F3EC] px-3 transition-colors focus-within:border-[#C9C2B3]">
         <span className="sr-only">Ask your own question</span>
         <input
           value={q}
@@ -298,16 +298,16 @@ const AskBox: React.FC<{ busy: boolean; disabled: boolean; onAsk: (q: string) =>
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           disabled={disabled}
           placeholder="Ask your own question…"
-          className="h-full flex-1 bg-transparent text-[13px] text-[#E8EAED] placeholder:text-[#7D838C] focus:outline-none"
+          className="h-full flex-1 bg-transparent text-[13px] text-[#1B1B18] placeholder:text-[#5E5B53] focus:outline-none"
         />
         {busy ? (
-          <Loader2 className="h-4 w-4 animate-spin text-[#8A9099]" />
+          <Loader2 className="h-4 w-4 animate-spin text-[#5E5B53]" />
         ) : (
           <button
             onClick={submit}
             disabled={disabled || !q.trim()}
             aria-label="Evaluate question"
-            className="rounded-[5px] border border-[#22252B] px-1.5 font-mono text-[11px] text-[#8A9099] hover:text-white disabled:opacity-50"
+            className="rounded-[5px] border border-[#D6D0C3] px-1.5 font-mono text-[11px] text-[#5E5B53] hover:text-[#1B1B18] disabled:opacity-50"
           >
             ↵
           </button>
@@ -318,7 +318,7 @@ const AskBox: React.FC<{ busy: boolean; disabled: boolean; onAsk: (q: string) =>
 };
 
 const Centered: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-[#1A1D22] text-sm text-[#8A9099]">
+  <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-[#E3DED3] text-sm text-[#5E5B53]">
     {children}
   </div>
 );

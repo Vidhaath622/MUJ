@@ -138,8 +138,8 @@ export const App: React.FC = () => {
           <div className="h-full px-6 py-5">
             <TopBarControls>
               {openBatch && (
-                <button onClick={() => go('diagnose')} className="text-xs text-[#8A9099] hover:text-white">
-                  Viewing run <span className="font-mono text-[#C9CDD3]">{openBatch}</span> · show latest
+                <button onClick={() => go('diagnose')} className="text-xs text-[#5E5B53] hover:text-[#1B1B18]">
+                  Viewing run <span className="font-mono text-[#33322D]">{openBatch}</span> · show latest
                 </button>
               )}
               <PackSwitcher

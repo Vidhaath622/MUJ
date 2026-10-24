@@ -4,18 +4,18 @@ import { cn } from '../../lib/utils';
 import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98]',
+  'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5D8A]/40 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98]',
   {
     variants: {
       variant: {
-        default: 'bg-white text-black hover:bg-neutral-200 shadow-sm font-semibold',
-        primary: 'bg-sky-600 text-white hover:bg-sky-500 shadow-md shadow-sky-600/20',
-        secondary: 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700 border border-neutral-700',
-        outline: 'border border-neutral-700 text-neutral-300 hover:bg-neutral-800/80 hover:text-white',
-        ghost: 'text-neutral-400 hover:text-white hover:bg-neutral-800/60',
-        destructive: 'bg-rose-600/90 text-white hover:bg-rose-600 shadow-md shadow-rose-900/30',
-        glow: 'relative bg-gradient-to-r from-sky-500 to-indigo-600 text-white hover:from-sky-400 hover:to-indigo-500 shadow-lg shadow-sky-500/25 border border-sky-400/30',
-        shine: 'relative overflow-hidden bg-neutral-900 border border-neutral-700 text-white hover:border-neutral-500 before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent',
+        default: 'bg-white text-black hover:bg-[#D6D0C3] shadow-sm font-semibold',
+        primary: 'bg-[#2F5D8A] text-[#1B1B18] hover:bg-[#2F5D8A] shadow-md shadow-[#2F5D8A]/10',
+        secondary: 'bg-[#FBF9F4] text-[#1B1B18] hover:bg-[#E3DED3] border border-[#E3DED3]',
+        outline: 'border border-[#E3DED3] text-[#33322D] hover:bg-[#FBF9F4] hover:text-[#1B1B18]',
+        ghost: 'text-[#5E5B53] hover:text-[#1B1B18] hover:bg-[#FBF9F4]',
+        destructive: 'bg-[#B3261E] text-[#1B1B18] hover:bg-[#B3261E] shadow-md shadow-[#B3261E]/10',
+        glow: 'relative bg-gradient-to-r from-[#2F5D8A] to-[#2F5D8A] text-[#1B1B18] hover:from-[#2F5D8A] hover:to-[#2F5D8A] shadow-lg shadow-[#2F5D8A]/10 border border-[#2F5D8A]/40',
+        shine: 'relative overflow-hidden bg-[#FBF9F4] border border-[#E3DED3] text-[#1B1B18] hover:border-[#D6D0C3] before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent',
       },
       size: {
         xs: 'h-7 px-2.5 text-xs rounded-md',

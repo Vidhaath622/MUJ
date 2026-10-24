@@ -24,9 +24,9 @@ interface Persona {
 }
 
 const PERSONAS: Persona[] = [
-  { pack: 'banking', org: 'Harbor Ridge Bank', role: 'Fees & accounts assistant', initials: 'HR', accent: '#5BA8FF' },
-  { pack: 'recruitment', org: 'Northwind Talent', role: 'HR policy assistant', initials: 'NT', accent: '#B48CFF' },
-  { pack: 'healthcare', org: 'Mercy Vale General Hospital', role: 'Patient help desk', initials: 'MV', accent: '#2DD4BF' },
+  { pack: 'banking', org: 'Harbor Ridge Bank', role: 'Fees & accounts assistant', initials: 'HR', accent: '#2F5D8A' },
+  { pack: 'recruitment', org: 'Northwind Talent', role: 'HR policy assistant', initials: 'NT', accent: '#6B4C9A' },
+  { pack: 'healthcare', org: 'Mercy Vale General Hospital', role: 'Patient help desk', initials: 'MV', accent: '#1F6F6A' },
 ];
 
 const TRAP: Record<string, { badge: string; teaser: string }> = {
@@ -154,7 +154,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
     <div className="flex h-full min-h-0">
       {/* Chat */}
       <section className="flex min-w-0 flex-[55] flex-col">
-        <div className="flex items-center gap-2 border-b border-[#17191D] px-5 py-3">
+        <div className="flex items-center gap-2 border-b border-[#E3DED3] px-5 py-3">
           {PERSONAS.map((p) => {
             const active = p.pack === botPack;
             return (
@@ -166,7 +166,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                 }}
                 className={cn(
                   'flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-[13px] transition-colors',
-                  active ? 'text-white' : 'border-transparent text-[#8A9099] hover:text-[#E8EAED]'
+                  active ? 'text-[#1B1B18]' : 'border-transparent text-[#5E5B53] hover:text-[#1B1B18]'
                 )}
                 style={active ? { borderColor: `${p.accent}66`, background: `${p.accent}14` } : undefined}
               >
@@ -185,18 +185,18 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
             <div className="flex items-center gap-3.5">
               <Avatar persona={persona} size={44} />
               <div className="min-w-0">
-                <div className="text-[17px] font-semibold tracking-[-0.01em] text-white">{persona.org}</div>
-                <div className="flex items-center gap-2 text-xs text-[#8A9099]">
+                <div className="text-[17px] font-semibold tracking-[-0.01em] text-[#1B1B18]">{persona.org}</div>
+                <div className="flex items-center gap-2 text-xs text-[#5E5B53]">
                   {persona.role}
-                  <span className="h-1 w-1 rounded-full bg-[#3A3E45]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#3DD68C]" />
+                  <span className="h-1 w-1 rounded-full bg-[#C9C2B3]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#1F7A4D]" />
                   {pack ? `Online · reads ${pack.documents.length} documents` : 'Connecting…'}
                 </div>
               </div>
             </div>
 
             {example === undefined && !userTurns.length && (
-              <div className="flex items-center gap-2 text-[13px] text-[#8A9099]">
+              <div className="flex items-center gap-2 text-[13px] text-[#5E5B53]">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading a real exchange from the latest test…
               </div>
             )}
@@ -204,8 +204,8 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
             {turns.map((t) => (
               <React.Fragment key={t.id}>
                 {t.example && (
-                  <div className="-mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[#6F757E]">
-                    <span className="h-px flex-1 bg-[#1A1D22]" /> From the latest test run <span className="h-px flex-1 bg-[#1A1D22]" />
+                  <div className="-mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[#6E6A62]">
+                    <span className="h-px flex-1 bg-[#E3DED3]" /> From the latest test run <span className="h-px flex-1 bg-[#E3DED3]" />
                   </div>
                 )}
                 <TurnView
@@ -220,7 +220,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                   }}
                 />
                 {t.example && (
-                  <div className="mt-1 flex items-center gap-2 text-[13px] font-medium text-[#C9CDD3]">
+                  <div className="mt-1 flex items-center gap-2 text-[13px] font-medium text-[#33322D]">
                     Try it yourself <span aria-hidden="true">↓</span>
                   </div>
                 )}
@@ -229,7 +229,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
 
             {tricks.length > 0 && !busy && (
               <div>
-                <div className="mb-2 text-[13px] font-semibold text-white">Can you trick it?</div>
+                <div className="mb-2 text-[13px] font-semibold text-[#1B1B18]">Can you trick it?</div>
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                   {tricks.map((c) => {
                     const trap = TRAP[c.type ?? ''] ?? { badge: 'Trick', teaser: '' };
@@ -237,7 +237,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                       <button
                         key={c.test_id}
                         onClick={() => ask(c.question, c)}
-                        className="group flex flex-col gap-2 rounded-xl border border-[#1F2228] bg-[#0D0E11] p-3 text-left transition-colors hover:border-[#2F333A] hover:bg-[#111317]"
+                        className="group flex flex-col gap-2 rounded-xl border border-[#E3DED3] bg-[#FBF9F4] p-3 text-left transition-colors hover:border-[#D6D0C3] hover:bg-[#FBF9F4]"
                       >
                         <span
                           className="self-start rounded-full px-2 py-0.5 text-[10.5px] font-medium"
@@ -245,8 +245,8 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                         >
                           {trap.badge}
                         </span>
-                        <span className="line-clamp-3 text-[13px] leading-snug text-[#E8EAED]">{c.question}</span>
-                        <span className="text-[11px] leading-snug text-[#6F757E]">{trap.teaser}</span>
+                        <span className="line-clamp-3 text-[13px] leading-snug text-[#1B1B18]">{c.question}</span>
+                        <span className="text-[11px] leading-snug text-[#6E6A62]">{trap.teaser}</span>
                       </button>
                     );
                   })}
@@ -256,7 +256,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
           </div>
         </div>
 
-        <div className="border-t border-[#17191D] px-6 py-3.5">
+        <div className="border-t border-[#E3DED3] px-6 py-3.5">
           <form
             className="mx-auto flex max-w-[760px] items-center gap-3"
             onSubmit={(e) => {
@@ -264,21 +264,21 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
               ask(draft);
             }}
           >
-            <label className="flex h-11 flex-1 items-center rounded-xl border border-[#22252B] bg-[#0D0E11] px-4 focus-within:border-[#3A3E45]">
+            <label className="flex h-11 flex-1 items-center rounded-xl border border-[#D6D0C3] bg-[#FBF9F4] px-4 focus-within:border-[#C9C2B3]">
               <span className="sr-only">Message {persona.org}</span>
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 disabled={!pack}
                 placeholder={`Ask ${persona.org} anything…`}
-                className="h-10 flex-1 bg-transparent text-[14px] text-[#E8EAED] placeholder:text-[#6F757E] focus:outline-none"
+                className="h-10 flex-1 bg-transparent text-[14px] text-[#1B1B18] placeholder:text-[#6E6A62] focus:outline-none"
               />
             </label>
             <button
               type="submit"
               disabled={!draft.trim() || busy || !pack}
               aria-label="Send"
-              className="flex h-11 w-11 items-center justify-center rounded-xl text-[#0A0B0D] transition-opacity disabled:opacity-30"
+              className="flex h-11 w-11 items-center justify-center rounded-xl text-[#F6F3EC] transition-opacity disabled:opacity-30"
               style={{ background: persona.accent }}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
@@ -288,14 +288,14 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
       </section>
 
       {/* X-ray */}
-      <aside className="flex min-w-0 flex-[45] flex-col border-l border-[#17191D] bg-[#0A0B0D]">
-        <div className="flex items-center justify-between border-b border-[#17191D] px-5 py-3.5">
+      <aside className="flex min-w-0 flex-[45] flex-col border-l border-[#E3DED3] bg-[#F6F3EC]">
+        <div className="flex items-center justify-between border-b border-[#E3DED3] px-5 py-3.5">
           <div>
-            <div className="text-[13px] font-semibold text-white">X-ray of this reply</div>
-            <div className="text-[11px] text-[#8A9099]">What the bot read, three checks, and who is to blame</div>
+            <div className="text-[13px] font-semibold text-[#1B1B18]">X-ray of this reply</div>
+            <div className="text-[11px] text-[#5E5B53]">What the bot read, three checks, and who is to blame</div>
           </div>
           {xrayTurn?.example && (
-            <span className="rounded-full border border-[#2A2E35] px-2 py-0.5 text-[10.5px] text-[#9AA0A8]">From the latest test run</span>
+            <span className="rounded-full border border-[#D6D0C3] px-2 py-0.5 text-[10.5px] text-[#6B675E]">From the latest test run</span>
           )}
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -304,7 +304,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
           ) : xrayTurn.pending ? (
             <XrayPending />
           ) : xrayTurn.error ? (
-            <p className="text-[13px] text-[#F9B8BF]">{xrayTurn.error}</p>
+            <p className="text-[13px] text-[#8E1F18]">{xrayTurn.error}</p>
           ) : xrayTurn.result ? (
             <Xray
               key={xrayTurn.id}
@@ -330,7 +330,7 @@ const Avatar: React.FC<{ persona: Persona; size: number }> = ({ persona, size })
       height: size,
       fontSize: size * 0.38,
       color: persona.accent,
-      background: `radial-gradient(circle at 30% 25%, ${persona.accent}38, ${persona.accent}12)`,
+      background: `${persona.accent}1A`,
       boxShadow: `inset 0 0 0 1px ${persona.accent}55`,
     }}
   >
@@ -358,20 +358,20 @@ const TurnView: React.FC<{
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex justify-end">
-        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-[#1C1F24] px-4 py-2.5 text-[14px] leading-relaxed text-[#F4F5F6]">
+        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-[#ECE7DC] px-4 py-2.5 text-[14px] leading-relaxed text-[#1B1B18]">
           {turn.question}
         </div>
       </div>
       <div className="flex items-end gap-2.5">
         <Avatar persona={persona} size={28} />
         {turn.pending ? (
-          <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-[#1F2228] bg-[#111317] px-4 py-3.5" aria-label="Typing">
+          <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-[#E3DED3] bg-[#FBF9F4] px-4 py-3.5" aria-label="Typing">
             {[0, 1, 2].map((i) => (
-              <span key={i} className="typing-dot h-1.5 w-1.5 rounded-full bg-[#9AA0A8]" style={{ animationDelay: `${i * 160}ms` }} />
+              <span key={i} className="typing-dot h-1.5 w-1.5 rounded-full bg-[#6B675E]" style={{ animationDelay: `${i * 160}ms` }} />
             ))}
           </div>
         ) : turn.error ? (
-          <div className="rounded-2xl rounded-bl-md border border-[#F47783]/40 bg-[#F47783]/10 px-4 py-2.5 text-[13px] text-[#F9B8BF]">
+          <div className="rounded-2xl rounded-bl-md border border-[#B3261E]/40 bg-[#B3261E]/10 px-4 py-2.5 text-[13px] text-[#8E1F18]">
             Couldn’t answer: {turn.error}
           </div>
         ) : (
@@ -379,12 +379,12 @@ const TurnView: React.FC<{
             onClick={onSelect}
             className={cn(
               'max-w-[86%] rounded-2xl rounded-bl-md border px-4 py-3 text-left transition-colors',
-              selected ? 'bg-[#14161A]' : 'border-[#1F2228] bg-[#111317] hover:border-[#2A2E35]'
+              selected ? 'bg-[#FBF9F4]' : 'border-[#E3DED3] bg-[#FBF9F4] hover:border-[#D6D0C3]'
             )}
             style={selected && v ? { borderColor: `${v.color}66` } : undefined}
           >
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[#F4F5F6]">
-              {(r?.generated_answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '') || <span className="text-[#8A9099]">No answer.</span>}
+            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[#1B1B18]">
+              {(r?.generated_answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '') || <span className="text-[#5E5B53]">No answer.</span>}
             </p>
             {r && (
               <span className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -398,7 +398,7 @@ const TurnView: React.FC<{
                       onCite(chunk.chunk_id);
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && onCite(chunk.chunk_id)}
-                    className="rounded-md border border-[#2A2E35] px-1.5 py-0.5 text-[11px] text-[#9AA0A8] hover:border-[#3A3E45] hover:text-white"
+                    className="rounded-md border border-[#D6D0C3] px-1.5 py-0.5 text-[11px] text-[#6B675E] hover:border-[#C9C2B3] hover:text-[#1B1B18]"
                   >
                     [{n}] {chunk.filename ?? filenames[chunk.document_id ?? ''] ?? 'document'}
                   </span>
@@ -459,32 +459,32 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
               className={cn('xray-in rounded-xl border px-3 py-2.5 transition-shadow', highlight === c.chunk_id && 'ring-2 ring-white/40')}
               style={{
                 animationDelay: `${i * 110}ms`,
-                borderColor: color ? `${color}66` : '#1F2228',
-                background: color ? `${color}0F` : '#0D0E11',
+                borderColor: color ? `${color}66` : '#E3DED3',
+                background: color ? `${color}0F` : '#FBF9F4',
               }}
             >
               <div className="flex items-center gap-2 text-[11px]">
-                <span className="font-mono text-[#6F757E]">[{n}]</span>
-                <span className="truncate text-[#C9CDD3]">{c.filename ?? filenames[c.document_id ?? ''] ?? 'document'}</span>
+                <span className="font-mono text-[#6E6A62]">[{n}]</span>
+                <span className="truncate text-[#33322D]">{c.filename ?? filenames[c.document_id ?? ''] ?? 'document'}</span>
                 <span className="ml-auto flex shrink-0 items-center gap-1.5">
-                  {used && <span className="text-[#9AA0A8]">bot used it</span>}
-                  <span className="rounded-full px-1.5 py-0.5" style={color ? { background: `${color}22`, color } : { color: '#8A9099' }}>
+                  {used && <span className="text-[#6B675E]">bot used it</span>}
+                  <span className="rounded-full px-1.5 py-0.5" style={color ? { background: `${color}22`, color } : { color: '#5E5B53' }}>
                     {tag}
                   </span>
                 </span>
               </div>
-              <p className="mt-1.5 line-clamp-3 text-[12.5px] leading-relaxed text-[#B4B9C0]">
+              <p className="mt-1.5 line-clamp-3 text-[12.5px] leading-relaxed text-[#33322D]">
                 {c.text.replace(/^#+\s.*\n+/, '').replace(/\s*\n+\s*/g, ' ')}
               </p>
             </div>
           ))}
-          {hidden > 0 && <p className="text-[11px] text-[#6F757E]">+ {hidden} unrelated passage{hidden === 1 ? '' : 's'} hidden</p>}
+          {hidden > 0 && <p className="text-[11px] text-[#6E6A62]">+ {hidden} unrelated passage{hidden === 1 ? '' : 's'} hidden</p>}
         </div>
       </section>
 
       <section>
         <SectionLabel n={2}>Three checks</SectionLabel>
-        <ul className="mt-2 divide-y divide-[#17191D] rounded-xl border border-[#1F2228] bg-[#0D0E11]">
+        <ul className="mt-2 divide-y divide-[#E3DED3] rounded-xl border border-[#E3DED3] bg-[#FBF9F4]">
           {checks.map(([label, tech, score, threshold], i) => {
             const ok = score == null ? null : score >= threshold;
             return (
@@ -495,10 +495,10 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
               >
                 <span
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: ok == null ? '#1C1F24' : ok ? `${PASS}22` : `${RED}22` }}
+                  style={{ background: ok == null ? '#ECE7DC' : ok ? `${PASS}22` : `${RED}22` }}
                 >
                   {ok == null ? (
-                    <Minus className="h-3.5 w-3.5 text-[#6F757E]" />
+                    <Minus className="h-3.5 w-3.5 text-[#6E6A62]" />
                   ) : ok ? (
                     <Check className="h-3.5 w-3.5" style={{ color: PASS }} />
                   ) : (
@@ -506,10 +506,10 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] text-[#E8EAED]">{label}</span>
-                  <span className="block text-[10.5px] text-[#6F757E]">{ok == null ? 'no known answer to compare' : tech}</span>
+                  <span className="block text-[13px] text-[#1B1B18]">{label}</span>
+                  <span className="block text-[10.5px] text-[#6E6A62]">{ok == null ? 'no known answer to compare' : tech}</span>
                 </span>
-                <span className="text-[15px] font-semibold tabular-nums" style={{ color: ok == null ? '#6F757E' : ok ? PASS : RED }}>
+                <span className="text-[15px] font-semibold tabular-nums" style={{ color: ok == null ? '#6E6A62' : ok ? PASS : RED }}>
                   {pct(score)}
                 </span>
               </li>
@@ -520,36 +520,36 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
 
       <section className="stamp-land" style={{ animationDelay: `${base + 900}ms` }}>
         <SectionLabel n={3}>Verdict</SectionLabel>
-        <div className="mt-2 rounded-xl border-2 px-4 py-3" style={{ borderColor: `${v.color}88`, background: `${v.color}12` }}>
-          <div className="text-[22px] font-semibold tracking-[-0.02em]" style={{ color: v.color }}>
+        <div className="mt-2 rounded-xl border px-4 py-3" style={{ borderColor: `${v.color}55`, background: '#FBF9F4' }}>
+          <div className="stamp my-1 text-[17px] leading-none" style={{ color: v.color }}>
             {v.label}
           </div>
-          <p className="mt-1 text-[13px] leading-relaxed text-[#C9CDD3]">{r.root_cause?.summary ?? v.blame}</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-[#33322D]">{r.root_cause?.summary ?? v.blame}</p>
         </div>
       </section>
 
       {replay && (
         <section className="xray-in" style={{ animationDelay: `${base + 1300}ms` }}>
           <SectionLabel n={4}>Replay: the proof</SectionLabel>
-          <div className="mt-2 rounded-xl border border-[#23262C] bg-[#111317] px-4 py-3">
-            <div className="flex items-center gap-2 text-[12px] text-[#9AA0A8]">
+          <div className="mt-2 rounded-xl border border-[#D6D0C3] bg-[#FBF9F4] px-4 py-3">
+            <div className="flex items-center gap-2 text-[12px] text-[#6B675E]">
               With only the right text
               <ArrowRight className="h-3 w-3" />
               <span className="font-medium" style={{ color: fixed ? PASS : RED }}>
                 {fixed ? 'fixed' : 'still wrong'} ({pct(replay.answer_accuracy)})
               </span>
             </div>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-[#E8EAED]">
+            <p className="mt-1.5 text-[13px] leading-relaxed text-[#1B1B18]">
               {(replay.answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '')}
             </p>
-            <p className="mt-1.5 text-[11.5px] text-[#8A9099]">
+            <p className="mt-1.5 text-[11.5px] text-[#5E5B53]">
               {fixed ? 'So the retriever caused it: the bot was fine once it had the right text.' : 'So the bot is at fault: even the right text didn’t help.'}
             </p>
           </div>
         </section>
       )}
 
-      <button onClick={onOpen} className="flex items-center gap-1.5 self-start text-[13px] font-medium text-white hover:underline">
+      <button onClick={onOpen} className="flex items-center gap-1.5 self-start text-[13px] font-medium text-[#1B1B18] hover:underline">
         Open full diagnosis <ArrowRight className="h-3.5 w-3.5" />
       </button>
     </div>
@@ -557,8 +557,8 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
 };
 
 const SectionLabel: React.FC<{ n: number; children: React.ReactNode }> = ({ n, children }) => (
-  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-[#8A9099]">
-    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[#2A2E35] font-mono text-[9.5px] text-[#C9CDD3]">{n}</span>
+  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-[#5E5B53]">
+    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[#D6D0C3] font-mono text-[9.5px] text-[#33322D]">{n}</span>
     {children}
   </div>
 );
@@ -566,7 +566,7 @@ const SectionLabel: React.FC<{ n: number; children: React.ReactNode }> = ({ n, c
 const XrayPending: React.FC = () => (
   <div className="flex flex-col gap-3">
     {['Finding the text to read…', 'Writing the answer…', 'Checking it three ways…'].map((s, i) => (
-      <div key={s} className="xray-in flex items-center gap-2.5 text-[13px] text-[#8A9099]" style={{ animationDelay: `${i * 600}ms` }}>
+      <div key={s} className="xray-in flex items-center gap-2.5 text-[13px] text-[#5E5B53]" style={{ animationDelay: `${i * 600}ms` }}>
         <Loader2 className="h-3.5 w-3.5 animate-spin" /> {s}
       </div>
     ))}
@@ -575,8 +575,8 @@ const XrayPending: React.FC = () => (
 
 const XrayEmpty: React.FC = () => (
   <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-    <div className="text-[13px] text-[#C9CDD3]">Ask the bot something</div>
-    <p className="max-w-[300px] text-xs leading-relaxed text-[#6F757E]">
+    <div className="text-[13px] text-[#33322D]">Ask the bot something</div>
+    <p className="max-w-[300px] text-xs leading-relaxed text-[#6E6A62]">
       Each reply is X-rayed here: the text it read, whether it found and stuck to the right text, and whether the answer is correct.
     </p>
   </div>

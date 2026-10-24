@@ -167,7 +167,7 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
     <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
       <TopBarControls>
         <GhostButton onClick={runInjection} disabled={injecting || !token}>
-          <FlaskConical className="h-3.5 w-3.5 text-[#8A9099]" />
+          <FlaskConical className="h-3.5 w-3.5 text-[#5E5B53]" />
           {injecting ? injectLabel(injectProgress) : 'Run failure-injection test'}
         </GhostButton>
       </TopBarControls>
@@ -176,7 +176,7 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
 
       <AgreementSection agreement={agreement} error={agreementErr} />
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.35fr_1fr]">
+      <div className="grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <Panel
           title="Failure types: predicted vs true"
           note={confusion?.n != null ? `${confusion.n} cases with a known failure type` : 'injected failures with known types'}
@@ -212,7 +212,7 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
             ) : stabilityErr ? (
               <LoadState error={stabilityErr} what="stability" />
             ) : (
-              <p className="text-[13px] leading-relaxed text-[#8A9099]">
+              <p className="text-[13px] leading-relaxed text-[#5E5B53]">
                 Re-scores the latest run with both judges and with chunks and cases in shuffled order (cache bypassed).
                 Scores should barely move.
               </p>
@@ -260,30 +260,30 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
         />
         <Metric big label="False fail" value={pv.false_fail ?? '—'} sub="pipeline flagged a correct answer" color={pv.false_fail ? AMBER : undefined} />
       </div>
-      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#16181C]">
+      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#EFEBE2]">
         <div
           className="h-full rounded-full transition-[width] duration-700"
-          style={{ width: `${Math.min(100, (n / LABEL_TARGET) * 100)}%`, background: n >= LABEL_TARGET ? PASS : '#F4F5F6' }}
+          style={{ width: `${Math.min(100, (n / LABEL_TARGET) * 100)}%`, background: n >= LABEL_TARGET ? PASS : '#1B1B18' }}
         />
       </div>
-      <p className="mt-2 text-xs text-[#6F757E]">
+      <p className="mt-2 text-xs text-[#6E6A62]">
         {agreement.n_labels ?? 0} labels on {agreement.n_items_labeled ?? 0} answers so far. Pipeline numbers use only the{' '}
         {pv.n ?? 0} answers where both people agree.
       </p>
       {!!agreement.disagreements?.length && (
-        <div className="mt-5 border-t border-[#17191D] pt-4">
-          <div className="mb-2 text-xs text-[#8A9099]">Disagreements ({agreement.disagreements.length})</div>
+        <div className="mt-5 border-t border-[#E3DED3] pt-4">
+          <div className="mb-2 text-xs text-[#5E5B53]">Disagreements ({agreement.disagreements.length})</div>
           <ul className="space-y-1.5 text-[13px]">
             {agreement.disagreements.slice(0, 4).map((d) => (
               <li key={`${d.batch_id}-${d.test_id}-${d.kind}`} className="flex gap-3">
-                <span className="w-16 shrink-0 font-mono text-xs text-[#8A9099]">{d.test_id}</span>
+                <span className="w-16 shrink-0 font-mono text-xs text-[#5E5B53]">{d.test_id}</span>
                 <span className="shrink-0 text-xs" style={{ color: d.kind === 'human_vs_human' ? AMBER : RED }}>
                   {d.kind === 'human_vs_human' ? 'humans split' : 'pipeline differs'}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[#C9CDD3]">{d.question ?? d.note}</span>
-                <span className="shrink-0 text-xs text-[#8A9099]">
-                  humans <span className="text-[#E8EAED]">{d.humans ?? '—'}</span> · pipeline{' '}
-                  <span className="text-[#E8EAED]">{d.pipeline ?? '—'}</span>
+                <span className="min-w-0 flex-1 truncate text-[#33322D]">{d.question ?? d.note}</span>
+                <span className="shrink-0 text-xs text-[#5E5B53]">
+                  humans <span className="text-[#1B1B18]">{d.humans ?? '—'}</span> · pipeline{' '}
+                  <span className="text-[#1B1B18]">{d.pipeline ?? '—'}</span>
                 </span>
               </li>
             ))}
@@ -307,19 +307,19 @@ const ProgressNote: React.FC<{ what: string; p: RunProgress | null }> = ({ what,
   return (
     <div className="flex flex-col gap-2.5 py-2">
       <div className="flex items-baseline justify-between text-[13px]">
-        <span className="text-[#C9CDD3]">{what}…</span>
-        <span className="tabular-nums text-[#8A9099]">
+        <span className="text-[#33322D]">{what}…</span>
+        <span className="tabular-nums text-[#5E5B53]">
           {p?.total ? `${p.done ?? 0} / ${p.total}` : 'starting'}
           {p?.eta_ms != null && ` · ${fmtDuration(p.eta_ms)} left`}
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-[#16181C]">
+      <div className="h-1.5 overflow-hidden rounded-full bg-[#EFEBE2]">
         <div
-          className={frac == null ? 'h-full w-1/3 animate-pulse rounded-full bg-[#3A3E45]' : 'h-full rounded-full bg-[#F4F5F6] transition-[width] duration-700'}
+          className={frac == null ? 'h-full w-1/3 animate-pulse rounded-full bg-[#C9C2B3]' : 'h-full rounded-full bg-[#1B1B18] transition-[width] duration-700'}
           style={frac == null ? undefined : { width: `${frac * 100}%` }}
         />
       </div>
-      <p className="text-xs text-[#6F757E]">This shares the grading model's rate limit with other runs, so it can take a few minutes.</p>
+      <p className="text-xs text-[#6E6A62]">This shares the grading model's rate limit with other runs, so it can take a few minutes.</p>
     </div>
   );
 };
@@ -339,9 +339,9 @@ const ConfusionMatrix: React.FC<{ c: Confusion }> = ({ c }) => {
         <span className="text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums" style={{ color: tone(c.accuracy) }}>
           {pct(c.accuracy)}
         </span>
-        <span className="text-[13px] text-[#8A9099]">of failures named correctly</span>
+        <span className="text-[13px] text-[#5E5B53]">of failures named correctly</span>
         {c.stage_accuracy != null && (
-          <span className="ml-auto text-[13px] text-[#8A9099]">
+          <span className="ml-auto text-[13px] text-[#5E5B53]">
             right stage blamed{' '}
             <span className="font-semibold tabular-nums" style={{ color: tone(c.stage_accuracy) }}>
               {pct(c.stage_accuracy)}
@@ -353,19 +353,19 @@ const ConfusionMatrix: React.FC<{ c: Confusion }> = ({ c }) => {
         <table className="border-separate border-spacing-[3px] text-[11px]">
           <thead>
             <tr>
-              <th className="pr-2 text-right align-bottom font-normal text-[#6F757E]">true ↓ / predicted →</th>
+              <th className="pr-2 text-right align-bottom font-normal text-[#6E6A62]">true ↓ / predicted →</th>
               {c.labels.map((l) => (
-                <th key={l} className="h-[92px] w-11 align-bottom font-normal text-[#8A9099]">
+                <th key={l} className="h-[92px] w-11 align-bottom font-normal text-[#5E5B53]">
                   <span className="inline-block origin-bottom-left translate-x-5 -rotate-45 whitespace-nowrap">{short(l)}</span>
                 </th>
               ))}
-              <th className="pl-3 text-left align-bottom font-normal text-[#6F757E]">recall</th>
+              <th className="pl-3 text-left align-bottom font-normal text-[#6E6A62]">recall</th>
             </tr>
           </thead>
           <tbody>
             {c.labels.map((row, i) => (
               <tr key={row}>
-                <th className="whitespace-nowrap pr-2 text-right font-normal text-[#C9CDD3]">{short(row)}</th>
+                <th className="whitespace-nowrap pr-2 text-right font-normal text-[#33322D]">{short(row)}</th>
                 {c.matrix[i]?.map((v, j) => {
                   const diag = i === j;
                   const color = diag ? PASS : RED;
@@ -374,8 +374,8 @@ const ConfusionMatrix: React.FC<{ c: Confusion }> = ({ c }) => {
                       key={j}
                       className="h-9 w-11 rounded-md text-center tabular-nums"
                       style={{
-                        background: v ? tint(color, 0.12 + 0.6 * (v / max)) : '#111317',
-                        color: v ? '#F4F5F6' : '#3A3E45',
+                        background: v ? tint(color, 0.12 + 0.6 * (v / max)) : '#FBF9F4',
+                        color: v ? '#1B1B18' : '#C9C2B3',
                       }}
                       title={`true ${short(row)} → predicted ${short(c.labels[j])}: ${v}`}
                     >
@@ -383,13 +383,13 @@ const ConfusionMatrix: React.FC<{ c: Confusion }> = ({ c }) => {
                     </td>
                   );
                 })}
-                <td className="pl-3 tabular-nums text-[#C9CDD3]">{pct(c.per_class?.[row]?.recall)}</td>
+                <td className="pl-3 tabular-nums text-[#33322D]">{pct(c.per_class?.[row]?.recall)}</td>
               </tr>
             ))}
             <tr>
-              <th className="pr-2 pt-1 text-right font-normal text-[#6F757E]">precision</th>
+              <th className="pr-2 pt-1 text-right font-normal text-[#6E6A62]">precision</th>
               {c.labels.map((l) => (
-                <td key={l} className="pt-1 text-center tabular-nums text-[#C9CDD3]">
+                <td key={l} className="pt-1 text-center tabular-nums text-[#33322D]">
                   {pct(c.per_class?.[l]?.precision)}
                 </td>
               ))}
@@ -404,11 +404,11 @@ const ConfusionMatrix: React.FC<{ c: Confusion }> = ({ c }) => {
 
 const JudgeInput: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
   <label className="block">
-    <span className="text-xs text-[#8A9099]">{label}</span>
+    <span className="text-xs text-[#5E5B53]">{label}</span>
     <input
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="mt-1 h-9 w-full rounded-[9px] border border-[#22252B] bg-[#08090B] px-3 font-mono text-[12px] text-[#E8EAED] focus:border-[#3A3E45] focus:outline-none"
+      className="mt-1 h-9 w-full rounded-[9px] border border-[#D6D0C3] bg-[#F6F3EC] px-3 font-mono text-[12px] text-[#1B1B18] focus:border-[#C9C2B3] focus:outline-none"
     />
   </label>
 );
@@ -417,14 +417,14 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
   const corr = s.judge_swap?.correlation ?? {};
   const stable = s.stable ?? s.shuffle?.stable;
   return (
-    <div className="flex flex-col gap-4 border-t border-[#17191D] pt-4">
+    <div className="flex flex-col gap-4 border-t border-[#E3DED3] pt-4">
       {stable != null && (
         <div className="text-[15px] font-semibold" style={{ color: stable ? PASS : RED }}>
           {stable ? 'Stable' : 'Unstable'} when the grading model is swapped or the order shuffled
         </div>
       )}
       <div>
-        <div className="mb-2 flex items-center gap-2 text-xs text-[#8A9099]">
+        <div className="mb-2 flex items-center gap-2 text-xs text-[#5E5B53]">
           <Scale className="h-3.5 w-3.5" /> Judge swap {s.judges?.length ? `· ${s.judges.map((j) => j.split('/').pop()).join(' vs ')}` : ''}
         </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
@@ -437,7 +437,7 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
         </div>
       </div>
       <div>
-        <div className="mb-2 flex items-center gap-2 text-xs text-[#8A9099]">
+        <div className="mb-2 flex items-center gap-2 text-xs text-[#5E5B53]">
           <Shuffle className="h-3.5 w-3.5" /> Shuffle × {s.shuffle?.runs ?? '—'}
         </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
@@ -453,8 +453,8 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
 };
 
 const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <div className="flex justify-between gap-3 border-b border-[#14161A] pb-1.5">
-    <span className="capitalize text-[#8A9099]">{label}</span>
-    <span className="tabular-nums text-[#E8EAED]">{value}</span>
+  <div className="flex justify-between gap-3 border-b border-[#FBF9F4] pb-1.5">
+    <span className="capitalize text-[#5E5B53]">{label}</span>
+    <span className="tabular-nums text-[#1B1B18]">{value}</span>
   </div>
 );

@@ -207,9 +207,9 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
               saveLabeler(null);
               setLabeler(null);
             }}
-            className="text-xs text-[#8A9099] hover:text-white"
+            className="text-xs text-[#5E5B53] hover:text-[#1B1B18]"
           >
-            Labeling as <span className="font-medium text-[#E8EAED]">{labeler}</span> · switch
+            Labeling as <span className="font-medium text-[#1B1B18]">{labeler}</span> · switch
           </button>
         )}
         <PackSwitcher value={packId} onChange={onPackChange} />
@@ -244,55 +244,55 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
 
             <div key={item.test_id} className="lab-fade-up grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr]">
               <section className="lab-panel flex min-h-0 flex-col rounded-2xl p-6">
-                <div className="flex items-center gap-2 text-xs text-[#8A9099]">
+                <div className="flex items-center gap-2 text-xs text-[#5E5B53]">
                   <span className="font-mono">{item.test_id}</span>
-                  {done[item.test_id] && <span className="text-[#3DD68C]">· labeled</span>}
+                  {done[item.test_id] && <span className="text-[#1F7A4D]">· labeled</span>}
                 </div>
-                <h2 className="mt-2 text-[22px] font-semibold leading-snug tracking-[-0.02em] text-white">{item.question}</h2>
+                <h2 className="mt-2 text-[22px] font-semibold leading-snug tracking-[-0.02em] text-[#1B1B18]">{item.question}</h2>
 
-                <div className="mt-6 text-xs text-[#8A9099]">Known answer</div>
-                <p className="mt-1 text-[15px] leading-relaxed text-[#C9CDD3]">
+                <div className="mt-6 text-xs text-[#5E5B53]">Known answer</div>
+                <p className="mt-1 text-[15px] leading-relaxed text-[#33322D]">
                   {item.expected_abstain
                     ? 'Not in the documents. The right reply is to say so, not to answer.'
                     : knownAnswer || '— (none given)'}
                 </p>
 
-                <div className="mt-6 text-xs text-[#8A9099]">Model answer</div>
-                <p className="mt-1 overflow-y-auto whitespace-pre-wrap text-[17px] leading-relaxed tracking-[-0.01em] text-[#F4F5F6]">
+                <div className="mt-6 text-xs text-[#5E5B53]">Model answer</div>
+                <p className="mt-1 overflow-y-auto whitespace-pre-wrap text-[17px] leading-relaxed tracking-[-0.01em] text-[#1B1B18]">
                   {item.generated_answer || '— (no answer)'}
                 </p>
 
                 <div className="mt-auto pt-6">
-                  <label className="flex h-9 items-center gap-2 rounded-[9px] border border-[#22252B] bg-[#08090B] px-3">
+                  <label className="flex h-9 items-center gap-2 rounded-[9px] border border-[#D6D0C3] bg-[#F6F3EC] px-3">
                     <span className="sr-only">Note</span>
                     <input
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Optional note (Esc to leave the field)"
-                      className="h-full flex-1 bg-transparent text-[13px] text-[#E8EAED] placeholder:text-[#6F757E] focus:outline-none"
+                      className="h-full flex-1 bg-transparent text-[13px] text-[#1B1B18] placeholder:text-[#6E6A62] focus:outline-none"
                     />
                   </label>
                 </div>
               </section>
 
               <section className="lab-panel-flat flex min-h-0 flex-col overflow-hidden rounded-2xl">
-                <div className="flex items-baseline justify-between border-b border-[#17191D] px-5 py-3.5 text-[13px]">
+                <div className="flex items-baseline justify-between border-b border-[#E3DED3] px-5 py-3.5 text-[13px]">
                   <span className="font-medium">What the model was given</span>
-                  <span className="text-xs text-[#8A9099]">{item.retrieved_chunks?.length ?? 0} chunks</span>
+                  <span className="text-xs text-[#5E5B53]">{item.retrieved_chunks?.length ?? 0} chunks</span>
                 </div>
                 <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto p-4">
                   {(item.retrieved_chunks ?? []).map((c, i) => (
-                    <article key={c.chunk_id ?? i} className="rounded-xl border border-[#1A1D22] px-3.5 py-3">
+                    <article key={c.chunk_id ?? i} className="rounded-xl border border-[#E3DED3] px-3.5 py-3">
                       <div className="flex gap-2 text-xs">
-                        <span className="truncate text-[#C9CDD3]">{c.filename ?? c.document_name ?? c.document_id ?? 'document'}</span>
-                        <span className="font-mono text-[#6F757E]">{c.chunk_id}</span>
+                        <span className="truncate text-[#33322D]">{c.filename ?? c.document_name ?? c.document_id ?? 'document'}</span>
+                        <span className="font-mono text-[#6E6A62]">{c.chunk_id}</span>
                       </div>
-                      <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-relaxed text-[#B4B9C0]">
+                      <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-relaxed text-[#33322D]">
                         {c.text.replace(/^#+\s.*\n+/, '')}
                       </p>
                     </article>
                   ))}
-                  {!item.retrieved_chunks?.length && <p className="text-sm text-[#8A9099]">No chunks were retrieved.</p>}
+                  {!item.retrieved_chunks?.length && <p className="text-sm text-[#5E5B53]">No chunks were retrieved.</p>}
                 </div>
               </section>
             </div>
@@ -322,7 +322,7 @@ const ChooseLabeler: React.FC<{ onChoose: (name: string) => void }> = ({ onChoos
   <div className="flex h-full items-center justify-center p-6">
     <div className="lab-panel lab-fade-up w-full max-w-md rounded-2xl p-7">
       <h2 className="text-lg font-semibold tracking-[-0.01em]">Who is labeling?</h2>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-[#8A9099]">
+      <p className="mt-1.5 text-[13px] leading-relaxed text-[#5E5B53]">
         Two people label the same answers independently. Only answers you both agree on count as ground truth for
         checking the pipeline.
       </p>
@@ -331,7 +331,7 @@ const ChooseLabeler: React.FC<{ onChoose: (name: string) => void }> = ({ onChoos
           <button
             key={name}
             onClick={() => onChoose(name)}
-            className="h-12 rounded-xl border border-[#22252B] text-[15px] font-medium text-[#E8EAED] transition-colors hover:border-[#3A3E45] hover:bg-white/[0.02]"
+            className="h-12 rounded-xl border border-[#D6D0C3] text-[15px] font-medium text-[#1B1B18] transition-colors hover:border-[#C9C2B3] hover:bg-[#1B1B18]/[0.02]"
           >
             {name}
           </button>
@@ -343,14 +343,14 @@ const ChooseLabeler: React.FC<{ onChoose: (name: string) => void }> = ({ onChoos
 
 const Progress: React.FC<{ labeled: number; total: number; index: number }> = ({ labeled, total, index }) => (
   <div className="flex items-center gap-4">
-    <div className="text-[13px] text-[#C9CDD3]">
-      <span className="font-semibold tabular-nums text-white">{labeled}</span>
-      <span className="text-[#8A9099]"> of {total} labeled</span>
+    <div className="text-[13px] text-[#33322D]">
+      <span className="font-semibold tabular-nums text-[#1B1B18]">{labeled}</span>
+      <span className="text-[#5E5B53]"> of {total} labeled</span>
     </div>
-    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#16181C]">
-      <div className="h-full rounded-full bg-[#3DD68C] transition-[width] duration-500" style={{ width: `${(labeled / total) * 100}%` }} />
+    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EFEBE2]">
+      <div className="h-full rounded-full bg-[#1F7A4D] transition-[width] duration-500" style={{ width: `${(labeled / total) * 100}%` }} />
     </div>
-    <div className="text-xs tabular-nums text-[#8A9099]">
+    <div className="text-xs tabular-nums text-[#5E5B53]">
       item {index + 1} / {total}
     </div>
   </div>
@@ -386,24 +386,24 @@ const ActionBar: React.FC<{
     return (
       <div className="lab-panel lab-fade-up rounded-2xl p-4">
         <div className="mb-3 flex items-center justify-between text-[13px]">
-          <span className="text-[#E8EAED]">
-            Why is it wrong? <span className="text-[#8A9099]">Press a number, or <Key>0</Key> if you're not sure (that still counts).</span>
+          <span className="text-[#1B1B18]">
+            Why is it wrong? <span className="text-[#5E5B53]">Press a number, or <Key>0</Key> if you're not sure (that still counts).</span>
           </span>
-          <button onClick={onCancel} className="flex items-center gap-1.5 text-xs text-[#8A9099] hover:text-white">
+          <button onClick={onCancel} className="flex items-center gap-1.5 text-xs text-[#5E5B53] hover:text-[#1B1B18]">
             <Key>Esc</Key> back
           </button>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-3">
           {groups.map((g) => (
             <div key={g.stage || 'other'} className="flex flex-wrap items-center gap-2">
-              {g.stage && <span className="mr-1 text-[11px] text-[#6F757E]">{g.stage}</span>}
+              {g.stage && <span className="mr-1 text-[11px] text-[#6E6A62]">{g.stage}</span>}
               {g.items.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => onType(f.id)}
                   disabled={saving}
                   title={f.hint}
-                  className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border px-3 py-2 text-left text-[13px] text-[#E8EAED] transition-colors hover:bg-white/[0.03] disabled:opacity-50"
+                  className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border px-3 py-2 text-left text-[13px] text-[#1B1B18] transition-colors hover:bg-[#1B1B18]/[0.03] disabled:opacity-50"
                   style={{ borderColor: tint(STAGE_COLOR[f.stage], 0.35) }}
                 >
                   <span style={{ color: STAGE_COLOR[f.stage] }}>
@@ -411,7 +411,7 @@ const ActionBar: React.FC<{
                   </span>
                   <span className="flex flex-col items-start leading-tight">
                     <span>{f.plain ?? f.label}</span>
-                    <span className="text-[11px] text-[#8A9099]">{f.hint}</span>
+                    <span className="text-[11px] text-[#5E5B53]">{f.hint}</span>
                   </span>
                 </button>
               ))}
@@ -426,7 +426,7 @@ const ActionBar: React.FC<{
     <div className="flex items-center gap-3">
       <button
         onClick={onBack}
-        className="flex h-14 items-center gap-2 rounded-xl border border-[#1A1D22] px-4 text-[13px] text-[#8A9099] hover:text-white"
+        className="flex h-14 items-center gap-2 rounded-xl border border-[#E3DED3] px-4 text-[13px] text-[#5E5B53] hover:text-[#1B1B18]"
         aria-label="Previous item"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -439,11 +439,11 @@ const ActionBar: React.FC<{
       </BigChoice>
       <button
         onClick={onSkip}
-        className="flex h-14 items-center gap-2 rounded-xl border border-[#1A1D22] px-4 text-[13px] text-[#8A9099] hover:text-white"
+        className="flex h-14 items-center gap-2 rounded-xl border border-[#E3DED3] px-4 text-[13px] text-[#5E5B53] hover:text-[#1B1B18]"
       >
-        <SkipForward className="h-4 w-4" /> Skip <span className="text-[#6F757E]"><Key>S</Key></span>
+        <SkipForward className="h-4 w-4" /> Skip <span className="text-[#6E6A62]"><Key>S</Key></span>
       </button>
-      <div className="ml-2 hidden items-center gap-1.5 text-xs text-[#6F757E] xl:flex">
+      <div className="ml-2 hidden items-center gap-1.5 text-xs text-[#6E6A62] xl:flex">
         <Keyboard className="h-3.5 w-3.5" /> ← previous
       </div>
     </div>
@@ -475,19 +475,19 @@ const WaitingForRun: React.FC<{ p: RunProgress }> = ({ p }) => {
   return (
     <div className="lab-panel mx-auto max-w-xl rounded-2xl p-7">
       <h2 className="text-lg font-semibold tracking-[-0.01em]">Waiting for this pack's run to finish</h2>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-[#8A9099]">
+      <p className="mt-1.5 text-[13px] leading-relaxed text-[#5E5B53]">
         A run over the full question set is still scoring answers. Labelling starts on that run so both of you label the
         same answers. This page refreshes on its own.
       </p>
       <div className="mt-5 flex items-baseline justify-between text-[13px]">
-        <span className="font-mono text-xs text-[#8A9099]">{p.batch_id}</span>
-        <span className="tabular-nums text-[#C9CDD3]">
+        <span className="font-mono text-xs text-[#5E5B53]">{p.batch_id}</span>
+        <span className="tabular-nums text-[#33322D]">
           {p.done ?? 0} / {p.total ?? '—'} answers
-          {p.eta_ms != null && <span className="text-[#8A9099]"> · about {fmtDuration(p.eta_ms)} left</span>}
+          {p.eta_ms != null && <span className="text-[#5E5B53]"> · about {fmtDuration(p.eta_ms)} left</span>}
         </span>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#16181C]">
-        <div className="h-full rounded-full bg-[#F4F5F6] transition-[width] duration-700" style={{ width: `${frac * 100}%` }} />
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#EFEBE2]">
+        <div className="h-full rounded-full bg-[#1B1B18] transition-[width] duration-700" style={{ width: `${frac * 100}%` }} />
       </div>
     </div>
   );

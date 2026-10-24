@@ -176,17 +176,17 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
             disabled={!token || uploading}
             className={cn(
               'flex flex-col items-center gap-2 rounded-2xl border border-dashed px-4 py-6 text-center transition-colors',
-              dragging ? 'border-[#F4F5F6] bg-white/[0.04]' : 'border-[#2A2E35] hover:border-[#3A3E45] hover:bg-white/[0.02]'
+              dragging ? 'border-[#1B1B18] bg-[#1B1B18]/[0.04]' : 'border-[#D6D0C3] hover:border-[#C9C2B3] hover:bg-[#1B1B18]/[0.02]'
             )}
           >
-            <Upload className="h-5 w-5 text-[#C9CDD3]" />
-            <span className="text-[13px] font-medium text-white">{uploading ? 'Uploading…' : 'Drop a document here'}</span>
-            <span className="text-xs text-[#8A9099]">or click to choose · PDF, Markdown or text</span>
+            <Upload className="h-5 w-5 text-[#33322D]" />
+            <span className="text-[13px] font-medium text-[#1B1B18]">{uploading ? 'Uploading…' : 'Drop a document here'}</span>
+            <span className="text-xs text-[#5E5B53]">or click to choose · PDF, Markdown or text</span>
           </button>
 
           <div className="lab-panel-flat flex min-h-0 flex-1 flex-col rounded-2xl">
-            <div className="border-b border-[#17191D] px-4 py-3 text-[13px] font-medium text-[#E8EAED]">
-              Documents {docs && <span className="font-normal text-[#8A9099]">· {docs.length}</span>}
+            <div className="border-b border-[#E3DED3] px-4 py-3 text-[13px] font-medium text-[#1B1B18]">
+              Documents {docs && <span className="font-normal text-[#5E5B53]">· {docs.length}</span>}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-2">
               {!docs ? (
@@ -204,13 +204,13 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
                           onClick={() => pick(d.document_id)}
                           className={cn(
                             'flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-colors',
-                            active ? 'bg-[#16181C]' : 'hover:bg-white/[0.02]'
+                            active ? 'bg-[#EFEBE2]' : 'hover:bg-[#1B1B18]/[0.02]'
                           )}
                         >
-                          <FileText className={cn('mt-0.5 h-4 w-4 shrink-0', active ? 'text-white' : 'text-[#6F757E]')} />
+                          <FileText className={cn('mt-0.5 h-4 w-4 shrink-0', active ? 'text-[#1B1B18]' : 'text-[#6E6A62]')} />
                           <span className="min-w-0">
-                            <span className={cn('block truncate text-[13px]', active ? 'text-white' : 'text-[#C9CDD3]')}>{d.filename}</span>
-                            <span className="text-[11px] text-[#8A9099]">
+                            <span className={cn('block truncate text-[13px]', active ? 'text-[#1B1B18]' : 'text-[#33322D]')}>{d.filename}</span>
+                            <span className="text-[11px] text-[#5E5B53]">
                               {pack ? `Sample · ${PACK_LABEL[pack] ?? pack}` : 'Your upload'} · {d.chunk_count} passages
                             </span>
                           </span>
@@ -226,14 +226,14 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
 
         {/* Right: read the document, or its generated questions */}
         <section className="lab-panel-flat flex min-h-0 flex-col rounded-2xl">
-          <div className="flex flex-wrap items-center gap-3 border-b border-[#17191D] px-5 py-3">
+          <div className="flex flex-wrap items-center gap-3 border-b border-[#E3DED3] px-5 py-3">
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[15px] font-semibold text-white">{doc?.filename ?? 'Pick a document'}</div>
-              <div className="text-xs text-[#8A9099]">
+              <div className="truncate text-[15px] font-semibold text-[#1B1B18]">{doc?.filename ?? 'Pick a document'}</div>
+              <div className="text-xs text-[#5E5B53]">
                 Questions come with a known answer and the passage that contains it; a few trick questions are mixed in.
               </div>
             </div>
-            <div className="flex items-center gap-0.5 rounded-[10px] border border-[#1C1F24] p-[3px] text-[13px]" role="radiogroup" aria-label="How many questions">
+            <div className="flex items-center gap-0.5 rounded-[10px] border border-[#ECE7DC] p-[3px] text-[13px]" role="radiogroup" aria-label="How many questions">
               {COUNTS.map((c) => (
                 <button
                   key={c}
@@ -242,7 +242,7 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
                   onClick={() => setCount(c)}
                   className={cn(
                     'rounded-[7px] px-2.5 py-[5px] tabular-nums transition-colors',
-                    count === c ? 'bg-[#1C1F24] text-white' : 'text-[#8A9099] hover:text-[#E8EAED]'
+                    count === c ? 'bg-[#ECE7DC] text-[#1B1B18]' : 'text-[#5E5B53] hover:text-[#1B1B18]'
                   )}
                 >
                   {c}
@@ -255,7 +255,7 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
             </PrimaryButton>
           </div>
 
-          <div className="flex gap-1 border-b border-[#17191D] px-4 text-[13px]">
+          <div className="flex gap-1 border-b border-[#E3DED3] px-4 text-[13px]">
             <TabButton active={tab === 'read'} onClick={() => setTab('read')} icon={<BookOpen className="h-3.5 w-3.5" />}>
               Read the document
             </TabButton>
@@ -293,11 +293,11 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
                 <article className="mx-auto max-w-[760px] space-y-4 px-6 py-6">
                   {detail.chunks.map((c, i) => (
                     <div key={c.chunk_id} className="group relative">
-                      <span className="absolute -left-6 top-0.5 font-mono text-[10.5px] text-[#4A4F57]">{i + 1}</span>
-                      <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[#C9CDD3]">{c.text.replace(/^#+\s*/gm, '')}</p>
+                      <span className="absolute -left-6 top-0.5 font-mono text-[10.5px] text-[#6E6A62]">{i + 1}</span>
+                      <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[#33322D]">{c.text.replace(/^#+\s*/gm, '')}</p>
                     </div>
                   ))}
-                  <p className="pt-2 text-xs text-[#6F757E]">
+                  <p className="pt-2 text-xs text-[#6E6A62]">
                     Split into {detail.chunks.length} passages; the numbers on the left are what the bot can retrieve.
                   </p>
                 </article>
@@ -314,20 +314,20 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
                   const r = resultFor(c.test_id);
                   const v = r ? verdictStyle(r.root_cause?.category ?? r.category) : null;
                   return (
-                    <li key={c.test_id} className="border-b border-[#14161A] last:border-0">
+                    <li key={c.test_id} className="border-b border-[#FBF9F4] last:border-0">
                       <button
                         disabled={!r}
                         onClick={() => r && setOpen(r)}
-                        className={cn('grid w-full grid-cols-[1fr_auto] gap-6 px-5 py-3.5 text-left', r && 'hover:bg-white/[0.02]')}
+                        className={cn('grid w-full grid-cols-[1fr_auto] gap-6 px-5 py-3.5 text-left', r && 'hover:bg-[#1B1B18]/[0.02]')}
                       >
                         <span className="min-w-0">
-                          {c.type && <span className="text-[11px] text-[#8A9099]">{TYPE_LABEL[c.type] ?? c.type}</span>}
-                          <span className="mt-0.5 block text-[14px] text-[#E8EAED]">{c.question}</span>
-                          <span className="mt-1 block text-[13px] text-[#8A9099]">
-                            Correct answer: <span className="text-[#C9CDD3]">{c.ground_truth_answer || 'the bot should say it’s not in the document'}</span>
+                          {c.type && <span className="text-[11px] text-[#5E5B53]">{TYPE_LABEL[c.type] ?? c.type}</span>}
+                          <span className="mt-0.5 block text-[14px] text-[#1B1B18]">{c.question}</span>
+                          <span className="mt-1 block text-[13px] text-[#5E5B53]">
+                            Correct answer: <span className="text-[#33322D]">{c.ground_truth_answer || 'the bot should say it’s not in the document'}</span>
                           </span>
                           {c.context_snippet && (
-                            <span className="mt-1.5 block truncate border-l-2 border-[#22252B] pl-2.5 text-xs text-[#6F757E]">
+                            <span className="mt-1.5 block truncate border-l-2 border-[#D6D0C3] pl-2.5 text-xs text-[#6E6A62]">
                               From: “{c.context_snippet}”
                             </span>
                           )}
@@ -339,10 +339,10 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
                                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: v.color }} />
                                 {v.label}
                               </span>
-                              <span className="mt-1 block text-[#8A9099]">click for details</span>
+                              <span className="mt-1 block text-[#5E5B53]">click for details</span>
                             </>
                           ) : (
-                            <span className="text-[#5A5F67]">not checked yet</span>
+                            <span className="text-[#6E6A62]">not checked yet</span>
                           )}
                         </span>
                       </button>
@@ -370,7 +370,7 @@ const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: React.Re
     onClick={onClick}
     className={cn(
       '-mb-px flex items-center gap-1.5 border-b-2 px-2.5 py-2.5 transition-colors',
-      active ? 'border-white text-white' : 'border-transparent text-[#8A9099] hover:text-[#E8EAED]'
+      active ? 'border-white text-[#1B1B18]' : 'border-transparent text-[#5E5B53] hover:text-[#1B1B18]'
     )}
   >
     {icon}
@@ -382,8 +382,8 @@ const RunStrip: React.FC<{ run: RunSummary }> = ({ run }) => {
   const b = run.root_cause_breakdown ?? {};
   return (
     <span className="flex items-center gap-2.5 text-xs">
-      <span className="font-semibold tabular-nums text-white">{pct(run.aggregates?.pass_rate)}</span>
-      <span className="text-[#8A9099]">correct</span>
+      <span className="font-semibold tabular-nums text-[#1B1B18]">{pct(run.aggregates?.pass_rate)}</span>
+      <span className="text-[#5E5B53]">correct</span>
       {VERDICT_ORDER.filter((k) => b[k] && k !== 'CLEAN_PASS').map((k) => (
         <span key={k} style={{ color: VERDICTS[k].color }}>
           {b[k]} {VERDICTS[k].short.toLowerCase()}

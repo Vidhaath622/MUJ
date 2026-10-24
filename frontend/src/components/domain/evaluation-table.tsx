@@ -44,11 +44,11 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
   });
 
   return (
-    <Card className={cn('bg-neutral-900/90 border-neutral-800 overflow-hidden shadow-xl space-y-2', className)}>
-      <div className="p-4 border-b border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+    <Card className={cn('bg-[#FBF9F4] border-[#E3DED3] overflow-hidden shadow-xl space-y-2', className)}>
+      <div className="p-4 border-b border-[#E3DED3] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
-          <ListFilter className="w-4 h-4 text-teal-400" />
-          <span className="font-bold text-white font-mono uppercase tracking-wider">
+          <ListFilter className="w-4 h-4 text-[#1F6F6A]" />
+          <span className="font-bold text-[#1B1B18] font-mono uppercase tracking-wider">
             Evaluation Batch Test Suite ({items.length} Cases)
           </span>
         </div>
@@ -61,8 +61,8 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
               onClick={() => setSelectedFilter(f)}
               className={`px-2 py-0.5 rounded text-[10px] font-mono transition border ${
                 selectedFilter === f
-                  ? 'bg-sky-500/20 text-sky-300 border-sky-500/60 font-semibold'
-                  : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-white'
+                  ? 'bg-[#2F5D8A] text-[#2F5D8A] border-[#2F5D8A]/40 font-semibold'
+                  : 'bg-[#FBF9F4] text-[#5E5B53] border-[#E3DED3] hover:text-[#1B1B18]'
               }`}
             >
               {f}
@@ -73,7 +73,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs font-sans">
-          <thead className="bg-neutral-950/80 font-mono uppercase text-neutral-400 text-[10px] border-b border-neutral-800 tracking-wider">
+          <thead className="bg-[#FBF9F4] font-mono uppercase text-[#5E5B53] text-[10px] border-b border-[#E3DED3] tracking-wider">
             <tr>
               <th className="py-3 px-4">Test ID / Query</th>
               <th className="py-3 px-3 text-center">Retriever</th>
@@ -84,7 +84,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
               <th className="py-3 px-3 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-800/80 bg-black/40">
+          <tbody className="divide-y divide-[#E3DED3]/80 bg-[#F6F3EC]">
             {filteredItems.map((item) => {
               const isSelected = selectedId === item.id;
               const retPass = item.retrieverScore >= 0.7;
@@ -96,43 +96,43 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
                   key={item.id}
                   onClick={() => onSelectRow?.(item)}
                   className={cn(
-                    'hover:bg-neutral-800/60 transition cursor-pointer group',
-                    isSelected && 'bg-sky-950/40 border-l-2 border-l-sky-500'
+                    'hover:bg-[#FBF9F4] transition cursor-pointer group',
+                    isSelected && 'bg-[#E3EAF2] border-l-2 border-l-sky-500'
                   )}
                 >
-                  <td className="py-3.5 px-4 font-medium text-neutral-200 max-w-xs">
+                  <td className="py-3.5 px-4 font-medium text-[#1B1B18] max-w-xs">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] text-sky-400 font-bold bg-sky-950/60 px-1.5 py-0.5 rounded border border-sky-800/40">
+                      <span className="font-mono text-[10px] text-[#2F5D8A] font-bold bg-[#E3EAF2] px-1.5 py-0.5 rounded border border-[#2F5D8A]/40">
                         {item.id}
                       </span>
                       <span className="truncate" title={item.query}>{item.query}</span>
                     </div>
                     {item.summaryNote && (
-                      <div className="text-[11px] text-neutral-400 truncate pl-1 mt-0.5">
+                      <div className="text-[11px] text-[#5E5B53] truncate pl-1 mt-0.5">
                         {item.summaryNote}
                       </div>
                     )}
                   </td>
 
                   <td className="py-3.5 px-3 text-center font-mono">
-                    <span className={cn('font-bold', retPass ? 'text-emerald-400' : 'text-rose-400')}>
+                    <span className={cn('font-bold', retPass ? 'text-[#1F7A4D]' : 'text-[#B3261E]')}>
                       {(item.retrieverScore * 100).toFixed(0)}%
                     </span>
                   </td>
 
                   <td className="py-3.5 px-3 text-center font-mono">
-                    <span className={cn('font-bold', faithPass ? 'text-emerald-400' : 'text-rose-400')}>
+                    <span className={cn('font-bold', faithPass ? 'text-[#1F7A4D]' : 'text-[#B3261E]')}>
                       {(item.faithfulnessScore * 100).toFixed(0)}%
                     </span>
                   </td>
 
                   <td className="py-3.5 px-3 text-center font-mono">
                     {item.accuracyScore === null ? (
-                      <span className="text-amber-400 font-medium text-[11px] bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-900/60">
+                      <span className="text-[#B26B00] font-medium text-[11px] bg-[#F5EBD8] px-1.5 py-0.5 rounded border border-[#B26B00]/40">
                         REVIEW (No GT)
                       </span>
                     ) : (
-                      <span className={cn('font-bold', accPass ? 'text-emerald-400' : 'text-rose-400')}>
+                      <span className={cn('font-bold', accPass ? 'text-[#1F7A4D]' : 'text-[#B3261E]')}>
                         {(item.accuracyScore * 100).toFixed(0)}%
                       </span>
                     )}
@@ -157,7 +157,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
                     <Button
                       variant="ghost"
                       size="iconSm"
-                      className="group-hover:text-sky-400 group-hover:bg-neutral-800"
+                      className="group-hover:text-[#2F5D8A] group-hover:bg-[#FBF9F4]"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>

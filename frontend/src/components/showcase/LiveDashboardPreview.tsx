@@ -76,20 +76,20 @@ export const LiveDashboardPreview: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Telemetry Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-neutral-900/90 border border-neutral-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#FBF9F4] border border-[#E3DED3] shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono uppercase tracking-wider text-sky-400 bg-sky-950/60 border border-sky-800 px-2.5 py-0.5 rounded-full">
+            <span className="text-xs font-mono uppercase tracking-wider text-[#2F5D8A] bg-[#E3EAF2] border border-[#2F5D8A]/40 px-2.5 py-0.5 rounded-full">
               Live Mockup • AI-04 Spirit
             </span>
             <Badge variant="neon" size="sm" dot pulse>
               EVALUATION PIPELINE READY
             </Badge>
           </div>
-          <h3 className="text-xl font-bold text-white tracking-tight">
+          <h3 className="text-xl font-bold text-[#1B1B18] tracking-tight">
             Single-Screen Diagnostic Cockpit
           </h3>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-[#5E5B53]">
             Decoupling chunk retrieval precision from generator hallucination in real time.
           </p>
         </div>
@@ -97,7 +97,7 @@ export const LiveDashboardPreview: React.FC = () => {
         {/* Diagnosis Pill Display */}
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <span className="text-[10px] font-mono uppercase text-neutral-500 block">
+            <span className="text-[10px] font-mono uppercase text-[#6E6A62] block">
               Automated Root-Cause
             </span>
             <DiagnosticBadge category={activeDiagnosis} size="md" pulse />
@@ -152,8 +152,8 @@ export const LiveDashboardPreview: React.FC = () => {
       {/* Bottom Row: Document Dropzone & Batch Test Table */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-4 space-y-4">
-          <Card className="p-4 bg-neutral-900/90 border-neutral-800 space-y-3">
-            <h4 className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-bold">
+          <Card className="p-4 bg-[#FBF9F4] border-[#E3DED3] space-y-3">
+            <h4 className="text-xs font-mono uppercase tracking-wider text-[#5E5B53] font-bold">
               Document Knowledge Base
             </h4>
             <FileDropzone />

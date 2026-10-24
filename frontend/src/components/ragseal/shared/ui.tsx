@@ -24,9 +24,9 @@ export const Panel: React.FC<{
 }> = ({ title, note, className, bodyClassName, raised, children }) => (
   <section className={cn(raised ? 'lab-panel' : 'lab-panel-flat', 'flex min-h-0 flex-col rounded-2xl', className)}>
     {title && (
-      <div className="flex items-baseline justify-between gap-3 border-b border-[#17191D] px-5 py-3.5 text-[13px]">
-        <h2 className="font-medium text-[#E8EAED]">{title}</h2>
-        {note && <span className="text-xs text-[#8A9099]">{note}</span>}
+      <div className="flex items-baseline justify-between gap-3 border-b border-[#E3DED3] px-5 py-3.5 text-[13px]">
+        <h2 className="font-medium text-[#1B1B18]">{title}</h2>
+        {note && <span className="text-xs text-[#5E5B53]">{note}</span>}
       </div>
     )}
     <div className={cn('min-h-0 flex-1', bodyClassName ?? 'p-5')}>{children}</div>
@@ -41,22 +41,22 @@ export const Metric: React.FC<{
   big?: boolean;
 }> = ({ label, value, sub, color, big }) => (
   <div className="min-w-0">
-    <div className="text-xs text-[#8A9099]">{label}</div>
+    <div className="text-xs text-[#5E5B53]">{label}</div>
     <div
       className={cn(
         'mt-1 font-semibold tabular-nums tracking-[-0.03em]',
         big ? 'text-[40px] leading-none' : 'text-[22px] leading-tight'
       )}
-      style={{ color: color ?? '#F4F5F6' }}
+      style={{ color: color ?? '#1B1B18' }}
     >
       {value}
     </div>
-    {sub && <div className="mt-1 text-xs text-[#8A9099]">{sub}</div>}
+    {sub && <div className="mt-1 text-xs text-[#5E5B53]">{sub}</div>}
   </div>
 );
 
 export const PackSwitcher: React.FC<{ value: PackId; onChange: (p: PackId) => void }> = ({ value, onChange }) => (
-  <div className="flex items-center gap-0.5 rounded-[10px] border border-[#1C1F24] p-[3px] text-[13px]" role="tablist">
+  <div className="flex items-center gap-0.5 rounded-[10px] border border-[#ECE7DC] p-[3px] text-[13px]" role="tablist">
     {PACKS.map((p) => (
       <button
         key={p.id}
@@ -66,8 +66,8 @@ export const PackSwitcher: React.FC<{ value: PackId; onChange: (p: PackId) => vo
         className={cn(
           'rounded-[7px] px-3 py-[5px] transition-colors',
           value === p.id
-            ? 'bg-[#1C1F24] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
-            : 'text-[#8A9099] hover:text-[#E8EAED]'
+            ? 'bg-[#ECE7DC] text-[#1B1B18] shadow-[inset_0_1px_0_rgba(27,27,24,0.06)]'
+            : 'text-[#5E5B53] hover:text-[#1B1B18]'
         )}
       >
         {p.label}
@@ -87,7 +87,7 @@ export const PrimaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElemen
     {...rest}
     disabled={disabled || busy}
     className={cn(
-      'flex h-[34px] items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-[#F4F5F6] px-3.5 text-[13px] font-semibold text-[#0A0B0D] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[#1C1F24] disabled:text-[#8A9099]',
+      'flex h-[34px] items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-[#1B1B18] px-3.5 text-[13px] font-semibold text-[#F6F3EC] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[#ECE7DC] disabled:text-[#5E5B53]',
       className
     )}
   >
@@ -100,7 +100,7 @@ export const GhostButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>
   <button
     {...rest}
     className={cn(
-      'flex h-[34px] items-center gap-2 whitespace-nowrap rounded-[9px] border border-[#22252B] px-3 text-[13px] text-[#C9CDD3] transition-colors hover:border-[#2E3238] hover:text-white disabled:cursor-not-allowed disabled:opacity-50',
+      'flex h-[34px] items-center gap-2 whitespace-nowrap rounded-[9px] border border-[#D6D0C3] px-3 text-[13px] text-[#33322D] transition-colors hover:border-[#D6D0C3] hover:text-[#1B1B18] disabled:cursor-not-allowed disabled:opacity-50',
       className
     )}
   >
@@ -117,13 +117,13 @@ export const EmptyState: React.FC<{
 }> = ({ title, children, icon, className }) => (
   <div
     className={cn(
-      'flex h-full min-h-[160px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#1F2228] px-6 py-8 text-center',
+      'flex h-full min-h-[160px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E3DED3] px-6 py-8 text-center',
       className
     )}
   >
-    {icon && <div className="mb-1 text-[#5A5F67]">{icon}</div>}
-    <div className="text-sm font-medium text-[#C9CDD3]">{title}</div>
-    {children && <div className="max-w-md text-[13px] leading-relaxed text-[#8A9099]">{children}</div>}
+    {icon && <div className="mb-1 text-[#6E6A62]">{icon}</div>}
+    <div className="text-sm font-medium text-[#33322D]">{title}</div>
+    {children && <div className="max-w-md text-[13px] leading-relaxed text-[#5E5B53]">{children}</div>}
   </div>
 );
 
@@ -141,7 +141,7 @@ export const LoadState: React.FC<{ error: unknown; loading?: boolean; what: stri
   if (error instanceof NotAvailable) {
     return (
       <EmptyState className={className} title="Backend endpoint not available yet" icon={<PlugZap className="h-5 w-5" />}>
-        This view is wired to <span className="font-mono text-[#C9CDD3]">{error.message.split(': ')[1]}</span>. It fills
+        This view is wired to <span className="font-mono text-[#33322D]">{error.message.split(': ')[1]}</span>. It fills
         in as soon as the backend ships it; nothing here is simulated.
       </EmptyState>
     );
@@ -149,7 +149,7 @@ export const LoadState: React.FC<{ error: unknown; loading?: boolean; what: stri
   if (error) {
     return (
       <EmptyState className={className} title={`Couldn't load ${what}`}>
-        <span className="text-[#F9B8BF]">{error instanceof Error ? error.message : String(error)}</span>
+        <span className="text-[#8E1F18]">{error instanceof Error ? error.message : String(error)}</span>
       </EmptyState>
     );
   }
@@ -158,10 +158,10 @@ export const LoadState: React.FC<{ error: unknown; loading?: boolean; what: stri
 
 export const ErrorBanner: React.FC<{ message: string | null; onDismiss?: () => void }> = ({ message, onDismiss }) =>
   message ? (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-[#F47783]/40 bg-[#F47783]/10 px-4 py-2.5 text-sm text-[#F9B8BF]">
+    <div className="flex items-start justify-between gap-3 rounded-xl border border-[#B3261E]/40 bg-[#B3261E]/10 px-4 py-2.5 text-sm text-[#8E1F18]">
       <span>{message}</span>
       {onDismiss && (
-        <button onClick={onDismiss} className="text-[#F47783] hover:text-white">
+        <button onClick={onDismiss} className="text-[#B3261E] hover:text-[#1B1B18]">
           Dismiss
         </button>
       )}

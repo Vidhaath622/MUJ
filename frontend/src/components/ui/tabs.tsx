@@ -47,8 +47,8 @@ export const TabsList = React.forwardRef<
     ref={ref}
     className={cn(
       variant === 'pills'
-        ? 'inline-flex items-center justify-center rounded-xl bg-neutral-900/90 border border-neutral-800 p-1 text-neutral-400 gap-1'
-        : 'flex items-center gap-6 border-b border-neutral-800 text-neutral-400 pb-px',
+        ? 'inline-flex items-center justify-center rounded-xl bg-[#FBF9F4] border border-[#E3DED3] p-1 text-[#5E5B53] gap-1'
+        : 'flex items-center gap-6 border-b border-[#E3DED3] text-[#5E5B53] pb-px',
       className
     )}
     {...props}
@@ -77,8 +77,8 @@ export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>
         className={cn(
           'inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium font-mono transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 select-none gap-2',
           isActive
-            ? 'bg-neutral-800 text-white shadow-sm font-semibold'
-            : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-850',
+            ? 'bg-[#FBF9F4] text-[#1B1B18] shadow-sm font-semibold'
+            : 'text-[#5E5B53] hover:text-[#1B1B18] hover:bg-[#FBF9F4]',
           className
         )}
         {...props}
@@ -89,8 +89,8 @@ export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>
             className={cn(
               'px-1.5 py-0.2 rounded-full text-[10px] font-mono',
               isActive
-                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                : 'bg-neutral-800 text-neutral-400'
+                ? 'bg-[#2F5D8A] text-[#2F5D8A] border border-[#2F5D8A]/40'
+                : 'bg-[#FBF9F4] text-[#5E5B53]'
             )}
           >
             {badge}

@@ -71,24 +71,24 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl max-h-[85vh] bg-[#090d16] border border-neutral-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-neutral-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F6F3EC] backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl max-h-[85vh] bg-[#F6F3EC] border border-[#E3DED3] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#1B1B18]">
         {/* Header */}
-        <div className="p-4 md:px-6 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/80">
+        <div className="p-4 md:px-6 border-b border-[#E3DED3] flex items-center justify-between bg-[#FBF9F4]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-teal-950/60 border border-teal-800/40 text-teal-400">
+            <div className="p-2 rounded-xl bg-[#E2EFEC] border border-[#1F6F6A]/40 text-[#1F6F6A]">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white tracking-tight">
+                <h3 className="text-base font-bold text-[#1B1B18] tracking-tight">
                   Synthetic Test-Question Generator
                 </h3>
                 <Badge variant="neon" size="sm">
                   Deliverable 2
                 </Badge>
               </div>
-              <p className="text-[11px] text-neutral-400 font-mono">
+              <p className="text-[11px] text-[#5E5B53] font-mono">
                 Extracts grounded question-answer test pairs directly from corpus chunks.
               </p>
             </div>
@@ -96,20 +96,20 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition"
+            className="p-1.5 rounded-lg hover:bg-[#FBF9F4] text-[#5E5B53] hover:text-[#1B1B18] transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Generator Controls */}
-        <div className="p-4 bg-neutral-900/40 border-b border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-4 bg-[#FBF9F4] border-b border-[#E3DED3] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-neutral-400">Source Document:</span>
+            <span className="text-xs font-mono text-[#5E5B53]">Source Document:</span>
             <select
               value={selectedDocId}
               onChange={(e) => setSelectedDocId(e.target.value)}
-              className="text-xs font-mono bg-neutral-950 border border-neutral-700 text-white rounded-lg px-2.5 py-1.5"
+              className="text-xs font-mono bg-[#FBF9F4] border border-[#E3DED3] text-[#1B1B18] rounded-lg px-2.5 py-1.5"
             >
               {documents.map((d) => (
                 <option key={d.document_id} value={d.document_id}>
@@ -124,7 +124,7 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
             size="sm"
             onClick={handleTriggerGenerate}
             disabled={isGenerating}
-            className="bg-teal-600 hover:bg-teal-500 text-white font-mono text-xs gap-1.5"
+            className="bg-[#1F6F6A] hover:bg-[#1F6F6A] text-[#1B1B18] font-mono text-xs gap-1.5"
           >
             {isGenerating ? (
               <>
@@ -143,30 +143,30 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
         {/* Question List */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
           {generatorError && (
-            <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-xs font-mono text-rose-300 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+            <div className="p-3 rounded-xl bg-[#F6E3E0] border border-[#B3261E]/40 text-xs font-mono text-[#B3261E] flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-[#B3261E] flex-shrink-0" />
               <span>{generatorError}</span>
             </div>
           )}
 
-          <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400 block mb-1">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-[#5E5B53] block mb-1">
             Generated Benchmark Test Cases ({questionList.length}):
           </span>
 
           {questionList.map((q) => (
             <div
               key={q.test_id}
-              className="p-4 rounded-xl border border-neutral-800 bg-neutral-900/40 hover:border-neutral-700 transition space-y-2.5"
+              className="p-4 rounded-xl border border-[#E3DED3] bg-[#FBF9F4] hover:border-[#E3DED3] transition space-y-2.5"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] font-mono font-bold text-teal-300 bg-teal-950/80 px-2 py-0.5 rounded border border-teal-800/60">
+                  <span className="text-[11px] font-mono font-bold text-[#1F6F6A] bg-[#E2EFEC] px-2 py-0.5 rounded border border-[#1F6F6A]/40">
                     {q.test_id}
                   </span>
-                  <Badge variant="outline" size="sm" className="text-[10px] font-mono text-neutral-300 border-neutral-700">
+                  <Badge variant="outline" size="sm" className="text-[10px] font-mono text-[#33322D] border-[#E3DED3]">
                     {q.archetype}
                   </Badge>
-                  <span className="text-[11px] font-mono text-neutral-500">
+                  <span className="text-[11px] font-mono text-[#6E6A62]">
                     chunk: {q.source_chunk_id}
                   </span>
                 </div>
@@ -178,37 +178,37 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
                       onSelectQuestion(q);
                       onClose();
                     }}
-                    className="text-[11px] font-mono border-sky-800 text-sky-300 hover:bg-sky-950/40 gap-1 py-1 h-7"
+                    className="text-[11px] font-mono border-[#2F5D8A]/40 text-[#2F5D8A] hover:bg-[#E3EAF2] gap-1 py-1 h-7"
                   >
                     <span>Test in Trace</span>
                     <ArrowRight className="w-3 h-3" />
                   </Button>
                 </div>
 
-                <div className="text-sm font-semibold text-white font-sans">
+                <div className="text-sm font-semibold text-[#1B1B18] font-sans">
                   {q.question}
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-black/50 border border-neutral-800/80 text-xs space-y-1">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">
+                <div className="p-2.5 rounded-lg bg-[#F6F3EC] border border-[#E3DED3] text-xs space-y-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#1F7A4D] font-bold block">
                     Ground Truth Expected Answer:
                   </span>
-                  <p className="text-neutral-200 font-mono text-[11px]">
+                  <p className="text-[#1B1B18] font-mono text-[11px]">
                     {q.ground_truth_answer}
                   </p>
                 </div>
 
-                <div className="text-[11px] font-mono text-neutral-400 truncate">
-                  Context snippet: <span className="text-neutral-400 italic">"{q.context_snippet}"</span>
+                <div className="text-[11px] font-mono text-[#5E5B53] truncate">
+                  Context snippet: <span className="text-[#5E5B53] italic">"{q.context_snippet}"</span>
                 </div>
               </div>
             ))}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-neutral-800 bg-neutral-950/80 flex items-center justify-between text-xs font-mono text-neutral-400">
+        <div className="p-4 border-t border-[#E3DED3] bg-[#FBF9F4] flex items-center justify-between text-xs font-mono text-[#5E5B53]">
           <span>Pairs generated via synthetic question generator from document chunks</span>
-          <Button variant="outline" size="sm" onClick={onClose} className="border-neutral-700">
+          <Button variant="outline" size="sm" onClick={onClose} className="border-[#E3DED3]">
             Close
           </Button>
         </div>

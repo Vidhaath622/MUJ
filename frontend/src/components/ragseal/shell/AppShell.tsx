@@ -135,17 +135,17 @@ export const AppShell: React.FC<AppShellProps> = ({
   fitScreen,
   children,
 }) => (
-  <div className="flex h-screen overflow-hidden bg-[#08090B] text-[#E8EAED]">
-    <aside className="flex w-[60px] shrink-0 flex-col border-r border-[#17191D] bg-[#0A0B0D] lg:w-[232px]">
+  <div className="flex h-screen overflow-hidden bg-[#F6F3EC] text-[#1B1B18]">
+    <aside className="flex w-[60px] shrink-0 flex-col border-r border-[#E3DED3] bg-[#F6F3EC] lg:w-[232px]">
       <div className="flex h-14 items-center gap-2.5 px-[19px] lg:px-5">
-        <ShieldCheck className="h-[22px] w-[22px] shrink-0 text-[#E8EAED]" strokeWidth={1.6} />
+        <ShieldCheck className="h-[22px] w-[22px] shrink-0 text-[#1B1B18]" strokeWidth={1.6} />
         <span className="hidden text-[15px] font-semibold tracking-[-0.01em] lg:inline">RAGSeal</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2.5 pb-4 pt-2 lg:px-3">
         {NAV.map((g) => (
           <div key={g.group} className="mb-5">
-            <div className="mb-1.5 hidden px-2.5 text-[11px] font-medium text-[#6F757E] lg:block">{g.group}</div>
+            <div className="mb-1.5 hidden px-2.5 text-[11px] font-medium text-[#6E6A62] lg:block">{g.group}</div>
             <ul className="space-y-0.5">
               {g.items.map((item) => {
                 const active = route === item.id;
@@ -163,11 +163,11 @@ export const AppShell: React.FC<AppShellProps> = ({
                       className={cn(
                         'flex h-9 items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors lg:justify-start',
                         active
-                          ? 'bg-[#16181C] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
-                          : 'text-[#8A9099] hover:bg-white/[0.03] hover:text-[#E8EAED]'
+                          ? 'bg-[#EFEBE2] text-[#1B1B18] shadow-[inset_0_1px_0_rgba(27,27,24,0.04)]'
+                          : 'text-[#5E5B53] hover:bg-[#1B1B18]/[0.03] hover:text-[#1B1B18]'
                       )}
                     >
-                      <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-white' : 'text-[#6F757E]')} />
+                      <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-[#1B1B18]' : 'text-[#6E6A62]')} />
                       <span className="hidden truncate lg:inline">{item.label}</span>
                     </a>
                   </li>
@@ -178,14 +178,14 @@ export const AppShell: React.FC<AppShellProps> = ({
         ))}
       </nav>
 
-      <div className="border-t border-[#17191D] p-3">
+      <div className="border-t border-[#E3DED3] p-3">
         <ModelStatus live={live} health={health} />
         <button
           onClick={onOpenAuth}
-          className="mt-2 flex h-9 w-full items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[#C9CDD3] transition-colors hover:bg-white/[0.03] lg:justify-start"
+          className="mt-2 flex h-9 w-full items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[#33322D] transition-colors hover:bg-[#1B1B18]/[0.03] lg:justify-start"
           title={user?.email ?? 'Sign in'}
         >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1C1F24] text-[11px] font-medium text-white">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ECE7DC] text-[11px] font-medium text-[#1B1B18]">
             {user ? user.email[0].toUpperCase() : <User className="h-3.5 w-3.5" />}
           </span>
           <span className="hidden truncate lg:inline">{user ? user.email.split('@')[0] : 'Sign in'}</span>
@@ -194,10 +194,10 @@ export const AppShell: React.FC<AppShellProps> = ({
     </aside>
 
     <div className="flex min-w-0 flex-1 flex-col">
-      <header className="flex min-h-14 shrink-0 items-center gap-4 border-b border-[#17191D] px-6 py-2">
+      <header className="flex min-h-14 shrink-0 items-center gap-4 border-b border-[#E3DED3] px-6 py-2">
         <div className="min-w-0">
-          <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-white">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
-          <p className="truncate text-xs text-[#8A9099]">{ROUTE_BLURB[route]}</p>
+          <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-[#1B1B18]">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
+          <p className="truncate text-xs text-[#5E5B53]">{ROUTE_BLURB[route]}</p>
         </div>
         <div id={TOP_BAR_SLOT} className="ml-auto flex min-w-0 items-center gap-3">
           {topBarControls}
@@ -212,8 +212,8 @@ export const AppShell: React.FC<AppShellProps> = ({
 const ModelStatus: React.FC<{ live: boolean; health: HealthResponse | null }> = ({ live, health }) => {
   if (!live || !health) {
     return (
-      <div className="flex items-center justify-center gap-2 px-2.5 text-xs text-[#F47783] lg:justify-start">
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#F47783]" />
+      <div className="flex items-center justify-center gap-2 px-2.5 text-xs text-[#B3261E] lg:justify-start">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#B3261E]" />
         <span className="hidden lg:inline">Backend offline</span>
       </div>
     );
@@ -235,16 +235,16 @@ const ModelStatus: React.FC<{ live: boolean; health: HealthResponse | null }> = 
       <span
         className={cn(
           'mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full',
-          ready ? 'bg-[#3DD68C] shadow-[0_0_0_3px_rgba(61,214,140,0.15)]' : 'bg-[#F5A524] shadow-[0_0_0_3px_rgba(245,165,36,0.15)]'
+          ready ? 'bg-[#1F7A4D] shadow-[0_0_0_3px_rgba(61,214,140,0.15)]' : 'bg-[#B26B00] shadow-[0_0_0_3px_rgba(245,165,36,0.15)]'
         )}
       />
       <div className="hidden min-w-0 leading-relaxed lg:block">
-        <div className="truncate text-[#8A9099]">
-          Chatbot model <span className="font-mono text-[#C9CDD3]">{gen?.name ?? health.generator_model ?? '—'}</span>
+        <div className="truncate text-[#5E5B53]">
+          Chatbot model <span className="font-mono text-[#33322D]">{gen?.name ?? health.generator_model ?? '—'}</span>
         </div>
-        <div className="truncate text-[#8A9099]">
-          Grading model <span className="font-mono text-[#C9CDD3]">{judgeName}</span>
-          {pool.keys != null && pool.keys > 1 && <span className="text-[#6F757E]"> ×{pool.keys} keys</span>}
+        <div className="truncate text-[#5E5B53]">
+          Grading model <span className="font-mono text-[#33322D]">{judgeName}</span>
+          {pool.keys != null && pool.keys > 1 && <span className="text-[#6E6A62]"> ×{pool.keys} keys</span>}
         </div>
       </div>
     </div>

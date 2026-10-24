@@ -65,31 +65,31 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         className={cn(
           'relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3',
           isDragging
-            ? 'border-sky-400 bg-sky-950/20 scale-[1.01]'
-            : 'border-neutral-800 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-900/70',
-          selectedFile && 'border-emerald-600/60 bg-emerald-950/10'
+            ? 'border-[#2F5D8A]/40 bg-[#E3EAF2] scale-[1.01]'
+            : 'border-[#E3DED3] bg-[#FBF9F4] hover:border-[#E3DED3] hover:bg-[#FBF9F4]',
+          selectedFile && 'border-[#1F7A4D]/40 bg-[#E6F0E8]'
         )}
       >
-        <div className="w-12 h-12 rounded-2xl bg-neutral-800/80 border border-neutral-700 flex items-center justify-center text-sky-400 shadow-inner">
+        <div className="w-12 h-12 rounded-2xl bg-[#FBF9F4] border border-[#E3DED3] flex items-center justify-center text-[#2F5D8A] shadow-inner">
           <UploadCloud className="w-6 h-6" />
         </div>
 
         {selectedFile ? (
           <div className="space-y-1">
-            <div className="flex items-center justify-center gap-2 text-sm font-semibold text-white">
-              <FileText className="w-4 h-4 text-emerald-400" />
+            <div className="flex items-center justify-center gap-2 text-sm font-semibold text-[#1B1B18]">
+              <FileText className="w-4 h-4 text-[#1F7A4D]" />
               <span>{selectedFile.name}</span>
             </div>
-            <p className="text-xs text-neutral-400 font-mono">
+            <p className="text-xs text-[#5E5B53] font-mono">
               {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for chunking
             </p>
           </div>
         ) : (
           <div className="space-y-1">
-            <h4 className="text-sm font-semibold text-white">
+            <h4 className="text-sm font-semibold text-[#1B1B18]">
               Click to upload or drag &amp; drop document
             </h4>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-[#5E5B53]">
               Supports {acceptedFormats.join(', ')} up to {maxSizeMb}MB
             </p>
           </div>
