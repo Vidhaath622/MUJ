@@ -168,6 +168,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                         onNavigate(item.id);
                       }}
                       aria-current={active ? 'page' : undefined}
+                      data-tour={`nav-${item.id}`}
                       title={`${item.label}: ${item.hint}`}
                       className={cn(
                         'flex h-9 items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors lg:justify-start',
@@ -190,6 +191,14 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div className="border-t border-[var(--rule)] p-3">
         <ModelStatus live={live} health={health} />
         <ThemeToggle />
+        <button
+          onClick={() => window.dispatchEvent(new Event('ragseal:tour'))}
+          className="flex h-9 w-full items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] lg:justify-start"
+          title="Show the guided tour"
+        >
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--rule)] text-[12px] font-semibold text-[var(--ink)]">?</span>
+          <span className="hidden lg:inline">Guided tour</span>
+        </button>
         <button
           onClick={onOpenAuth}
           className="flex h-9 w-full items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] lg:justify-start"

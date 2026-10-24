@@ -21,15 +21,15 @@ export const CaseDrawer: React.FC<{
   if (!result) return null;
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="Diagnosis">
-      <button aria-label="Close diagnosis" onClick={onClose} className="absolute inset-0 bg-[var(--paper)] backdrop-blur-[2px]" />
-      <div className="lab-fade-up relative flex h-full w-[min(1120px,92vw)] flex-col border-l border-[var(--rule)] bg-[var(--paper)] shadow-2xl">
+      <button aria-label="Close diagnosis" onClick={onClose} className="drawer-backdrop absolute inset-0 bg-[color:color-mix(in_srgb,var(--ink)_38%,transparent)] backdrop-blur-[2px]" />
+      <div className="drawer-panel relative flex h-full w-[min(1120px,92vw)] flex-col border-l border-[var(--rule)] bg-[var(--paper)] shadow-2xl">
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--rule)] px-6">
           <span className="text-[15px] font-semibold">Diagnosis</span>
           <button onClick={onClose} className="rounded-md p-1.5 text-[var(--ink-2)] hover:bg-[color:color-mix(in_srgb,var(--ink)_4%,transparent)] hover:text-[var(--ink)]" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
           <CaseReport
             result={result}
             testId={testId ?? result.test_id}
