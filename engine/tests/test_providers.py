@@ -171,3 +171,21 @@ def test_zero_wait_overflows_immediately(tmp_path):
     judge.start_tracking()
     assert judge.ask("s", "u", {"type": "object"}) == {"score": 0}
     assert judge.used()["judge_fallback_used"] is True
+
+
+def test_rate_limit_never_overflows_to_local_judge(tmp_path):
+    from engine.llm import Generation, Judge, RateLimited
+
+    class Limited(_Model):
+        calls = 0
+
+        def chat(self, messages, schema=None, num_predict=512, patient=True):
+            Limited.calls += 1
+            if Limited.calls < 3:
+                raise RateLimited("429", wait=0.2)
+            return Generation('{"score": 1}', self.model, 1)
+
+    judge = Judge(Limited("hosted", True), tmp_path / "c.sqlite", fallback=_Model("local", False, '{"score": 0}'), max_wait_s=0)
+    judge.start_tracking()
+    assert judge.ask("s", "u", {"type": "object"}) == {"score": 1}
+    assert judge.used()["judge_fallback_used"] is False

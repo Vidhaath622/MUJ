@@ -452,9 +452,14 @@ class Judge:
                 time.sleep(max(0.05, primary_wait))  # a short wait beats switching judges
                 continue
             else:
-                candidates = [m for m in usable if not self._is_primary(m) and self._cooldown.get(id(m), 0) <= now]
+                # A rate limit overflows to other hosted models only. The local model is the last
+                # resort for when every hosted judge is down: it is slow and shares the GPU with the
+                # generator under test.
+                hosted_usable = [m for m in usable if m.hosted]
+                pool = [m for m in (hosted_usable or usable) if not self._is_primary(m)]
+                candidates = [m for m in pool if self._cooldown.get(id(m), 0) <= now]
                 if not candidates:
-                    reopen = min(self._cooldown.get(id(m), now) for m in usable)
+                    reopen = min(self._cooldown.get(id(m), now) for m in (hosted_usable or usable))
                     time.sleep(min(2.0, max(0.1, reopen - now)))
                     continue
             member = next((m for m in candidates if self._slots[id(m)].acquire(blocking=False)), None)
