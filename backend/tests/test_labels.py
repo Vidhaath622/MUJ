@@ -107,3 +107,23 @@ def test_stability_is_async(client, alice, bob, fake_engine):
     assert body["status"] == "done" and body["stable"] is True and body["shuffle"]["runs"] == 2
     assert client.get("/api/trust/stability/latest", headers=alice).json()["stability_id"] == sid
     assert client.get(f"/api/trust/stability/{sid}", headers=bob).status_code == 404
+
+
+def test_compare_flow(client, alice, fake_engine):
+    import time
+
+    assert client.get("/api/rag/profiles", headers=alice).json()[1]["id"] == "v2"
+    assert client.post("/api/compare", headers=alice, json={"pack_ids": ["nope"]}).status_code == 404
+    client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"})  # becomes the reused v1 baseline
+    started = client.post("/api/compare", headers=alice, json={"pack_ids": ["banking"]})
+    assert started.status_code == 202, started.text
+    assert started.json()["reused_base_runs"] == ["banking"]
+    cid = started.json()["compare_id"]
+    for _ in range(100):
+        body = client.get(f"/api/compare/{cid}", headers=alice).json()
+        if body["status"] != "running":
+            break
+        time.sleep(0.05)
+    assert body["status"] == "done", body
+    assert body["n"] == 1 and body["pass_to_fail"] == 1 and body["flips"][0]["direction"] == "pass_to_fail"
+    assert body["flips"][0]["pack_id"] == "banking"

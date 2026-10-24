@@ -156,3 +156,25 @@ class FakeEngine:
         return {"batch_id": batch["batch_id"], "judges": judges or ["groq:a", "groq:b"], "n_cases": 1,
                 "judge_swap": {"correlation": {"faithfulness": 1.0}, "verdict_agreement": 1.0, "verdict_kappa": 1.0, "n": 1},
                 "shuffle": {"runs": shuffles, "max_delta": 0.0, "stable": True}, "stable": True}
+
+    def profiles(self):
+        return [{"id": "v1", "name": "v1", "params": {"top_k": 4}}, {"id": "v2", "name": "v2", "params": {"top_k": 2}}]
+
+    def run_profile(self, owner_id, pack_id, profile_id, progress=None, batch_id=None):
+        pack = self.load_pack(owner_id, pack_id)
+        batch = self.evaluate_batch(owner_id, pack["document_ids"], pack["test_cases"], pack_id=pack_id, progress=progress, batch_id=batch_id)
+        if profile_id == "v2":
+            for result in batch["results"]:
+                result["root_cause"] = {"category": "RETRIEVAL_FAILURE"}
+        return {**batch, "profile": profile_id, "failed_cases": 0}
+
+    def compare(self, base_results, candidate_results, base, candidate):
+        base_pass = {r["test_id"]: r["root_cause"]["category"] == "CLEAN_PASS" for r in base_results}
+        flips = [
+            {"test_id": r["test_id"], "pack_id": r.get("pack_id"),
+             "direction": "pass_to_fail" if base_pass[r["test_id"]] else "fail_to_pass"}
+            for r in candidate_results
+            if base_pass.get(r["test_id"]) != (r["root_cause"]["category"] == "CLEAN_PASS")
+        ]
+        return {"base": base, "candidate": candidate, "n": len(candidate_results), "flips": flips,
+                "pass_to_fail": sum(f["direction"] == "pass_to_fail" for f in flips)}
