@@ -11,10 +11,17 @@ function scrollParent(el: HTMLElement | null): HTMLElement | null {
   return null;
 }
 
+// The scene eases toward the scroll position instead of jumping with it: a trackpad flick
+// moves the scroll hundreds of pixels in a few frames, which made the motion (the retriever's
+// sideways sweep especially) snap. SMOOTH_MS is the easing time constant; MAX_CHAPTERS_PER_S
+// caps how fast the story can play however hard the user scrolls.
+const SMOOTH_MS = 200;
+const MAX_CHAPTERS_PER_S = 3;
+
 /**
- * Scroll-driven story: the section is `chapters + 1` viewports tall and a sticky stage
- * inside it stays pinned. Returns the stage height (the scroll viewport) and the current
- * chapter position as a float, 0 → chapters. Updates at most once per animation frame.
+ * Scroll-driven story: a tall section with a sticky stage inside that stays pinned. Returns the
+ * stage height (the scroll viewport) and the current chapter position as a float,
+ * 0 → chapters, eased toward the scroll position once per animation frame.
  */
 export function useScrollStory(chapters: number) {
   const sectionRef = useRef<HTMLDivElement | null>(null);
@@ -26,7 +33,31 @@ export function useScrollStory(chapters: number) {
     if (!section) return;
     const scroller = scrollParent(section);
     const target: HTMLElement | Window = scroller ?? window;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     let frame = 0;
+    let ease = 0;
+    let goal = 0;
+    let shown = 0;
+    let last = 0;
+    let first = true;
+
+    const tick = (now: number) => {
+      const dt = last ? Math.min(64, now - last) : 16;
+      last = now;
+      const diff = goal - shown;
+      if (Math.abs(diff) < 0.002) {
+        shown = goal;
+        setChapter(shown);
+        ease = 0;
+        last = 0;
+        return;
+      }
+      const maxStep = (MAX_CHAPTERS_PER_S * dt) / 1000;
+      const step = diff * (1 - Math.exp(-dt / SMOOTH_MS));
+      shown += Math.max(-maxStep, Math.min(maxStep, step));
+      setChapter(shown);
+      ease = requestAnimationFrame(tick);
+    };
 
     const measure = () => {
       const vh = scroller ? scroller.clientHeight : window.innerHeight;
@@ -36,7 +67,15 @@ export function useScrollStory(chapters: number) {
         : section.getBoundingClientRect().top;
       const travel = section.offsetHeight - vh;
       const p = travel > 0 ? Math.min(1, Math.max(0, -top / travel)) : 0;
-      setChapter(p * chapters);
+      goal = p * chapters;
+      // First paint (and deep links) land directly; reduced motion never animates.
+      if (first || reduced) {
+        first = false;
+        shown = goal;
+        setChapter(shown);
+        return;
+      }
+      if (!ease) ease = requestAnimationFrame(tick);
     };
     const onScroll = () => {
       if (frame) return;
@@ -63,6 +102,7 @@ export function useScrollStory(chapters: number) {
       target.removeEventListener('scroll', onScroll);
       ro.disconnect();
       if (frame) cancelAnimationFrame(frame);
+      if (ease) cancelAnimationFrame(ease);
     };
   }, [chapters]);
 

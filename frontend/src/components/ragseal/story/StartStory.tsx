@@ -133,7 +133,7 @@ export const StartStory: React.FC<StartStoryProps> = ({ token, latest, onOpenPac
   }
 
   return (
-    <section ref={sectionRef} style={{ height: height + height * CHAPTERS * 0.5, position: 'relative' }}>
+    <section ref={sectionRef} style={{ height: height + height * CHAPTERS * 0.65, position: 'relative' }}>
       <div className="sticky top-0 overflow-hidden" style={{ height, background: 'var(--paper)' }}>
         {hero ? (
           <Stage c={chapter} hero={hero} docs={docs} height={height} />
@@ -198,8 +198,8 @@ const Stage: React.FC<{
   const qIn = easeOut(seg(c, 0.05, 0.6));
   const docsIn = seg(c, 1.0, 1.45);
   const split = easeInOut(seg(c, 1.45, 1.9));
-  const sweep = seg(c, 2.0, 2.45);
-  const pick = seg(c, 2.4, 2.95);
+  const sweep = seg(c, 1.95, 2.65);
+  const pick = seg(c, 2.55, 2.98);
   const typing = seg(c, 3.05, 3.8);
   const dials = seg(c, 4.05, 4.7);
   const rewind = seg(c, 5.0, 5.45);
