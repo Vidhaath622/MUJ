@@ -401,6 +401,44 @@ class Engine:
         batch = self.evaluate_batch(owner_id, document_ids, cases, pack_id=None, progress=progress, batch_id=batch_id)
         return {**batch, "kind": "injection", "injected_packs": pack_ids, "n_per_type": n_per_type, "confusion": confusion(batch["results"])}
 
+    # ------------------------------------------------------------ stability
+
+    def judge_model(self, spec: str) -> ChatModel:
+        """A single judge model from "provider:model" (or a bare model name, looked up in the judge pool)."""
+        from .config import PROVIDERS
+        from .llm import OllamaClient, _client
+
+        provider, _, model = spec.partition(":")
+        if provider not in PROVIDERS:
+            member = next((m for m in getattr(self.judge, "members", []) if m.model == spec), None)
+            if member is None:
+                raise NotFound(f"unknown judge {spec!r}: use provider:model, e.g. groq:openai/gpt-oss-120b")
+            return ChatModel(member.client, member.model)
+        if not model:
+            raise NotFound(f"judge {spec!r} has no model name")
+        return ChatModel(_client(provider, self.settings, OllamaClient(self.settings)), model)
+
+    def stability(
+        self,
+        owner_id: str,
+        batch: dict,
+        judges: list[str] | None = None,
+        shuffles: int = 3,
+        max_cases: int = 20,
+        progress: Callable[[int, int, int], None] | None = None,
+    ) -> dict:
+        from .stability import run_stability
+
+        judges = judges or [f"{self.judge.provider}:{self.judge.model}", "groq:qwen/qwen3.8-27b"]
+        if len(judges) != 2:
+            raise ValueError("stability needs exactly two judges")
+        models = (self.judge_model(judges[0]), self.judge_model(judges[1]))
+        for model in models:
+            ready, reason = model.ready()
+            if not ready:
+                raise ModelUnavailable(f"judge {model.provider}:{model.model} is not available: {reason}")
+        return run_stability(self, owner_id, batch, models, shuffles=shuffles, max_cases=max_cases, progress=progress)
+
     def pack_labels(self, pack_id: str) -> list[dict]:
         try:
             spec = self._pack(pack_id)
