@@ -47,6 +47,9 @@ interface LabelStudioPageProps {
  * a number for the failure type. The pipeline's own verdict is never shown, so it can't
  * anchor the labeler.
  */
+const PACK_NAME: Record<string, string> = { recruitment: 'Recruitment', banking: 'Banking', healthcare: 'Healthcare' };
+const NEXT_PACK: Record<string, string | undefined> = { recruitment: 'banking', banking: 'healthcare', healthcare: 'recruitment' };
+
 export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId, onPackChange }) => {
   const [labeler, setLabeler] = useState<string | null>(readLabeler);
   const [items, setItems] = useState<LabelItem[] | null>(null);
@@ -54,6 +57,8 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
   const [review, setReview] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [index, setIndex] = useState(0);
+  // After everything is labelled the queue shows a completion card; "Review my labels" browses 1..N.
+  const [browsing, setBrowsing] = useState(false);
   const [done, setDone] = useState<Record<string, 'correct' | string>>({});
   const [pickingType, setPickingType] = useState(false);
   const [note, setNote] = useState('');
@@ -132,20 +137,40 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
 
   const item = items?.[index];
   const labeledCount = Object.keys(done).length;
+  const allDone = !!items && items.length > 0 && labeledCount >= items.length;
+  const showComplete = allDone && !browsing && !review;
 
+  useEffect(() => setBrowsing(false), [packId, labeler, review]);
+
+  const goTo = useCallback(
+    (i: number) => {
+      if (!items?.length) return;
+      setPickingType(false);
+      setNote('');
+      setIndex(Math.max(0, Math.min(items.length - 1, i)));
+    },
+    [items]
+  );
+
+  // Next unlabelled item after this one (no wrap-around). When browsing a finished pack, step forward by one.
   const advance = useCallback(() => {
     if (!items) return;
     setPickingType(false);
     setNote('');
-    // Next unlabeled item after this one, wrapping around; stay put when all are done.
-    for (let step = 1; step <= items.length; step++) {
-      const j = (index + step) % items.length;
-      if (!done[items[j].test_id] || step === items.length) {
+    if (browsing) {
+      setIndex((i) => Math.min(items.length - 1, i + 1));
+      return;
+    }
+    for (let j = index + 1; j < items.length; j++) {
+      if (!done[items[j].test_id]) {
         setIndex(j);
         return;
       }
     }
-  }, [items, index, done]);
+    const firstOpen = items.findIndex((it) => !done[it.test_id]);
+    if (firstOpen !== -1) setIndex(firstOpen);
+    else setIndex((i) => Math.min(items.length - 1, i + 1));
+  }, [items, index, done, browsing]);
 
   const submit = useCallback(
     async (correct: boolean, failureType: string | null) => {
@@ -157,7 +182,8 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
           { test_id: item.test_id, batch_id: item.batch_id, labeler, correct, failure_type: failureType, note: note.trim() || undefined },
           token
         );
-        setDone((d) => ({ ...d, [item.test_id]: correct ? 'correct' : failureType ?? 'wrong' }));
+        const value = correct ? 'correct' : failureType ?? 'wrong';
+        setDone((d) => ({ ...d, [item.test_id]: value }));
         advance();
       } catch (err) {
         setError(errorText(err));
@@ -199,13 +225,14 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
       } else if (e.key.toLowerCase() === 's') {
         advance();
       } else if (e.key === 'ArrowLeft' && items) {
-        setPickingType(false);
-        setIndex((i) => (i - 1 + items.length) % items.length);
+        goTo(index - 1);
+      } else if (e.key === 'ArrowRight' && items) {
+        goTo(index + 1);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [item, items, pickingType, submit, advance, types]);
+  }, [item, items, pickingType, submit, advance, types, goTo, index]);
 
   const knownAnswer = item?.ground_truth ?? item?.ground_truth_answer;
 
@@ -266,6 +293,43 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
             The queue fills from the pack's latest finished run. Run the pack first, then come back.
           </EmptyState>
         </div>
+      ) : showComplete ? (
+        <div className="flex h-full items-center justify-center p-6">
+          <div className="lab-panel lab-fade-up w-full max-w-lg rounded-2xl p-7 text-center">
+            <div className="text-xs uppercase tracking-[0.12em] text-[var(--ok)]">Pack complete</div>
+            <h2 className="mt-2 text-xl font-semibold tracking-[-0.01em] text-[var(--ink)]">
+              All {items.length} labelled in {PACK_NAME[packId] ?? packId}
+            </h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-[var(--ink-2)]">
+              Thanks. You can go back over your labels, check the answers you and your teammate disagreed on, or move on.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2.5">
+              <button
+                onClick={() => {
+                  setBrowsing(true);
+                  goTo(0);
+                }}
+                className="rounded-[9px] border border-[var(--rule-2)] px-3.5 py-2 text-[13px] text-[var(--ink)] hover:bg-[var(--panel-2)]"
+              >
+                Review my labels
+              </button>
+              <button
+                onClick={() => setReview(true)}
+                className="rounded-[9px] border border-[var(--rule-2)] px-3.5 py-2 text-[13px] text-[var(--ink)] hover:bg-[var(--panel-2)]"
+              >
+                Review disagreements
+              </button>
+              {NEXT_PACK[packId] && (
+                <button
+                  onClick={() => onPackChange(NEXT_PACK[packId] as PackId)}
+                  className="rounded-[9px] bg-[var(--ink)] px-3.5 py-2 text-[13px] font-medium text-[var(--paper)] hover:opacity-90"
+                >
+                  Next pack: {PACK_NAME[NEXT_PACK[packId] as string]}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       ) : (
         item && (
           <div className="mx-auto flex min-h-0 w-full max-w-[1320px] flex-1 flex-col gap-4 px-6 py-5">
@@ -276,11 +340,16 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
             )}
             <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
-            <div key={item.test_id} className="lab-fade-up grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr]">
+            <div key={item.test_id} className="page-enter grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr]">
               <section className="lab-panel flex min-h-0 flex-col rounded-2xl p-6">
                 <div className="flex items-center gap-2 text-xs text-[var(--ink-2)]">
                   <span className="font-mono">{item.test_id}</span>
-                  {done[item.test_id] && <span className="text-[var(--ok)]">· labeled</span>}
+                  {done[item.test_id] && (
+                    <span className="text-[var(--ok)]">
+                      · {done[item.test_id] === 'labeled' ? 'already labelled' : `you said ${done[item.test_id] === 'correct' ? 'Correct' : `Wrong${done[item.test_id] === 'wrong' ? '' : ` · ${failureLabel(done[item.test_id])}`}`}`}
+                      <span className="text-[var(--ink-2)]"> (press 1 / 2 to change)</span>
+                    </span>
+                  )}
                 </div>
                 <h2 className="mt-2 text-[22px] font-semibold leading-snug tracking-[-0.02em] text-[var(--ink)]">{item.question}</h2>
 
@@ -340,10 +409,8 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
               onType={(id) => submit(false, id)}
               onCancel={() => setPickingType(false)}
               onSkip={advance}
-              onBack={() => {
-                setPickingType(false);
-                setIndex((i) => (i - 1 + items.length) % items.length);
-              }}
+              onBack={() => goTo(index - 1)}
+              backDisabled={index === 0}
             />
           </div>
         )
@@ -421,7 +488,8 @@ const ActionBar: React.FC<{
   onCancel: () => void;
   onSkip: () => void;
   onBack: () => void;
-}> = ({ types, picking, saving, onCorrect, onWrong, onType, onCancel, onSkip, onBack }) => {
+  backDisabled?: boolean;
+}> = ({ types, picking, saving, onCorrect, onWrong, onType, onCancel, onSkip, onBack, backDisabled }) => {
   const groups = useMemo(() => {
     const keyed = types.map((f, i) => ({ ...f, key: i + 1 }));
     return [
@@ -475,7 +543,8 @@ const ActionBar: React.FC<{
     <div className="flex items-center gap-3">
       <button
         onClick={onBack}
-        className="flex h-14 items-center gap-2 rounded-xl border border-[var(--rule)] px-4 text-[13px] text-[var(--ink-2)] hover:text-[var(--ink)]"
+        disabled={backDisabled}
+        className="flex h-14 items-center gap-2 rounded-xl border border-[var(--rule)] px-4 text-[13px] text-[var(--ink-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-35"
         aria-label="Previous item"
       >
         <ArrowLeft className="h-4 w-4" />

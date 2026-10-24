@@ -152,6 +152,8 @@ export const App: React.FC = () => {
         onOpenAuth={() => setIsAuthOpen(true)}
         fitScreen={route === 'diagnose' || route === 'label' || route === 'bots' || route === 'testsets'}
       >
+        {/* Keyed by route so each page eases in instead of cutting. */}
+        <div key={route} className="page-enter flex min-h-0 flex-1 flex-col">
         {route === 'bots' && <BotsPage token={authToken} initialPack={activePackId} />}
 
         {route === 'testsets' && <TestSetsPage token={authToken} />}
@@ -217,6 +219,7 @@ export const App: React.FC = () => {
             <HowItWorksStory backendHealth={backendHealth} onRefreshHealth={handleRefreshHealth} />
           </div>
         )}
+        </div>
       </AppShell>
       <Tour enabled={!!authToken} />
 
