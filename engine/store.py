@@ -66,17 +66,23 @@ class VectorStore:
             CREATE INDEX IF NOT EXISTS chunks_doc ON chunks (owner_id, document_id);
             """
         )
+        columns = {row[1] for row in self._db.execute("PRAGMA table_info(documents)")}
+        if "embed_key" not in columns:
+            self._db.execute("ALTER TABLE documents ADD COLUMN embed_key TEXT")
         self._db.commit()
 
-    def add_document(self, owner_id: str, doc: ParsedDocument, embeddings: list[list[float]], pack_id: str | None = None) -> StoredDocument:
+    def add_document(
+        self, owner_id: str, doc: ParsedDocument, embeddings: list[list[float]], embed_key: str, pack_id: str | None = None
+    ) -> StoredDocument:
         if len(embeddings) != len(doc.chunks):
             raise ValueError("one embedding per chunk is required")
         now = time.time()
         with self._lock:
             self._db.execute("DELETE FROM chunks WHERE owner_id = ? AND document_id = ?", (owner_id, doc.document_id))
             self._db.execute(
-                "INSERT OR REPLACE INTO documents VALUES (?, ?, ?, ?, ?, ?)",
-                (owner_id, doc.document_id, doc.filename, pack_id, len(doc.chunks), now),
+                "INSERT OR REPLACE INTO documents (owner_id, document_id, filename, pack_id, chunk_count, uploaded_at, embed_key)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (owner_id, doc.document_id, doc.filename, pack_id, len(doc.chunks), now, embed_key),
             )
             self._db.executemany(
                 "INSERT INTO chunks VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -87,6 +93,29 @@ class VectorStore:
             )
             self._db.commit()
         return StoredDocument(doc.document_id, doc.filename, len(doc.chunks), pack_id, _iso(now))
+
+    def documents_needing_embeddings(self, owner_id: str, document_ids: list[str], embed_key: str) -> list[str]:
+        """Documents embedded with a different model than the current one (their vectors are not comparable)."""
+        if not document_ids:
+            return []
+        marks = ",".join("?" * len(document_ids))
+        with self._lock:
+            rows = self._db.execute(
+                f"SELECT document_id FROM documents WHERE owner_id = ? AND document_id IN ({marks}) AND (embed_key IS NULL OR embed_key != ?)",
+                (owner_id, *document_ids, embed_key),
+            ).fetchall()
+        return [r[0] for r in rows]
+
+    def replace_embeddings(self, owner_id: str, document_id: str, vectors: dict[str, list[float]], embed_key: str) -> None:
+        with self._lock:
+            self._db.executemany(
+                "UPDATE chunks SET embedding = ? WHERE owner_id = ? AND chunk_id = ?",
+                [(np.asarray(v, dtype=np.float32).tobytes(), owner_id, chunk_id) for chunk_id, v in vectors.items()],
+            )
+            self._db.execute(
+                "UPDATE documents SET embed_key = ? WHERE owner_id = ? AND document_id = ?", (embed_key, owner_id, document_id)
+            )
+            self._db.commit()
 
     def has_document(self, owner_id: str, document_id: str) -> bool:
         with self._lock:

@@ -12,6 +12,8 @@ from __future__ import annotations
 import difflib
 import re
 
+import numpy as np
+
 from .ingest import Chunk
 from .llm import Judge, JudgeError
 from .rag import RagSystem
@@ -156,10 +158,8 @@ class SyntheticGenerator:
         """Pair each new chunk with its most similar old chunk; keep pairs where a fact changed."""
         if not new_chunks or not old_chunks or limit <= 0:
             return []
-        new_vecs = self.rag.ollama.embed([f"search_document: {c.text}" for c in new_chunks])
-        old_vecs = self.rag.ollama.embed([f"search_document: {c.text}" for c in old_chunks])
-        import numpy as np
-
+        new_vecs = self.rag.embedder.embed([c.text for c in new_chunks])
+        old_vecs = self.rag.embedder.embed([c.text for c in old_chunks])
         a = np.asarray(new_vecs, dtype=np.float32)
         b = np.asarray(old_vecs, dtype=np.float32)
         a /= np.linalg.norm(a, axis=1, keepdims=True) + 1e-9
