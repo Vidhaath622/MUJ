@@ -182,6 +182,7 @@ class Evaluator:
             replay.pop("passed")
 
         relevance_by_id = {c["chunk_id"]: c for c in per_chunk}
+        filenames = {d.document_id: d.filename for d in self.store.list_documents(owner_id)}
         retrieved_out = []
         for scored in retrieved:
             graded = relevance_by_id.get(scored.chunk.chunk_id, {})
@@ -189,6 +190,7 @@ class Evaluator:
                 {
                     "chunk_id": scored.chunk.chunk_id,
                     "document_id": scored.chunk.document_id,
+                    "filename": filenames.get(scored.chunk.document_id),
                     "text": scored.chunk.text,
                     "page": scored.chunk.page,
                     "relevance_score": graded.get("relevance_score", 0.0),

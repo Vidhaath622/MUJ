@@ -189,3 +189,30 @@ def test_rate_limit_never_overflows_to_local_judge(tmp_path):
     judge.start_tracking()
     assert judge.ask("s", "u", {"type": "object"}) == {"score": 1}
     assert judge.used()["judge_fallback_used"] is False
+
+
+def test_interactive_call_goes_ahead_of_batch_calls(tmp_path):
+    import threading
+    import time
+
+    from engine.llm import Generation, Judge
+
+    order = []
+
+    class Slow(_Model):
+        def chat(self, messages, schema=None, num_predict=512, patient=True):
+            time.sleep(0.05)
+            order.append(messages[1]["content"])
+            return Generation('{"ok": 1}', self.model, 1)
+
+    judge = Judge(Slow("p", True), tmp_path / "c.sqlite", max_inflight=2)
+    judge._interactive_waiting = 1  # a live call is waiting
+    batch = threading.Thread(target=lambda: judge.ask("s", "batch", {"type": "object"}))
+    batch.start()
+    time.sleep(0.15)
+    assert order == []  # the batch call yielded
+    with judge.interactive():
+        judge.ask("s", "live", {"type": "object"})
+    judge._interactive_waiting = 0
+    batch.join(timeout=2)
+    assert order == ["live", "batch"]

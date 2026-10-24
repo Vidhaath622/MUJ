@@ -1,6 +1,6 @@
 import pytest
 
-from engine.verdict import Facts, decide, needs_replay
+from engine.verdict import Facts, classify_failure, decide, needs_replay
 
 
 def facts(**overrides) -> Facts:
@@ -58,11 +58,15 @@ def test_unanswerable():
     assert not needs_replay(facts(unanswerable=True, gold_known=False))
 
 
-def test_no_ground_truth_never_replays():
+def test_no_ground_truth_never_replays_or_blames_retrieval():
     f = facts(has_ground_truth=False, gold_known=False, correct=None, relevant_context=False, faithful=False)
     assert not needs_replay(f)
-    assert decide(f).category == "COMPOUND_FAILURE"
+    assert decide(f).category == "GENERATION_HALLUCINATION"
     assert "heuristic" in decide(f).summary
+    # Abstaining on an off-topic retrieval with no known answer: not provably a retrieval failure.
+    abstain = facts(has_ground_truth=False, gold_known=False, correct=None, relevant_context=False, faithful=True, abstained=True)
+    assert decide(abstain).category == "NEEDS_REVIEW"
+    assert classify_failure(abstain, "NEEDS_REVIEW") == ("UNRESOLVED", "unknown")
 
 
 def test_failed_replay_is_unresolved():

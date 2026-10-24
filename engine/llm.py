@@ -18,6 +18,7 @@ import re
 import sqlite3
 import threading
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -349,6 +350,9 @@ class Judge:
         self.max_wait_s = max_wait_s
         self._lock = threading.Lock()
         self._slots = {id(m): threading.BoundedSemaphore(max_inflight if m.hosted else 1) for m in self.members}
+        # Batch calls may not take the last slot of a hosted model: it is kept for interactive calls.
+        self._batch_slots = {id(m): threading.BoundedSemaphore(max(1, max_inflight - 1) if m.hosted else 1) for m in self.members}
+        self._interactive_waiting = 0
         self._cooldown: dict[int, float] = {}
         self._ready: dict[int, tuple[float, bool]] = {}
         self._local = threading.local()
@@ -373,6 +377,16 @@ class Judge:
 
     def start_tracking(self) -> None:
         self._local.used = []
+
+    @contextmanager
+    def interactive(self):
+        """Mark this thread's judge calls as interactive (a person is waiting): batch calls yield to them."""
+        previous = getattr(self._local, "interactive", False)
+        self._local.interactive = True
+        try:
+            yield
+        finally:
+            self._local.interactive = previous
 
     def used(self) -> dict:
         """Who judged since start_tracking() on this thread."""
@@ -442,10 +456,26 @@ class Judge:
                 self._record(member)
                 return cached
 
+        interactive = getattr(self._local, "interactive", False)
+        if interactive:
+            with self._lock:
+                self._interactive_waiting += 1
+        try:
+            return self._ask_live(system, user, schema, interactive)
+        finally:
+            if interactive:
+                with self._lock:
+                    self._interactive_waiting -= 1
+
+    def _ask_live(self, system: str, user: str, schema: dict, interactive: bool) -> dict:
+        max_wait = min(self.max_wait_s, 3.0) if interactive else self.max_wait_s
         deadline = time.time() + 300
         last_error: Exception | None = None
         broken: set[int] = set()  # members that failed for a reason other than a rate limit
         while time.time() < deadline:
+            if not interactive and self._interactive_waiting:
+                time.sleep(0.2)  # someone is waiting on a live answer: let their call go first
+                continue
             now = time.time()
             usable = [m for m in self.members if id(m) not in broken and self._member_ready(m)]
             if not usable:
@@ -455,7 +485,7 @@ class Judge:
             primary_wait = min((self._cooldown.get(id(m), 0) - now for m in primaries), default=float("inf"))
             if open_primaries:
                 candidates = open_primaries
-            elif primary_wait <= self.max_wait_s:
+            elif primary_wait <= max_wait:
                 time.sleep(max(0.05, primary_wait))  # a short wait beats switching judges
                 continue
             else:
@@ -469,11 +499,20 @@ class Judge:
                     reopen = min(self._cooldown.get(id(m), now) for m in (hosted_usable or usable))
                     time.sleep(min(2.0, max(0.1, reopen - now)))
                     continue
-            member = next((m for m in candidates if self._slots[id(m)].acquire(blocking=False)), None)
+            member = None
+            for m in candidates:
+                if not interactive and not self._batch_slots[id(m)].acquire(blocking=False):
+                    continue
+                if self._slots[id(m)].acquire(blocking=False):
+                    member = m
+                    break
+                if not interactive:
+                    self._batch_slots[id(m)].release()
             if member is None:
                 time.sleep(0.1)  # every open member already has its maximum calls in flight
                 continue
             slot = self._slots[id(member)]
+            batch_slot = None if interactive else self._batch_slots[id(member)]
             try:
                 result = self._call(member, system, user, schema)
             except RateLimited as exc:
@@ -497,6 +536,8 @@ class Judge:
                 continue
             finally:
                 slot.release()
+                if batch_slot is not None:
+                    batch_slot.release()
             self.cache.put(self._key(member, system, user, schema), result)
             if not self._is_primary(member):
                 with self._lock:

@@ -167,12 +167,14 @@ class Engine:
     def ask(self, owner_id: str, query: str, document_ids: list[str], k: int | None = None) -> dict:
         self._check_documents(owner_id, document_ids)
         result = self.rag.ask(owner_id, query, document_ids, k)
+        filenames = {d.document_id: d.filename for d in self.store.list_documents(owner_id)}
         return {
             "answer": result.answer,
             "retrieved_chunks": [
                 {
                     "chunk_id": s.chunk.chunk_id,
                     "document_id": s.chunk.document_id,
+                    "filename": filenames.get(s.chunk.document_id),
                     "text": s.chunk.text,
                     "page": s.chunk.page,
                     # Plain RAG has no judge pass: this is retrieval similarity, not a judged relevance score.
@@ -206,6 +208,18 @@ class Engine:
         distractor_document_ids: list[str] | None = None,
     ) -> dict:
         self._check_documents(owner_id, document_ids)
+        with self._interactive():
+            return self._evaluate_query(owner_id, query, document_ids, ground_truth, manual_answer, gold_chunk_ids,
+                                        case_type, stale_chunk_ids, test_id, distractor_document_ids)
+
+    def _interactive(self):
+        """Judge calls made inside this block go ahead of running batches."""
+        from contextlib import nullcontext
+
+        return self.judge.interactive() if hasattr(self.judge, "interactive") else nullcontext()
+
+    def _evaluate_query(self, owner_id, query, document_ids, ground_truth, manual_answer, gold_chunk_ids,
+                        case_type, stale_chunk_ids, test_id, distractor_document_ids) -> dict:
         case = TestCase(
             question=query,
             ground_truth=ground_truth or None,
@@ -328,12 +342,18 @@ class Engine:
                     old_chunks.extend(self.store.chunks_for(owner_id, [other.document_id]))
                     search_ids.append(other.document_id)
         self._ensure_embeddings(owner_id, search_ids)
-        cases = self.synth.generate(owner_id, document_id, chunks, count, search_ids, old_chunks, include_traps)
+        with self._interactive():
+            cases = self.synth.generate(owner_id, document_id, chunks, count, search_ids, old_chunks, include_traps)
         return {
             "document_id": document_id,
             "document_ids": search_ids,
             "requested_count": count,
             "generated_count": len(cases),
+            "note": (
+                f"{count - len(cases)} of {count} requested questions were dropped: a candidate is kept only if its quoted"
+                " evidence matches the document text, and a trap only if the judge confirms it."
+                if len(cases) < count else None
+            ),
             "generated_by": self.judge.model,
             "test_cases": cases,
         }
