@@ -100,3 +100,60 @@ def get_confusion(
             for r in run.get("results", [])
         ],
     }
+
+
+class StabilityRequest(BaseModel):
+    batch_id: str
+    judges: list[str] | None = Field(default=None, min_length=2, max_length=2)
+    shuffles: int = Field(default=3, ge=1, le=5)
+    max_cases: int = Field(default=20, ge=3, le=80)
+
+
+def analysis_response(response: Response, analysis: dict | None, jobs: BatchJobs, user: User, id_key: str) -> dict:
+    """Shared by stability and compare: 202 + progress while running, the result when done."""
+    if analysis is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "not found")
+    if analysis["status"] == "running":
+        response.status_code = status.HTTP_202_ACCEPTED
+        job = jobs.get(user.id, analysis["id"])
+        return {id_key: analysis["id"], "status": "running", "progress": job.to_dict() if job else None}
+    if analysis["status"] == "failed":
+        return {id_key: analysis["id"], "status": "failed", "error": analysis["error"]}
+    return {id_key: analysis["id"], "status": "done", "created_at": analysis["created_at"], **analysis["result"]}
+
+
+@router.post("/stability", status_code=status.HTTP_202_ACCEPTED)
+def start_stability(
+    body: StabilityRequest,
+    user: User = Depends(get_current_user),
+    engine: Engine = Depends(get_engine),
+    db: Database = Depends(get_db),
+    jobs: BatchJobs = Depends(get_jobs),
+) -> dict:
+    batch = db.get_run(user.id, body.batch_id) if (row := db.run_status(user.id, body.batch_id)) and row["status"] == "done" else None
+    if batch is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"finished run {body.batch_id} not found")
+    stability_id = "stab_" + uuid.uuid4().hex[:10]
+    db.start_analysis(user.id, stability_id, "stability")
+    jobs.submit(
+        stability_id,
+        user.id,
+        0,
+        work=lambda report: engine.stability(user.id, batch, body.judges, body.shuffles, body.max_cases, progress=report),
+        on_done=lambda result: db.finish_analysis(stability_id, result),
+        on_error=lambda error: db.fail_analysis(stability_id, error),
+    )
+    return {"stability_id": stability_id, "status": "running", "batch_id": body.batch_id}
+
+
+@router.get("/stability/{stability_id}")
+def get_stability(
+    stability_id: str,
+    response: Response,
+    user: User = Depends(get_current_user),
+    db: Database = Depends(get_db),
+    jobs: BatchJobs = Depends(get_jobs),
+) -> dict:
+    if stability_id == "latest":
+        stability_id = db.latest_analysis(user.id, "stability") or ""
+    return analysis_response(response, db.get_analysis(user.id, stability_id, "stability"), jobs, user, "stability_id")

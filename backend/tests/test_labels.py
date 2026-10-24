@@ -88,3 +88,22 @@ def test_injection_run_and_confusion(client, alice, bob, fake_engine):
     assert out["run_id"] == run_id and out["accuracy"] == 0.5 and out["n"] == 2
     assert out["matrix"][0][0] == 1 and out["cases"][1]["true_failure_type"] == "HALLUCINATION"
     assert client.get("/api/trust/confusion", headers=bob, params={"run_id": run_id}).status_code == 404
+
+
+def test_stability_is_async(client, alice, bob, fake_engine):
+    from tests.test_api import _wait_for
+
+    assert client.post("/api/trust/stability", headers=alice, json={"batch_id": "batch_nope"}).status_code == 404
+    run = client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"}).json()
+    started = client.post("/api/trust/stability", headers=alice, json={"batch_id": run["batch_id"], "shuffles": 2})
+    assert started.status_code == 202, started.text
+    sid = started.json()["stability_id"]
+    import time
+    for _ in range(100):
+        body = client.get(f"/api/trust/stability/{sid}", headers=alice).json()
+        if body["status"] != "running":
+            break
+        time.sleep(0.05)
+    assert body["status"] == "done" and body["stable"] is True and body["shuffle"]["runs"] == 2
+    assert client.get("/api/trust/stability/latest", headers=alice).json()["stability_id"] == sid
+    assert client.get(f"/api/trust/stability/{sid}", headers=bob).status_code == 404

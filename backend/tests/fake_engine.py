@@ -149,3 +149,10 @@ class FakeEngine:
                 "results": results, "n_per_type": n_per_type, "injected_packs": pack_ids or ["banking"],
                 "confusion": {"labels": ["WRONG_CHUNK", "IGNORED_CONTEXT", "HALLUCINATION"], "matrix": [[1, 0, 0], [0, 0, 0], [0, 1, 0]],
                               "per_class": {}, "accuracy": 0.5, "n": 2}}
+
+    def stability(self, owner_id, batch, judges=None, shuffles=3, max_cases=20, progress=None):
+        if progress:
+            progress(1, 1, 0)
+        return {"batch_id": batch["batch_id"], "judges": judges or ["groq:a", "groq:b"], "n_cases": 1,
+                "judge_swap": {"correlation": {"faithfulness": 1.0}, "verdict_agreement": 1.0, "verdict_kappa": 1.0, "n": 1},
+                "shuffle": {"runs": shuffles, "max_delta": 0.0, "stable": True}, "stable": True}

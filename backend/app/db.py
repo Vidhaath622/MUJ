@@ -36,6 +36,15 @@ CREATE TABLE IF NOT EXISTS evaluations (
     json TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS evaluations_user_created ON evaluations(user_id, created_at);
+CREATE TABLE IF NOT EXISTS analyses (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    kind TEXT NOT NULL,
+    status TEXT NOT NULL,
+    error TEXT,
+    created_at TEXT NOT NULL,
+    json TEXT NOT NULL DEFAULT '{}'
+);
 CREATE TABLE IF NOT EXISTS labels (
     batch_id TEXT NOT NULL,
     test_id TEXT NOT NULL,
@@ -127,8 +136,9 @@ class Database:
             conn.execute("UPDATE runs SET status = 'failed', error = ? WHERE batch_id = ?", (error, batch_id))
 
     def fail_interrupted_runs(self) -> int:
-        """Runs still 'running' at startup were cut off by a restart."""
+        """Runs and analyses still 'running' at startup were cut off by a restart."""
         with self._connect() as conn:
+            conn.execute("UPDATE analyses SET status = 'failed', error = 'interrupted by a server restart' WHERE status = 'running'")
             return conn.execute(
                 "UPDATE runs SET status = 'failed', error = 'interrupted by a server restart' WHERE status = 'running'"
             ).rowcount
@@ -249,3 +259,39 @@ class Database:
             else:
                 rows = conn.execute("SELECT * FROM labels ORDER BY created_at").fetchall()
         return [dict(r) | {"correct": bool(r["correct"])} for r in rows]
+
+    # ------------------------------------------------- async analyses (P5, P6)
+
+    def start_analysis(self, user_id: str, analysis_id: str, kind: str) -> str:
+        created_at = utc_now()
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO analyses (id, user_id, kind, status, created_at) VALUES (?, ?, ?, 'running', ?)",
+                (analysis_id, user_id, kind, created_at),
+            )
+        return created_at
+
+    def finish_analysis(self, analysis_id: str, result: dict) -> None:
+        with self._connect() as conn:
+            conn.execute("UPDATE analyses SET status = 'done', json = ? WHERE id = ?", (json.dumps(result), analysis_id))
+
+    def fail_analysis(self, analysis_id: str, error: str) -> None:
+        with self._connect() as conn:
+            conn.execute("UPDATE analyses SET status = 'failed', error = ? WHERE id = ?", (error, analysis_id))
+
+    def get_analysis(self, user_id: str, analysis_id: str, kind: str) -> dict | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT id, status, error, created_at, json FROM analyses WHERE id = ? AND user_id = ? AND kind = ?",
+                (analysis_id, user_id, kind),
+            ).fetchone()
+        if row is None:
+            return None
+        return {"id": row["id"], "status": row["status"], "error": row["error"], "created_at": row["created_at"], "result": json.loads(row["json"])}
+
+    def latest_analysis(self, user_id: str, kind: str) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT id FROM analyses WHERE user_id = ? AND kind = ? ORDER BY created_at DESC, rowid DESC LIMIT 1", (user_id, kind)
+            ).fetchone()
+        return row["id"] if row else None
