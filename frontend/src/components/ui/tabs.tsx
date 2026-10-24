@@ -47,8 +47,8 @@ export const TabsList = React.forwardRef<
     ref={ref}
     className={cn(
       variant === 'pills'
-        ? 'inline-flex items-center justify-center rounded-xl bg-[#FBF9F4] border border-[#E3DED3] p-1 text-[#5E5B53] gap-1'
-        : 'flex items-center gap-6 border-b border-[#E3DED3] text-[#5E5B53] pb-px',
+        ? 'inline-flex items-center justify-center rounded-xl bg-[var(--panel)] border border-[var(--rule)] p-1 text-[var(--ink-2)] gap-1'
+        : 'flex items-center gap-6 border-b border-[var(--rule)] text-[var(--ink-2)] pb-px',
       className
     )}
     {...props}
@@ -77,8 +77,8 @@ export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>
         className={cn(
           'inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium font-mono transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 select-none gap-2',
           isActive
-            ? 'bg-[#FBF9F4] text-[#1B1B18] shadow-sm font-semibold'
-            : 'text-[#5E5B53] hover:text-[#1B1B18] hover:bg-[#FBF9F4]',
+            ? 'bg-[var(--panel)] text-[var(--ink)] shadow-sm font-semibold'
+            : 'text-[var(--ink-2)] hover:text-[var(--ink)] hover:bg-[var(--panel)]',
           className
         )}
         {...props}
@@ -89,8 +89,8 @@ export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>
             className={cn(
               'px-1.5 py-0.2 rounded-full text-[10px] font-mono',
               isActive
-                ? 'bg-[#2F5D8A] text-[#2F5D8A] border border-[#2F5D8A]/40'
-                : 'bg-[#FBF9F4] text-[#5E5B53]'
+                ? 'bg-[var(--accent)] text-[var(--accent)] border border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)]'
+                : 'bg-[var(--panel)] text-[var(--ink-2)]'
             )}
           >
             {badge}

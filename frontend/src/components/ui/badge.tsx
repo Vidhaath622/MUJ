@@ -7,14 +7,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-[#FBF9F4] text-[#33322D] border-[#E3DED3]',
-        success: 'bg-[#E6F0E8] text-[#1F7A4D] border-[#1F7A4D]/40',
-        danger: 'bg-[#F6E3E0] text-[#B3261E] border-[#B3261E]/40',
-        warning: 'bg-[#F5EBD8] text-[#B26B00] border-[#B26B00]/40',
-        info: 'bg-[#E3EAF2] text-[#2F5D8A] border-[#2F5D8A]/40',
-        purple: 'bg-[#ECE6F3] text-[#6B4C9A] border-[#6B4C9A]/40',
-        outline: 'bg-transparent text-[#33322D] border-[#E3DED3]',
-        neon: 'bg-[#2F5D8A] text-[#2F5D8A] border-[#2F5D8A]/40 shadow-[0_0_12px_rgba(56,189,248,0.2)]',
+        default: 'bg-[var(--panel)] text-[var(--ink-1)] border-[var(--rule)]',
+        success: 'bg-[var(--ok-tint)] text-[var(--ok)] border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)]',
+        danger: 'bg-[var(--gen-tint)] text-[var(--gen)] border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)]',
+        warning: 'bg-[var(--retr-tint)] text-[var(--retr)] border-[color:color-mix(in_srgb,var(--retr)_40%,transparent)]',
+        info: 'bg-[var(--accent-tint)] text-[var(--accent)] border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)]',
+        purple: 'bg-[var(--violet-tint)] text-[var(--violet)] border-[color:color-mix(in_srgb,var(--violet)_40%,transparent)]',
+        outline: 'bg-transparent text-[var(--ink-1)] border-[var(--rule)]',
+        neon: 'bg-[var(--accent)] text-[var(--accent)] border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] shadow-[0_0_12px_rgba(56,189,248,0.2)]',
       },
       size: {
         sm: 'text-[10px] px-2 py-0.2',
@@ -47,16 +47,16 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const dotColorClass =
     variant === 'success'
-      ? 'bg-[#1F7A4D]'
+      ? 'bg-[var(--ok)]'
       : variant === 'danger'
-      ? 'bg-[#B3261E]'
+      ? 'bg-[var(--gen)]'
       : variant === 'warning'
-      ? 'bg-[#B26B00]'
+      ? 'bg-[var(--retr)]'
       : variant === 'info' || variant === 'neon'
-      ? 'bg-[#2F5D8A]'
+      ? 'bg-[var(--accent)]'
       : variant === 'purple'
-      ? 'bg-[#6B4C9A]'
-      : 'bg-[#D6D0C3]';
+      ? 'bg-[var(--violet)]'
+      : 'bg-[var(--rule-2)]';
 
   return (
     <div className={cn(badgeVariants({ variant, size, className }))} {...props}>

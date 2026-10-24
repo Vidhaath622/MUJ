@@ -116,35 +116,35 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F6F3EC] backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl max-h-[85vh] bg-[#F6F3EC] border border-[#E3DED3] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#1B1B18]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--paper)] backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-4xl max-h-[85vh] bg-[var(--paper)] border border-[var(--rule)] rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[var(--ink)]">
         {/* Modal Header */}
-        <div className="p-4 md:px-6 border-b border-[#E3DED3] flex items-center justify-between bg-[#FBF9F4]">
+        <div className="p-4 md:px-6 border-b border-[var(--rule)] flex items-center justify-between bg-[var(--panel)]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#E2EFEC] border border-[#1F6F6A]/40 text-[#1F6F6A]">
+            <div className="p-2 rounded-xl bg-[var(--teal-tint)] border border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)] text-[var(--teal)]">
               <Database className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-[#1B1B18] tracking-tight">
+                <h3 className="text-base font-bold text-[var(--ink)] tracking-tight">
                   Corpus Vault &amp; Chunks Inspector
                 </h3>
                 <Badge variant="outline" size="sm" className="font-mono text-[10px]">
                   5 Pre-loaded Documents
                 </Badge>
               </div>
-              <p className="text-[11px] text-[#5E5B53] font-mono">
+              <p className="text-[11px] text-[var(--ink-2)] font-mono">
                 Inspect ATS recruitment policy, candidate resumes, and distractor chunks.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-[#FBF9F4] p-0.5 rounded-lg border border-[#E3DED3] text-xs">
+            <div className="flex items-center bg-[var(--panel)] p-0.5 rounded-lg border border-[var(--rule)] text-xs">
               <button
                 onClick={() => setActiveTab('inspect')}
                 className={`px-3 py-1 rounded-md font-mono transition ${
-                  activeTab === 'inspect' ? 'bg-[#FBF9F4] text-[#1B1B18]' : 'text-[#5E5B53]'
+                  activeTab === 'inspect' ? 'bg-[var(--panel)] text-[var(--ink)]' : 'text-[var(--ink-2)]'
                 }`}
               >
                 Inspect Corpus
@@ -152,7 +152,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
               <button
                 onClick={() => setActiveTab('upload')}
                 className={`px-3 py-1 rounded-md font-mono transition flex items-center gap-1 ${
-                  activeTab === 'upload' ? 'bg-[#FBF9F4] text-[#1B1B18]' : 'text-[#5E5B53]'
+                  activeTab === 'upload' ? 'bg-[var(--panel)] text-[var(--ink)]' : 'text-[var(--ink-2)]'
                 }`}
               >
                 <Upload className="w-3 h-3" />
@@ -162,7 +162,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-[#FBF9F4] text-[#5E5B53] hover:text-[#1B1B18] transition"
+              className="p-1.5 rounded-lg hover:bg-[var(--panel)] text-[var(--ink-2)] hover:text-[var(--ink)] transition"
             >
               <X className="w-5 h-5" />
             </button>
@@ -174,8 +174,8 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
           {activeTab === 'inspect' ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Left: Document List */}
-              <div className="space-y-2 md:border-r border-[#E3DED3] md:pr-4">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#5E5B53] block mb-1">
+              <div className="space-y-2 md:border-r border-[var(--rule)] md:pr-4">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)] block mb-1">
                   Corpus Documents:
                 </span>
                 {documents.map((doc) => {
@@ -186,8 +186,8 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                       onClick={() => setSelectedDocId(doc.document_id)}
                       className={`p-3 rounded-xl border text-left cursor-pointer transition ${
                         isSelected
-                          ? 'bg-[#E3EAF2] border-[#2F5D8A]/40 text-[#1B1B18] shadow-sm'
-                          : 'bg-[#FBF9F4] border-[#E3DED3] text-[#33322D] hover:bg-[#FBF9F4]'
+                          ? 'bg-[var(--accent-tint)] border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] text-[var(--ink)] shadow-sm'
+                          : 'bg-[var(--panel)] border-[var(--rule)] text-[var(--ink-1)] hover:bg-[var(--panel)]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-1 mb-1">
@@ -202,7 +202,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                           <Badge variant="success" size="sm">ACTIVE</Badge>
                         )}
                       </div>
-                      <div className="flex items-center justify-between text-[10px] font-mono text-[#5E5B53]">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--ink-2)]">
                         <span>{doc.filename}</span>
                         <span>{doc.chunk_count} chunks</span>
                       </div>
@@ -215,20 +215,20 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
               <div className="md:col-span-2 space-y-3">
                 {currentDoc ? (
                   <div>
-                    <div className="p-3.5 rounded-xl bg-[#FBF9F4] border border-[#E3DED3] mb-3 space-y-1">
+                    <div className="p-3.5 rounded-xl bg-[var(--panel)] border border-[var(--rule)] mb-3 space-y-1">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-[#1B1B18]">{currentDoc.title}</h4>
-                        <span className="text-[10px] font-mono text-[#5E5B53]">
+                        <h4 className="text-sm font-bold text-[var(--ink)]">{currentDoc.title}</h4>
+                        <span className="text-[10px] font-mono text-[var(--ink-2)]">
                           id: {currentDoc.document_id}
                         </span>
                       </div>
-                      <div className="text-xs text-[#5E5B53] font-mono flex items-center gap-3">
+                      <div className="text-xs text-[var(--ink-2)] font-mono flex items-center gap-3">
                         <span>File: {currentDoc.filename}</span>
                         {currentDoc.version && <span>Version: {currentDoc.version}</span>}
                       </div>
                     </div>
 
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-[#5E5B53] block mb-2">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)] block mb-2">
                       Extracted Chunks ({currentDoc.chunks.length}):
                     </span>
 
@@ -236,15 +236,15 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                       {currentDoc.chunks.map((chk) => (
                         <div
                           key={chk.chunk_id}
-                          className="p-3 rounded-lg bg-[#F6F3EC] border border-[#E3DED3] space-y-1.5"
+                          className="p-3 rounded-lg bg-[var(--paper)] border border-[var(--rule)] space-y-1.5"
                         >
                           <div className="flex items-center justify-between text-[11px] font-mono">
-                            <span className="text-[#1F6F6A] font-semibold bg-[#E2EFEC] px-2 py-0.5 rounded border border-[#1F6F6A]/40">
+                            <span className="text-[var(--teal)] font-semibold bg-[var(--teal-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)]">
                               {chk.chunk_id}
                             </span>
-                            <span className="text-[#5E5B53]">Page {chk.page}</span>
+                            <span className="text-[var(--ink-2)]">Page {chk.page}</span>
                           </div>
-                          <p className="text-xs text-[#33322D] font-mono leading-relaxed bg-[#FBF9F4] p-2.5 rounded border border-[#E3DED3]">
+                          <p className="text-xs text-[var(--ink-1)] font-mono leading-relaxed bg-[var(--panel)] p-2.5 rounded border border-[var(--rule)]">
                             {chk.text}
                           </p>
                         </div>
@@ -252,7 +252,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-[#6E6A62] font-mono text-xs">
+                  <div className="text-center py-12 text-[var(--muted)] font-mono text-xs">
                     No document selected.
                   </div>
                 )}
@@ -261,8 +261,8 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
           ) : (
             <div className="max-w-xl mx-auto space-y-4 py-4">
               <div className="text-center space-y-1 mb-4">
-                <h4 className="text-base font-bold text-[#1B1B18]">Upload New Document to Corpus</h4>
-                <p className="text-xs text-[#5E5B53]">
+                <h4 className="text-base font-bold text-[var(--ink)]">Upload New Document to Corpus</h4>
+                <p className="text-xs text-[var(--ink-2)]">
                   Document will be parsed, chunked, and ingested into the evaluation vector index.
                 </p>
               </div>
@@ -274,22 +274,22 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
               />
 
               {isUploading && (
-                <div className="p-3 rounded-xl bg-[#E2EFEC] border border-[#1F6F6A]/40 text-xs text-[#1F6F6A] flex items-center gap-2">
-                  <RotateCw className="w-4 h-4 text-[#1F6F6A] animate-spin" />
+                <div className="p-3 rounded-xl bg-[var(--teal-tint)] border border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)] text-xs text-[var(--teal)] flex items-center gap-2">
+                  <RotateCw className="w-4 h-4 text-[var(--teal)] animate-spin" />
                   <span>Uploading and parsing document into chunks...</span>
                 </div>
               )}
 
               {uploadError && (
-                <div className="p-3 rounded-xl bg-[#F6E3E0] border border-[#B3261E]/40 text-xs text-[#B3261E] flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-[#B3261E] flex-shrink-0" />
+                <div className="p-3 rounded-xl bg-[var(--gen-tint)] border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] text-xs text-[var(--gen)] flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-[var(--gen)] flex-shrink-0" />
                   <span>{uploadError}</span>
                 </div>
               )}
 
               {uploadStatus && (
-                <div className="p-3 rounded-xl bg-[#E6F0E8] border border-[#1F7A4D]/40 text-xs text-[#1F7A4D] flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#1F7A4D]" />
+                <div className="p-3 rounded-xl bg-[var(--ok-tint)] border border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] text-xs text-[var(--ok)] flex items-center gap-2">
+                  <Check className="w-4 h-4 text-[var(--ok)]" />
                   <span>{uploadStatus}</span>
                 </div>
               )}
@@ -298,9 +298,9 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-[#E3DED3] bg-[#FBF9F4] flex items-center justify-between text-xs font-mono text-[#5E5B53]">
+        <div className="p-4 border-t border-[var(--rule)] bg-[var(--panel)] flex items-center justify-between text-xs font-mono text-[var(--ink-2)]">
           <span>Corpus indexed with hybrid BM25 + dense embedding vectors</span>
-          <Button variant="outline" size="sm" onClick={onClose} className="border-[#E3DED3]">
+          <Button variant="outline" size="sm" onClick={onClose} className="border-[var(--rule)]">
             Close Vault
           </Button>
         </div>

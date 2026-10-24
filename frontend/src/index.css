@@ -3,26 +3,81 @@
 @tailwind utilities;
 
 @layer base {
+  /* Theme tokens. Light = the Lab report paper; dark = the same lab at night (no neon).
+     Components use these through var(--…), so the toggle only flips data-theme on <html>. */
   :root {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 6%;
-    --card-foreground: 213 31% 91%;
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 223 47% 14%;
-    --accent-foreground: 210 40% 98%;
-    --border: 223 47% 14%;
+    --paper: #F6F3EC;
+    --panel: #FBF9F4;
+    --panel-2: #ECE7DC;
+    --panel-3: #EFEBE2;
+    --rule: #E3DED3;
+    --rule-2: #D6D0C3;
+    --rule-3: #C9C2B3;
+    --ink: #1B1B18;
+    --ink-1: #33322D;
+    --ink-2: #5E5B53;
+    --muted: #6E6A62;
+    --ok: #1F7A4D;
+    --retr: #B26B00;
+    --gen: #B3261E;
+    --gen-deep: #8E1F18;
+    --review: #6B675E;
+    --accent: #2F5D8A;
+    --teal: #1F6F6A;
+    --violet: #6B4C9A;
+    --ok-tint: #E6F0E8;
+    --retr-tint: #F5EBD8;
+    --gen-tint: #F6E3E0;
+    --accent-tint: #E3EAF2;
+    --teal-tint: #E2EFEC;
+    --violet-tint: #ECE6F3;
+    --violet-tint-2: #F3EFF7;
+    --selection: #E8DCC0;
+    color-scheme: light;
+  }
+
+  [data-theme="dark"] {
+    --paper: #121210;
+    --panel: #191915;
+    --panel-2: #22211D;
+    --panel-3: #1E1D19;
+    --rule: #2A2924;
+    --rule-2: #36342E;
+    --rule-3: #48453E;
+    --ink: #ECE8DF;
+    --ink-1: #D6D2C8;
+    --ink-2: #A29E94;
+    --muted: #8E8A80;
+    --ok: #4FB07F;
+    --retr: #D9A13A;
+    --gen: #E06A60;
+    --gen-deep: #F08A80;
+    --review: #9A968C;
+    --accent: #7EA6D1;
+    --teal: #5FB5AC;
+    --violet: #A68BD1;
+    --ok-tint: #17291E;
+    --retr-tint: #30250F;
+    --gen-tint: #331A17;
+    --accent-tint: #18232F;
+    --teal-tint: #142926;
+    --violet-tint: #241E30;
+    --violet-tint-2: #1F1A29;
+    --selection: #4A3F28;
+    color-scheme: dark;
+  }
+
+  /* Smooth theme switch; scoped to colour properties so motion elsewhere is untouched. */
+  html.theme-transition, html.theme-transition * {
+    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, fill 200ms ease, stroke 200ms ease !important;
   }
 
   body {
     margin: 0;
     font-family: Geist, ui-sans-serif, system-ui, -apple-system, sans-serif;
-    background-color: #F6F3EC;
+    background-color: var(--paper);
     -webkit-font-smoothing: antialiased;
-    color: #1B1B18;
+    color: var(--ink);
     overflow-x: hidden;
   }
 
@@ -35,33 +90,33 @@
 }
 
 .bg-dot-pattern {
-  background-image: radial-gradient(rgba(27,27,24,0.08) 1px, transparent 1px);
+  background-image: radial-gradient(color-mix(in srgb, var(--ink) 8%, transparent) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 .bg-grid-pattern {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(27,27,24,0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(27,27,24,0.03) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, var(--ink) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--ink) 3%, transparent) 1px, transparent 1px);
 }
 
 .glass-panel {
   background: rgba(13, 17, 23, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(27,27,24,0.08);
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 /* Lab screen: panels, motion. */
 .lab-panel {
-  background: #FBF9F4;
-  border: 1px solid #E3DED3;
+  background: var(--panel);
+  border: 1px solid var(--rule);
 }
 
 .lab-panel-flat {
-  background: #FBF9F4;
-  border: 1px solid #E3DED3;
+  background: var(--panel);
+  border: 1px solid var(--rule);
 }
 
 @keyframes lab-fade-up {
@@ -134,7 +189,7 @@
   background: transparent;
 }
 
-::selection { background: #E8DCC0; color: #1B1B18; }
+::selection { background: var(--selection); color: var(--ink); }
 
 @keyframes stamp-in {
   0% { opacity: 0; transform: scale(1.35) rotate(-8deg); }
@@ -152,4 +207,16 @@
 @media (prefers-reduced-motion: reduce) {
   .fig-draw { animation: none; stroke-dashoffset: 0; }
   .fig-fade { animation: none; }
+}
+
+/* Sign-in seal: ring draws, tick draws, then the whole seal lands like a stamp; dots turn slowly. */
+@keyframes signin-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes signin-land { 0% { transform: scale(1.25) rotate(-12deg); opacity: 0; } 60% { transform: scale(0.96) rotate(-4deg); opacity: 1; } 100% { transform: scale(1) rotate(-6deg); opacity: 1; } }
+@keyframes signin-turn { to { transform: rotate(360deg); } }
+.signin-seal { transform-origin: center; animation: signin-land 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.signin-seal-ring { stroke-dasharray: 1; animation: signin-draw 900ms ease-out 150ms both; }
+.signin-seal-tick { stroke-dasharray: 1; animation: signin-draw 450ms ease-out 900ms both; }
+.signin-seal-dots { transform-origin: 60px 60px; animation: signin-turn 24s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .signin-seal, .signin-seal-ring, .signin-seal-tick, .signin-seal-dots { animation: none; stroke-dashoffset: 0; }
 }

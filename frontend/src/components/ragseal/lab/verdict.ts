@@ -10,10 +10,10 @@ export type Verdict =
   | 'NEEDS_REVIEW'
   | 'UNRESOLVED';
 
-export const PASS = '#1F7A4D';
-export const AMBER = '#B26B00';
-export const RED = '#B3261E';
-export const GREY = '#6B675E';
+export const PASS = 'var(--ok)';
+export const AMBER = 'var(--retr)';
+export const RED = 'var(--gen)';
+export const GREY = 'var(--review)';
 
 export type StageState = 'ok' | 'fault' | 'neutral';
 
@@ -73,7 +73,7 @@ export const VERDICTS: Record<Verdict, VerdictStyle> = {
     label: 'Not judged',
     short: 'Unjudged',
     blame: 'The grading model could not score this case; no guess was made.',
-    color: '#6E6A62',
+    color: 'var(--muted)',
     severity: 4,
     stages: { retriever: 'neutral', generator: 'neutral' },
   },
@@ -92,10 +92,9 @@ export function verdictStyle(category?: string | null): VerdictStyle {
   return VERDICTS[(category as Verdict) ?? 'UNRESOLVED'] ?? VERDICTS.NEEDS_REVIEW;
 }
 
-/** `#RRGGBB` plus alpha 0..1 → rgba(). */
-export function tint(hex: string, alpha: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+/** Any CSS colour (hex or a theme var) at alpha 0..1, so tints follow the light/dark theme. */
+export function tint(color: string, alpha: number): string {
+  return `color-mix(in srgb, ${color} ${Math.round(alpha * 1000) / 10}%, transparent)`;
 }
 
 /** Green when a score clears its threshold, red when it doesn't, grey when there is no score. */

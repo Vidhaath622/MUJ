@@ -134,7 +134,7 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
         ) : (
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-[#E3DED3] text-left text-xs text-[#5E5B53]">
+              <tr className="border-b border-[var(--rule)] text-left text-xs text-[var(--ink-2)]">
                 <th className="px-5 py-2.5 font-normal">Run</th>
                 <th className="px-3 py-2.5 font-normal">Pack</th>
                 <th className="px-3 py-2.5 font-normal">Status</th>
@@ -154,22 +154,22 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
                     key={r.batch_id}
                     onClick={() => openable && onOpenRun(r.batch_id, r.pack_id)}
                     className={cn(
-                      'border-b border-[#FBF9F4] last:border-0',
-                      openable ? 'cursor-pointer hover:bg-[#1B1B18]/[0.02]' : 'opacity-80'
+                      'border-b border-[var(--panel)] last:border-0',
+                      openable ? 'cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]' : 'opacity-80'
                     )}
                   >
-                    <td className="px-5 py-3 font-mono text-xs text-[#33322D]">{r.batch_id}</td>
-                    <td className="px-3 py-3 text-[#1B1B18]">{PACK_LABEL[r.pack_id ?? ''] ?? r.pack_id ?? '—'}</td>
+                    <td className="px-5 py-3 font-mono text-xs text-[var(--ink-1)]">{r.batch_id}</td>
+                    <td className="px-3 py-3 text-[var(--ink)]">{PACK_LABEL[r.pack_id ?? ''] ?? r.pack_id ?? '—'}</td>
                     <td className="px-3 py-3">
                       <StatusPill status={status} />
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-[#33322D]">{r.total_evaluated ?? '—'}</td>
-                    <td className="px-3 py-3 text-right tabular-nums text-[#1B1B18]">{pct(r.pass_rate)}</td>
-                    <td className="px-3 py-3 text-right tabular-nums text-[#5E5B53]">
+                    <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-1)]">{r.total_evaluated ?? '—'}</td>
+                    <td className="px-3 py-3 text-right tabular-nums text-[var(--ink)]">{pct(r.pass_rate)}</td>
+                    <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-2)]">
                       {r.timing?.cases_per_min ? `${r.timing.cases_per_min.toFixed(1)}/min` : '—'}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-[#5E5B53]">{fmtTime(r.created_at)}</td>
-                    <td className="pr-4 text-[#6E6A62]">{openable && <ChevronRight className="h-4 w-4" />}</td>
+                    <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-2)]">{fmtTime(r.created_at)}</td>
+                    <td className="pr-4 text-[var(--muted)]">{openable && <ChevronRight className="h-4 w-4" />}</td>
                   </tr>
                 );
               })}
@@ -202,8 +202,8 @@ const LiveRun: React.FC<{ progress: RunProgress; packId?: string }> = ({ progres
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div className="flex items-baseline gap-2">
           <span className="text-[44px] font-semibold leading-none tracking-[-0.04em] tabular-nums">{done}</span>
-          <span className="text-lg text-[#5E5B53] tabular-nums">/ {total || '—'} questions</span>
-          {!!progress.failed && <span className="ml-2 text-sm text-[#B3261E]">{progress.failed} not scored</span>}
+          <span className="text-lg text-[var(--ink-2)] tabular-nums">/ {total || '—'} questions</span>
+          {!!progress.failed && <span className="ml-2 text-sm text-[var(--gen)]">{progress.failed} not scored</span>}
         </div>
         <div className="flex gap-8 text-right">
           <Mini label="Elapsed" value={fmtDuration(progress.elapsed_ms)} />
@@ -211,10 +211,10 @@ const LiveRun: React.FC<{ progress: RunProgress; packId?: string }> = ({ progres
           <Mini label="Pace" value={progress.cases_per_min ? `${progress.cases_per_min.toFixed(1)}/min` : '—'} />
         </div>
       </div>
-      <div className="mt-5 h-2 overflow-hidden rounded-full bg-[#EFEBE2]">
-        <div className="h-full rounded-full bg-[#1B1B18] transition-[width] duration-700 ease-out" style={{ width: `${frac * 100}%` }} />
+      <div className="mt-5 h-2 overflow-hidden rounded-full bg-[var(--panel-3)]">
+        <div className="h-full rounded-full bg-[var(--ink)] transition-[width] duration-700 ease-out" style={{ width: `${frac * 100}%` }} />
       </div>
-      <div className="mt-6 border-t border-[#E3DED3] pt-5">
+      <div className="mt-6 border-t border-[var(--rule)] pt-5">
         <BudgetBar cpm={progress.cases_per_min ?? null} />
       </div>
     </Panel>
@@ -236,17 +236,17 @@ const BudgetBar: React.FC<{ cpm: number | null }> = ({ cpm }) => {
   const projected = cpm ? (BUDGET_QUESTIONS / cpm) * 60_000 : null;
   const within = projected != null && projected <= BUDGET_MS;
   const scale = Math.max(BUDGET_MS * 1.35, projected ?? 0);
-  const color = projected == null ? '#C9C2B3' : within ? PASS : RED;
+  const color = projected == null ? 'var(--rule-3)' : within ? PASS : RED;
   return (
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex items-center gap-2 text-[13px] text-[#33322D]">
-          <Timer className="h-4 w-4 text-[#6E6A62]" />
+        <div className="flex items-center gap-2 text-[13px] text-[var(--ink-1)]">
+          <Timer className="h-4 w-4 text-[var(--muted)]" />
           {BUDGET_QUESTIONS} questions at this pace
         </div>
         <div className="text-[13px]">
           {projected == null ? (
-            <span className="text-[#5E5B53]">No pace measured yet</span>
+            <span className="text-[var(--ink-2)]">No pace measured yet</span>
           ) : (
             <span style={{ color }}>
               <span className="text-lg font-semibold tabular-nums">{fmtDuration(projected)}</span>{' '}
@@ -255,16 +255,16 @@ const BudgetBar: React.FC<{ cpm: number | null }> = ({ cpm }) => {
           )}
         </div>
       </div>
-      <div className="relative mt-3 h-2.5 rounded-full bg-[#EFEBE2]">
+      <div className="relative mt-3 h-2.5 rounded-full bg-[var(--panel-3)]">
         {projected != null && (
           <div
             className="lab-draw absolute inset-y-0 left-0 rounded-full"
             style={{ width: `${Math.min(100, (projected / scale) * 100)}%`, background: color }}
           />
         )}
-        <div className="absolute -top-1.5 bottom-[-6px] w-px bg-[#33322D]" style={{ left: `${(BUDGET_MS / scale) * 100}%` }} />
+        <div className="absolute -top-1.5 bottom-[-6px] w-px bg-[var(--ink-1)]" style={{ left: `${(BUDGET_MS / scale) * 100}%` }} />
       </div>
-      <div className="relative mt-1.5 h-4 text-[11px] text-[#5E5B53]">
+      <div className="relative mt-1.5 h-4 text-[11px] text-[var(--ink-2)]">
         <span className="absolute -translate-x-1/2" style={{ left: `${(BUDGET_MS / scale) * 100}%` }}>
           15:00
         </span>
@@ -275,7 +275,7 @@ const BudgetBar: React.FC<{ cpm: number | null }> = ({ cpm }) => {
 
 const Mini: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div>
-    <div className="text-xs text-[#5E5B53]">{label}</div>
-    <div className="mt-0.5 text-[17px] font-medium tabular-nums text-[#1B1B18]">{value}</div>
+    <div className="text-xs text-[var(--ink-2)]">{label}</div>
+    <div className="mt-0.5 text-[17px] font-medium tabular-nums text-[var(--ink)]">{value}</div>
   </div>
 );

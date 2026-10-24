@@ -4,7 +4,7 @@ import { cn } from '../../../lib/utils';
 import { loadPackBackend } from '../../../lib/api';
 import { PackId } from '../../../types/ragseal';
 import { evaluateAcrossDocs, LabChunk, LabPack, LabResult, LabTestCase } from '../lab/useLabData';
-import { AMBER, pct, PASS, RED, verdictStyle } from '../lab/verdict';
+import { AMBER, pct, PASS, RED, verdictStyle, tint } from '../lab/verdict';
 import { CaseDrawer } from '../shared/CaseDrawer';
 import { errorText, getRun, listRuns } from '../shared/apiExtra';
 import { ErrorBanner } from '../shared/ui';
@@ -24,9 +24,9 @@ interface Persona {
 }
 
 const PERSONAS: Persona[] = [
-  { pack: 'banking', org: 'Harbor Ridge Bank', role: 'Fees & accounts assistant', initials: 'HR', accent: '#2F5D8A' },
-  { pack: 'recruitment', org: 'Northwind Talent', role: 'HR policy assistant', initials: 'NT', accent: '#6B4C9A' },
-  { pack: 'healthcare', org: 'Mercy Vale General Hospital', role: 'Patient help desk', initials: 'MV', accent: '#1F6F6A' },
+  { pack: 'banking', org: 'Harbor Ridge Bank', role: 'Fees & accounts assistant', initials: 'HR', accent: 'var(--accent)' },
+  { pack: 'recruitment', org: 'Northwind Talent', role: 'HR policy assistant', initials: 'NT', accent: 'var(--violet)' },
+  { pack: 'healthcare', org: 'Mercy Vale General Hospital', role: 'Patient help desk', initials: 'MV', accent: 'var(--teal)' },
 ];
 
 const TRAP: Record<string, { badge: string; teaser: string }> = {
@@ -154,7 +154,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
     <div className="flex h-full min-h-0">
       {/* Chat */}
       <section className="flex min-w-0 flex-[55] flex-col">
-        <div className="flex items-center gap-2 border-b border-[#E3DED3] px-5 py-3">
+        <div className="flex items-center gap-2 border-b border-[var(--rule)] px-5 py-3">
           {PERSONAS.map((p) => {
             const active = p.pack === botPack;
             return (
@@ -166,9 +166,9 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                 }}
                 className={cn(
                   'flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-[13px] transition-colors',
-                  active ? 'text-[#1B1B18]' : 'border-transparent text-[#5E5B53] hover:text-[#1B1B18]'
+                  active ? 'text-[var(--ink)]' : 'border-transparent text-[var(--ink-2)] hover:text-[var(--ink)]'
                 )}
-                style={active ? { borderColor: `${p.accent}66`, background: `${p.accent}14` } : undefined}
+                style={active ? { borderColor: `${tint(p.accent, 0.4)}`, background: `${tint(p.accent, 0.08)}` } : undefined}
               >
                 <Avatar persona={p} size={24} />
                 {p.org.split(' ').slice(0, 2).join(' ')}
@@ -185,18 +185,18 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
             <div className="flex items-center gap-3.5">
               <Avatar persona={persona} size={44} />
               <div className="min-w-0">
-                <div className="text-[17px] font-semibold tracking-[-0.01em] text-[#1B1B18]">{persona.org}</div>
-                <div className="flex items-center gap-2 text-xs text-[#5E5B53]">
+                <div className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--ink)]">{persona.org}</div>
+                <div className="flex items-center gap-2 text-xs text-[var(--ink-2)]">
                   {persona.role}
-                  <span className="h-1 w-1 rounded-full bg-[#C9C2B3]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#1F7A4D]" />
+                  <span className="h-1 w-1 rounded-full bg-[var(--rule-3)]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--ok)]" />
                   {pack ? `Online · reads ${pack.documents.length} documents` : 'Connecting…'}
                 </div>
               </div>
             </div>
 
             {example === undefined && !userTurns.length && (
-              <div className="flex items-center gap-2 text-[13px] text-[#5E5B53]">
+              <div className="flex items-center gap-2 text-[13px] text-[var(--ink-2)]">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading a real exchange from the latest test…
               </div>
             )}
@@ -204,8 +204,8 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
             {turns.map((t) => (
               <React.Fragment key={t.id}>
                 {t.example && (
-                  <div className="-mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[#6E6A62]">
-                    <span className="h-px flex-1 bg-[#E3DED3]" /> From the latest test run <span className="h-px flex-1 bg-[#E3DED3]" />
+                  <div className="-mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+                    <span className="h-px flex-1 bg-[var(--rule)]" /> From the latest test run <span className="h-px flex-1 bg-[var(--rule)]" />
                   </div>
                 )}
                 <TurnView
@@ -220,7 +220,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                   }}
                 />
                 {t.example && (
-                  <div className="mt-1 flex items-center gap-2 text-[13px] font-medium text-[#33322D]">
+                  <div className="mt-1 flex items-center gap-2 text-[13px] font-medium text-[var(--ink-1)]">
                     Try it yourself <span aria-hidden="true">↓</span>
                   </div>
                 )}
@@ -229,7 +229,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
 
             {tricks.length > 0 && !busy && (
               <div>
-                <div className="mb-2 text-[13px] font-semibold text-[#1B1B18]">Can you trick it?</div>
+                <div className="mb-2 text-[13px] font-semibold text-[var(--ink)]">Can you trick it?</div>
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                   {tricks.map((c) => {
                     const trap = TRAP[c.type ?? ''] ?? { badge: 'Trick', teaser: '' };
@@ -237,16 +237,16 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                       <button
                         key={c.test_id}
                         onClick={() => ask(c.question, c)}
-                        className="group flex flex-col gap-2 rounded-xl border border-[#E3DED3] bg-[#FBF9F4] p-3 text-left transition-colors hover:border-[#D6D0C3] hover:bg-[#FBF9F4]"
+                        className="group flex flex-col gap-2 rounded-xl border border-[var(--rule)] bg-[var(--panel)] p-3 text-left transition-colors hover:border-[var(--rule-2)] hover:bg-[var(--panel)]"
                       >
                         <span
                           className="self-start rounded-full px-2 py-0.5 text-[10.5px] font-medium"
-                          style={{ background: `${persona.accent}1A`, color: persona.accent }}
+                          style={{ background: `${tint(persona.accent, 0.1)}`, color: persona.accent }}
                         >
                           {trap.badge}
                         </span>
-                        <span className="line-clamp-3 text-[13px] leading-snug text-[#1B1B18]">{c.question}</span>
-                        <span className="text-[11px] leading-snug text-[#6E6A62]">{trap.teaser}</span>
+                        <span className="line-clamp-3 text-[13px] leading-snug text-[var(--ink)]">{c.question}</span>
+                        <span className="text-[11px] leading-snug text-[var(--muted)]">{trap.teaser}</span>
                       </button>
                     );
                   })}
@@ -256,7 +256,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
           </div>
         </div>
 
-        <div className="border-t border-[#E3DED3] px-6 py-3.5">
+        <div className="border-t border-[var(--rule)] px-6 py-3.5">
           <form
             className="mx-auto flex max-w-[760px] items-center gap-3"
             onSubmit={(e) => {
@@ -264,21 +264,21 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
               ask(draft);
             }}
           >
-            <label className="flex h-11 flex-1 items-center rounded-xl border border-[#D6D0C3] bg-[#FBF9F4] px-4 focus-within:border-[#C9C2B3]">
+            <label className="flex h-11 flex-1 items-center rounded-xl border border-[var(--rule-2)] bg-[var(--panel)] px-4 focus-within:border-[var(--rule-3)]">
               <span className="sr-only">Message {persona.org}</span>
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 disabled={!pack}
                 placeholder={`Ask ${persona.org} anything…`}
-                className="h-10 flex-1 bg-transparent text-[14px] text-[#1B1B18] placeholder:text-[#6E6A62] focus:outline-none"
+                className="h-10 flex-1 bg-transparent text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
               />
             </label>
             <button
               type="submit"
               disabled={!draft.trim() || busy || !pack}
               aria-label="Send"
-              className="flex h-11 w-11 items-center justify-center rounded-xl text-[#F6F3EC] transition-opacity disabled:opacity-30"
+              className="flex h-11 w-11 items-center justify-center rounded-xl text-[var(--paper)] transition-opacity disabled:opacity-30"
               style={{ background: persona.accent }}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
@@ -288,14 +288,14 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
       </section>
 
       {/* X-ray */}
-      <aside className="flex min-w-0 flex-[45] flex-col border-l border-[#E3DED3] bg-[#F6F3EC]">
-        <div className="flex items-center justify-between border-b border-[#E3DED3] px-5 py-3.5">
+      <aside className="flex min-w-0 flex-[45] flex-col border-l border-[var(--rule)] bg-[var(--paper)]">
+        <div className="flex items-center justify-between border-b border-[var(--rule)] px-5 py-3.5">
           <div>
-            <div className="text-[13px] font-semibold text-[#1B1B18]">X-ray of this reply</div>
-            <div className="text-[11px] text-[#5E5B53]">What the bot read, three checks, and who is to blame</div>
+            <div className="text-[13px] font-semibold text-[var(--ink)]">X-ray of this reply</div>
+            <div className="text-[11px] text-[var(--ink-2)]">What the bot read, three checks, and who is to blame</div>
           </div>
           {xrayTurn?.example && (
-            <span className="rounded-full border border-[#D6D0C3] px-2 py-0.5 text-[10.5px] text-[#6B675E]">From the latest test run</span>
+            <span className="rounded-full border border-[var(--rule-2)] px-2 py-0.5 text-[10.5px] text-[var(--review)]">From the latest test run</span>
           )}
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -304,7 +304,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
           ) : xrayTurn.pending ? (
             <XrayPending />
           ) : xrayTurn.error ? (
-            <p className="text-[13px] text-[#8E1F18]">{xrayTurn.error}</p>
+            <p className="text-[13px] text-[var(--gen-deep)]">{xrayTurn.error}</p>
           ) : xrayTurn.result ? (
             <Xray
               key={xrayTurn.id}
@@ -330,8 +330,8 @@ const Avatar: React.FC<{ persona: Persona; size: number }> = ({ persona, size })
       height: size,
       fontSize: size * 0.38,
       color: persona.accent,
-      background: `${persona.accent}1A`,
-      boxShadow: `inset 0 0 0 1px ${persona.accent}55`,
+      background: `${tint(persona.accent, 0.1)}`,
+      boxShadow: `inset 0 0 0 1px ${tint(persona.accent, 0.33)}`,
     }}
   >
     {persona.initials}
@@ -358,20 +358,20 @@ const TurnView: React.FC<{
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex justify-end">
-        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-[#ECE7DC] px-4 py-2.5 text-[14px] leading-relaxed text-[#1B1B18]">
+        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-[var(--panel-2)] px-4 py-2.5 text-[14px] leading-relaxed text-[var(--ink)]">
           {turn.question}
         </div>
       </div>
       <div className="flex items-end gap-2.5">
         <Avatar persona={persona} size={28} />
         {turn.pending ? (
-          <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-[#E3DED3] bg-[#FBF9F4] px-4 py-3.5" aria-label="Typing">
+          <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-[var(--rule)] bg-[var(--panel)] px-4 py-3.5" aria-label="Typing">
             {[0, 1, 2].map((i) => (
-              <span key={i} className="typing-dot h-1.5 w-1.5 rounded-full bg-[#6B675E]" style={{ animationDelay: `${i * 160}ms` }} />
+              <span key={i} className="typing-dot h-1.5 w-1.5 rounded-full bg-[var(--review)]" style={{ animationDelay: `${i * 160}ms` }} />
             ))}
           </div>
         ) : turn.error ? (
-          <div className="rounded-2xl rounded-bl-md border border-[#B3261E]/40 bg-[#B3261E]/10 px-4 py-2.5 text-[13px] text-[#8E1F18]">
+          <div className="rounded-2xl rounded-bl-md border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] bg-[color:color-mix(in_srgb,var(--gen)_10%,transparent)] px-4 py-2.5 text-[13px] text-[var(--gen-deep)]">
             Couldn’t answer: {turn.error}
           </div>
         ) : (
@@ -379,12 +379,12 @@ const TurnView: React.FC<{
             onClick={onSelect}
             className={cn(
               'max-w-[86%] rounded-2xl rounded-bl-md border px-4 py-3 text-left transition-colors',
-              selected ? 'bg-[#FBF9F4]' : 'border-[#E3DED3] bg-[#FBF9F4] hover:border-[#D6D0C3]'
+              selected ? 'bg-[var(--panel)]' : 'border-[var(--rule)] bg-[var(--panel)] hover:border-[var(--rule-2)]'
             )}
-            style={selected && v ? { borderColor: `${v.color}66` } : undefined}
+            style={selected && v ? { borderColor: `${tint(v.color, 0.4)}` } : undefined}
           >
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[#1B1B18]">
-              {(r?.generated_answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '') || <span className="text-[#5E5B53]">No answer.</span>}
+            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[var(--ink)]">
+              {(r?.generated_answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '') || <span className="text-[var(--ink-2)]">No answer.</span>}
             </p>
             {r && (
               <span className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -398,7 +398,7 @@ const TurnView: React.FC<{
                       onCite(chunk.chunk_id);
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && onCite(chunk.chunk_id)}
-                    className="rounded-md border border-[#D6D0C3] px-1.5 py-0.5 text-[11px] text-[#6B675E] hover:border-[#C9C2B3] hover:text-[#1B1B18]"
+                    className="rounded-md border border-[var(--rule-2)] px-1.5 py-0.5 text-[11px] text-[var(--review)] hover:border-[var(--rule-3)] hover:text-[var(--ink)]"
                   >
                     [{n}] {chunk.filename ?? filenames[chunk.document_id ?? ''] ?? 'document'}
                   </span>
@@ -456,35 +456,35 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
           {shown.map(({ c, n, tag, color, used }, i) => (
             <div
               key={c.chunk_id}
-              className={cn('xray-in rounded-xl border px-3 py-2.5 transition-shadow', highlight === c.chunk_id && 'ring-2 ring-white/40')}
+              className={cn('xray-in rounded-xl border px-3 py-2.5 transition-shadow', highlight === c.chunk_id && 'ring-2 ring-[color:color-mix(in_srgb,var(--accent)_45%,transparent)]')}
               style={{
                 animationDelay: `${i * 110}ms`,
-                borderColor: color ? `${color}66` : '#E3DED3',
-                background: color ? `${color}0F` : '#FBF9F4',
+                borderColor: color ? `${tint(color, 0.4)}` : 'var(--rule)',
+                background: color ? `${tint(color, 0.06)}` : 'var(--panel)',
               }}
             >
               <div className="flex items-center gap-2 text-[11px]">
-                <span className="font-mono text-[#6E6A62]">[{n}]</span>
-                <span className="truncate text-[#33322D]">{c.filename ?? filenames[c.document_id ?? ''] ?? 'document'}</span>
+                <span className="font-mono text-[var(--muted)]">[{n}]</span>
+                <span className="truncate text-[var(--ink-1)]">{c.filename ?? filenames[c.document_id ?? ''] ?? 'document'}</span>
                 <span className="ml-auto flex shrink-0 items-center gap-1.5">
-                  {used && <span className="text-[#6B675E]">bot used it</span>}
-                  <span className="rounded-full px-1.5 py-0.5" style={color ? { background: `${color}22`, color } : { color: '#5E5B53' }}>
+                  {used && <span className="text-[var(--review)]">bot used it</span>}
+                  <span className="rounded-full px-1.5 py-0.5" style={color ? { background: `${tint(color, 0.13)}`, color } : { color: 'var(--ink-2)' }}>
                     {tag}
                   </span>
                 </span>
               </div>
-              <p className="mt-1.5 line-clamp-3 text-[12.5px] leading-relaxed text-[#33322D]">
+              <p className="mt-1.5 line-clamp-3 text-[12.5px] leading-relaxed text-[var(--ink-1)]">
                 {c.text.replace(/^#+\s.*\n+/, '').replace(/\s*\n+\s*/g, ' ')}
               </p>
             </div>
           ))}
-          {hidden > 0 && <p className="text-[11px] text-[#6E6A62]">+ {hidden} unrelated passage{hidden === 1 ? '' : 's'} hidden</p>}
+          {hidden > 0 && <p className="text-[11px] text-[var(--muted)]">+ {hidden} unrelated passage{hidden === 1 ? '' : 's'} hidden</p>}
         </div>
       </section>
 
       <section>
         <SectionLabel n={2}>Three checks</SectionLabel>
-        <ul className="mt-2 divide-y divide-[#E3DED3] rounded-xl border border-[#E3DED3] bg-[#FBF9F4]">
+        <ul className="mt-2 divide-y divide-[var(--rule)] rounded-xl border border-[var(--rule)] bg-[var(--panel)]">
           {checks.map(([label, tech, score, threshold], i) => {
             const ok = score == null ? null : score >= threshold;
             return (
@@ -495,10 +495,10 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
               >
                 <span
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: ok == null ? '#ECE7DC' : ok ? `${PASS}22` : `${RED}22` }}
+                  style={{ background: ok == null ? 'var(--panel-2)' : ok ? `${tint(PASS, 0.13)}` : `${tint(RED, 0.13)}` }}
                 >
                   {ok == null ? (
-                    <Minus className="h-3.5 w-3.5 text-[#6E6A62]" />
+                    <Minus className="h-3.5 w-3.5 text-[var(--muted)]" />
                   ) : ok ? (
                     <Check className="h-3.5 w-3.5" style={{ color: PASS }} />
                   ) : (
@@ -506,10 +506,10 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] text-[#1B1B18]">{label}</span>
-                  <span className="block text-[10.5px] text-[#6E6A62]">{ok == null ? 'no known answer to compare' : tech}</span>
+                  <span className="block text-[13px] text-[var(--ink)]">{label}</span>
+                  <span className="block text-[10.5px] text-[var(--muted)]">{ok == null ? 'no known answer to compare' : tech}</span>
                 </span>
-                <span className="text-[15px] font-semibold tabular-nums" style={{ color: ok == null ? '#6E6A62' : ok ? PASS : RED }}>
+                <span className="text-[15px] font-semibold tabular-nums" style={{ color: ok == null ? 'var(--muted)' : ok ? PASS : RED }}>
                   {pct(score)}
                 </span>
               </li>
@@ -520,36 +520,36 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
 
       <section className="stamp-land" style={{ animationDelay: `${base + 900}ms` }}>
         <SectionLabel n={3}>Verdict</SectionLabel>
-        <div className="mt-2 rounded-xl border px-4 py-3" style={{ borderColor: `${v.color}55`, background: '#FBF9F4' }}>
+        <div className="mt-2 rounded-xl border px-4 py-3" style={{ borderColor: `${tint(v.color, 0.33)}`, background: 'var(--panel)' }}>
           <div className="stamp my-1 text-[17px] leading-none" style={{ color: v.color }}>
             {v.label}
           </div>
-          <p className="mt-1 text-[13px] leading-relaxed text-[#33322D]">{r.root_cause?.summary ?? v.blame}</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-[var(--ink-1)]">{r.root_cause?.summary ?? v.blame}</p>
         </div>
       </section>
 
       {replay && (
         <section className="xray-in" style={{ animationDelay: `${base + 1300}ms` }}>
           <SectionLabel n={4}>Replay: the proof</SectionLabel>
-          <div className="mt-2 rounded-xl border border-[#D6D0C3] bg-[#FBF9F4] px-4 py-3">
-            <div className="flex items-center gap-2 text-[12px] text-[#6B675E]">
+          <div className="mt-2 rounded-xl border border-[var(--rule-2)] bg-[var(--panel)] px-4 py-3">
+            <div className="flex items-center gap-2 text-[12px] text-[var(--review)]">
               With only the right text
               <ArrowRight className="h-3 w-3" />
               <span className="font-medium" style={{ color: fixed ? PASS : RED }}>
                 {fixed ? 'fixed' : 'still wrong'} ({pct(replay.answer_accuracy)})
               </span>
             </div>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-[#1B1B18]">
+            <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--ink)]">
               {(replay.answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '')}
             </p>
-            <p className="mt-1.5 text-[11.5px] text-[#5E5B53]">
+            <p className="mt-1.5 text-[11.5px] text-[var(--ink-2)]">
               {fixed ? 'So the retriever caused it: the bot was fine once it had the right text.' : 'So the bot is at fault: even the right text didn’t help.'}
             </p>
           </div>
         </section>
       )}
 
-      <button onClick={onOpen} className="flex items-center gap-1.5 self-start text-[13px] font-medium text-[#1B1B18] hover:underline">
+      <button onClick={onOpen} className="flex items-center gap-1.5 self-start text-[13px] font-medium text-[var(--ink)] hover:underline">
         Open full diagnosis <ArrowRight className="h-3.5 w-3.5" />
       </button>
     </div>
@@ -557,8 +557,8 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
 };
 
 const SectionLabel: React.FC<{ n: number; children: React.ReactNode }> = ({ n, children }) => (
-  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-[#5E5B53]">
-    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[#D6D0C3] font-mono text-[9.5px] text-[#33322D]">{n}</span>
+  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--ink-2)]">
+    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--rule-2)] font-mono text-[9.5px] text-[var(--ink-1)]">{n}</span>
     {children}
   </div>
 );
@@ -566,7 +566,7 @@ const SectionLabel: React.FC<{ n: number; children: React.ReactNode }> = ({ n, c
 const XrayPending: React.FC = () => (
   <div className="flex flex-col gap-3">
     {['Finding the text to read…', 'Writing the answer…', 'Checking it three ways…'].map((s, i) => (
-      <div key={s} className="xray-in flex items-center gap-2.5 text-[13px] text-[#5E5B53]" style={{ animationDelay: `${i * 600}ms` }}>
+      <div key={s} className="xray-in flex items-center gap-2.5 text-[13px] text-[var(--ink-2)]" style={{ animationDelay: `${i * 600}ms` }}>
         <Loader2 className="h-3.5 w-3.5 animate-spin" /> {s}
       </div>
     ))}
@@ -575,8 +575,8 @@ const XrayPending: React.FC = () => (
 
 const XrayEmpty: React.FC = () => (
   <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-    <div className="text-[13px] text-[#33322D]">Ask the bot something</div>
-    <p className="max-w-[300px] text-xs leading-relaxed text-[#6E6A62]">
+    <div className="text-[13px] text-[var(--ink-1)]">Ask the bot something</div>
+    <p className="max-w-[300px] text-xs leading-relaxed text-[var(--muted)]">
       Each reply is X-rayed here: the text it read, whether it found and stuck to the right text, and whether the answer is correct.
     </p>
   </div>

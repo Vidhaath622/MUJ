@@ -24,34 +24,34 @@ export const Progress: React.FC<ProgressProps> = ({
 
   let barColor: string;
   if (variant === 'success') {
-    barColor = 'bg-[#1F7A4D]';
+    barColor = 'bg-[var(--ok)]';
   } else if (variant === 'warning') {
-    barColor = 'bg-[#B26B00]';
+    barColor = 'bg-[var(--retr)]';
   } else if (variant === 'danger') {
-    barColor = 'bg-[#B3261E]';
+    barColor = 'bg-[var(--gen)]';
   } else {
     barColor =
       clamped >= thresholdPass
-        ? 'bg-[#1F7A4D]'
+        ? 'bg-[var(--ok)]'
         : clamped >= thresholdWarn
-        ? 'bg-[#B26B00]'
-        : 'bg-[#B3261E]';
+        ? 'bg-[var(--retr)]'
+        : 'bg-[var(--gen)]';
   }
 
   const heightClass = size === 'sm' ? 'h-1.5' : size === 'lg' ? 'h-3' : 'h-2';
 
   return (
     <div className={cn('w-full space-y-1', className)} {...props}>
-      <div className={cn('w-full bg-[#FBF9F4] rounded-full overflow-hidden', heightClass)}>
+      <div className={cn('w-full bg-[var(--panel)] rounded-full overflow-hidden', heightClass)}>
         <div
           className={cn('h-full rounded-full transition-all duration-500', barColor)}
           style={{ width: `${clamped}%` }}
         />
       </div>
       {showLabel && (
-        <div className="flex justify-between text-[11px] font-mono text-[#5E5B53]">
+        <div className="flex justify-between text-[11px] font-mono text-[var(--ink-2)]">
           <span>Score</span>
-          <span className="font-bold text-[#1B1B18]">{clamped.toFixed(0)}%</span>
+          <span className="font-bold text-[var(--ink)]">{clamped.toFixed(0)}%</span>
         </div>
       )}
     </div>
@@ -84,10 +84,10 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
 
   const strokeColor =
     clamped >= thresholdPass
-      ? 'text-[#1F7A4D] stroke-[#1F7A4D]'
+      ? 'text-[var(--ok)] stroke-[var(--ok)]'
       : clamped >= thresholdWarn
-      ? 'text-[#B26B00] stroke-[#B26B00]'
-      : 'text-[#B3261E] stroke-[#B3261E]';
+      ? 'text-[var(--retr)] stroke-[var(--retr)]'
+      : 'text-[var(--gen)] stroke-[var(--gen)]';
 
   return (
     <div className="relative inline-flex flex-col items-center justify-center">
@@ -103,7 +103,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           r={radius}
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-[#6E6A62] fill-transparent"
+          className="text-[var(--muted)] fill-transparent"
         />
         <circle
           cx={size / 2}
@@ -118,11 +118,11 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="text-sm font-bold font-mono text-[#1B1B18] leading-none">
+        <span className="text-sm font-bold font-mono text-[var(--ink)] leading-none">
           {clamped.toFixed(0)}%
         </span>
         {label && (
-          <span className="text-[9px] font-mono text-[#5E5B53] uppercase mt-0.5">
+          <span className="text-[9px] font-mono text-[var(--ink-2)] uppercase mt-0.5">
             {label}
           </span>
         )}

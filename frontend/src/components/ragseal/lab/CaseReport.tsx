@@ -56,7 +56,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
     <div key={result.evaluation_id ?? result.query} className="flex h-full min-h-0 flex-col gap-4">
       <header className="lab-fade-up flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2.5 text-xs text-[#5E5B53]">
+          <div className="flex items-center gap-2.5 text-xs text-[var(--ink-2)]">
             {testId && <span className="font-mono">{testId}</span>}
             {type && (
               <>
@@ -71,12 +71,12 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
               </>
             )}
           </div>
-          <h1 className="mt-2 text-[22px] font-semibold leading-tight tracking-[-0.025em] text-[#1B1B18] 2xl:text-[26px]">{result.query}</h1>
+          <h1 className="mt-2 text-[22px] font-semibold leading-tight tracking-[-0.025em] text-[var(--ink)] 2xl:text-[26px]">{result.query}</h1>
         </div>
         {result.ground_truth && (
           <div className="max-w-[34%] shrink-0 text-right">
-            <div className="text-[11px] text-[#5E5B53]">Known answer</div>
-            <div className="mt-0.5 text-[15px] text-[#1B1B18]">{result.ground_truth}</div>
+            <div className="text-[11px] text-[var(--ink-2)]">Known answer</div>
+            <div className="mt-0.5 text-[15px] text-[var(--ink)]">{result.ground_truth}</div>
           </div>
         )}
       </header>
@@ -87,7 +87,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
         style={{
           animationDelay: '60ms',
           borderColor: tint(v.color, 0.28),
-          background: `linear-gradient(0deg, ${tint(v.color, 0.04)}, ${tint(v.color, 0.04)}), #FBF9F4`,
+          background: `linear-gradient(0deg, ${tint(v.color, 0.04)}, ${tint(v.color, 0.04)}), var(--panel)`,
           boxShadow: 'none',
         }}
       >
@@ -106,14 +106,14 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
               >
                 {failureLabel(ft)}
               </span>
-              {stage && <span className="text-[#5E5B53]">{STAGE_LABEL[stage] ?? stage}</span>}
+              {stage && <span className="text-[var(--ink-2)]">{STAGE_LABEL[stage] ?? stage}</span>}
             </div>
           )}
-          <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-[#33322D]">{result.root_cause?.summary ?? v.blame}</p>
+          <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-[var(--ink-1)]">{result.root_cause?.summary ?? v.blame}</p>
           {result.root_cause?.failure_type_text && ft !== 'CLEAN_PASS' && (
-            <p className="mt-1.5 max-w-[52ch] text-xs leading-relaxed text-[#5E5B53]">{result.root_cause.failure_type_text}</p>
+            <p className="mt-1.5 max-w-[52ch] text-xs leading-relaxed text-[var(--ink-2)]">{result.root_cause.failure_type_text}</p>
           )}
-          {result.error && <p className="mt-2 text-xs text-[#B3261E]">{result.error}</p>}
+          {result.error && <p className="mt-2 text-xs text-[var(--gen)]">{result.error}</p>}
         </div>
 
         <div className="flex min-w-0 flex-[1.4_1_420px] items-stretch">
@@ -166,7 +166,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
           ))}
           {otherChunks.length > 0 && (
             <details className="group">
-              <summary className="cursor-pointer list-none text-xs text-[#5E5B53] hover:text-[#1B1B18]">
+              <summary className="cursor-pointer list-none text-xs text-[var(--ink-2)] hover:text-[var(--ink)]">
                 <span className="group-open:hidden">Show {otherChunks.length} other passage{otherChunks.length === 1 ? '' : 's'} (not relevant)</span>
                 <span className="hidden group-open:inline">Hide other passages</span>
               </summary>
@@ -177,21 +177,21 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
               </div>
             </details>
           )}
-          {!chunks.length && <p className="text-sm text-[#5E5B53]">No chunks were retrieved.</p>}
+          {!chunks.length && <p className="text-sm text-[var(--ink-2)]">No chunks were retrieved.</p>}
         </Pane>
 
         <Pane title="What the bot answered" note={result.generator_model} mono delay={180}>
-          <p className="whitespace-pre-wrap text-[17px] leading-normal tracking-[-0.01em] text-[#1B1B18]">
+          <p className="whitespace-pre-wrap text-[17px] leading-normal tracking-[-0.01em] text-[var(--ink)]">
             {result.generated_answer ? (
               <Figures text={result.generated_answer} color={answerWrong ? RED : undefined} />
             ) : (
-              <span className="text-[#5E5B53]">No answer.</span>
+              <span className="text-[var(--ink-2)]">No answer.</span>
             )}
           </p>
           <ClaimList claims={m.faithfulness?.claims} />
           {result.replay && <ReplayProof replay={result.replay} before={accuracy} />}
           {result.root_cause?.recommended_action && !result.replay && (
-            <p className="text-xs text-[#5E5B53]">Fix: {result.root_cause.recommended_action}</p>
+            <p className="text-xs text-[var(--ink-2)]">Fix: {result.root_cause.recommended_action}</p>
           )}
         </Pane>
       </section>
@@ -220,16 +220,16 @@ const Stage: React.FC<{
       style={
         {
           animationDelay: `${delay}ms`,
-          borderColor: fault ? tint(color, 0.55) : '#E3DED3',
-          background: fault ? tint(color, 0.08) : '#FBF9F4',
+          borderColor: fault ? tint(color, 0.55) : 'var(--rule)',
+          background: fault ? tint(color, 0.08) : 'var(--panel)',
           '--pulse': tint(color, 0.45),
         } as React.CSSProperties
       }
     >
       <div className="flex items-start justify-between gap-2 text-xs">
         <span className="min-w-0 leading-tight">
-          <span className="block font-medium text-[#1B1B18]">{name}</span>
-          {tech && <span className="block text-[10.5px] text-[#6E6A62]">{tech}</span>}
+          <span className="block font-medium text-[var(--ink)]">{name}</span>
+          {tech && <span className="block text-[10.5px] text-[var(--muted)]">{tech}</span>}
         </span>
         <span className="shrink-0" style={{ color }}>
           {label ?? (fault ? 'to blame' : state === 'ok' ? 'yes' : 'unclear')}
@@ -238,7 +238,7 @@ const Stage: React.FC<{
       <div className="mt-2 truncate text-[21px] font-semibold tabular-nums tracking-[-0.02em] 2xl:text-[26px]" style={{ color }}>
         {value}
       </div>
-      <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-[#5E5B53]">{sub}</div>
+      <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-[var(--ink-2)]">{sub}</div>
     </div>
   );
 };
@@ -249,7 +249,7 @@ const Link: React.FC<{ fault: string | null; delay: number }> = ({ fault, delay 
       className="lab-draw h-px flex-1"
       style={{
         animationDelay: `${delay}ms`,
-        background: fault ? `linear-gradient(90deg, ${tint(fault, 0.6)}, #D6D0C3)` : '#D6D0C3',
+        background: fault ? `linear-gradient(90deg, ${tint(fault, 0.6)}, var(--rule-2))` : 'var(--rule-2)',
       }}
     />
   </div>
@@ -263,9 +263,9 @@ const Pane: React.FC<{ title: string; note?: string; mono?: boolean; delay: numb
   children,
 }) => (
   <div className="lab-panel-flat lab-fade-up flex min-h-0 flex-col overflow-hidden rounded-2xl" style={{ animationDelay: `${delay}ms` }}>
-    <div className="flex items-baseline justify-between border-b border-[#E3DED3] px-[18px] py-3.5 text-[13px]">
-      <h3 className="font-medium text-[#1B1B18]">{title}</h3>
-      {note && <span className={cn('text-[#5E5B53]', mono && 'font-mono text-xs')}>{note}</span>}
+    <div className="flex items-baseline justify-between border-b border-[var(--rule)] px-[18px] py-3.5 text-[13px]">
+      <h3 className="font-medium text-[var(--ink)]">{title}</h3>
+      {note && <span className={cn('text-[var(--ink-2)]', mono && 'font-mono text-xs')}>{note}</span>}
     </div>
     <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">{children}</div>
   </div>
@@ -297,22 +297,22 @@ const ChunkCard: React.FC<{
     <article
       className={cn('rounded-xl border px-3.5 py-3 transition-opacity', irrelevant && 'opacity-55 hover:opacity-100')}
       style={{
-        borderColor: color ? tint(color, isStale ? 0.45 : 0.3) : '#E3DED3',
+        borderColor: color ? tint(color, isStale ? 0.45 : 0.3) : 'var(--rule)',
         background: color ? tint(color, isStale ? 0.05 : 0.04) : 'transparent',
       }}
     >
       <div className="flex items-center gap-2 text-xs">
-        <span className="truncate text-[#1B1B18]">{filename ?? chunk.document_id ?? 'document'}</span>
+        <span className="truncate text-[var(--ink)]">{filename ?? chunk.document_id ?? 'document'}</span>
         {tag && (
           <span
             className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px]"
-            style={color ? { background: tint(color, 0.13), color } : { color: '#5E5B53' }}
+            style={color ? { background: tint(color, 0.13), color } : { color: 'var(--ink-2)' }}
           >
             {tag}
           </span>
         )}
       </div>
-      <p className="mt-2 line-clamp-4 text-[13px] leading-relaxed text-[#33322D]">
+      <p className="mt-2 line-clamp-4 text-[13px] leading-relaxed text-[var(--ink-1)]">
         <Figures text={stripHeading(chunk.text)} color={color ?? undefined} />
       </p>
     </article>
@@ -329,13 +329,13 @@ const ClaimList: React.FC<{ claims?: LabClaim[] }> = ({ claims }) => {
         return (
           <li key={i} className="flex gap-2.5 text-xs leading-snug">
             {ok ? (
-              <Check className="mt-px h-3.5 w-3.5 shrink-0 text-[#1F7A4D]" />
+              <Check className="mt-px h-3.5 w-3.5 shrink-0 text-[var(--ok)]" />
             ) : (
-              <X className="mt-px h-3.5 w-3.5 shrink-0 text-[#B3261E]" />
+              <X className="mt-px h-3.5 w-3.5 shrink-0 text-[var(--gen)]" />
             )}
-            <span className={ok ? 'text-[#5E5B53]' : 'text-[#8E1F18]'}>
+            <span className={ok ? 'text-[var(--ink-2)]' : 'text-[var(--gen-deep)]'}>
               {allOk && claims.length === 1 ? 'Every claim is supported by a retrieved chunk.' : c.claim}
-              {!ok && <span className="ml-1 text-[#B3261E]">not in context</span>}
+              {!ok && <span className="ml-1 text-[var(--gen)]">not in context</span>}
             </span>
           </li>
         );
@@ -349,19 +349,19 @@ const ReplayProof: React.FC<{ replay: NonNullable<LabResult['replay']>; before: 
   return (
     <div className="lab-panel rounded-[14px] p-4">
       <div className="flex items-center gap-2.5 text-xs">
-        <span className="rounded-md bg-[#E3DED3] px-2 py-0.5 font-mono text-[11px] text-[#33322D]">REPLAY</span>
-        <span className="text-[#33322D]">Same model, only the correct source</span>
+        <span className="rounded-md bg-[var(--rule)] px-2 py-0.5 font-mono text-[11px] text-[var(--ink-1)]">REPLAY</span>
+        <span className="text-[var(--ink-1)]">Same model, only the correct source</span>
         <span className="ml-auto font-medium tabular-nums" style={{ color: fixed ? PASS : RED }}>
           {pct(before)} → {pct(replay.answer_accuracy)}
         </span>
       </div>
       {replay.answer && (
-        <p className="mt-3 text-[15px] leading-normal text-[#1B1B18]">
+        <p className="mt-3 text-[15px] leading-normal text-[var(--ink)]">
           <Figures text={replay.answer} color={fixed ? PASS : undefined} />
         </p>
       )}
       {replay.verdict_effect && (
-        <div className="mt-3 border-t border-[#E3DED3] pt-3 text-xs text-[#6B675E]">{replay.verdict_effect}</div>
+        <div className="mt-3 border-t border-[var(--rule)] pt-3 text-xs text-[var(--review)]">{replay.verdict_effect}</div>
       )}
     </div>
   );
@@ -410,4 +410,4 @@ function stripHeading(text: string): string {
     .trim();
 }
 
-const Dot = () => <span className="h-[3px] w-[3px] rounded-full bg-[#C9C2B3]" />;
+const Dot = () => <span className="h-[3px] w-[3px] rounded-full bg-[var(--rule-3)]" />;

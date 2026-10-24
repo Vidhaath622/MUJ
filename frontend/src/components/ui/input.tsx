@@ -11,7 +11,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative flex items-center w-full">
         {icon && (
-          <div className="absolute left-3 pointer-events-none text-[#5E5B53]">
+          <div className="absolute left-3 pointer-events-none text-[var(--ink-2)]">
             {icon}
           </div>
         )}
@@ -19,7 +19,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           ref={ref}
           className={cn(
-            'flex h-10 w-full rounded-xl border border-[#E3DED3] bg-[#FBF9F4] px-3 py-2 text-sm text-[#1B1B18] placeholder:text-[#6E6A62] transition-colors focus:border-[#2F5D8A]/40 focus:outline-none focus:ring-1 focus:ring-[#2F5D8A]/40 disabled:cursor-not-allowed disabled:opacity-50 font-sans',
+            'flex h-10 w-full rounded-xl border border-[var(--rule)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)] transition-colors focus:border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] focus:outline-none focus:ring-1 focus:ring-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] disabled:cursor-not-allowed disabled:opacity-50 font-sans',
             icon && 'pl-9',
             shortcut && 'pr-12',
             className
@@ -27,7 +27,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {shortcut && (
-          <span className="absolute right-3 text-[10px] font-mono bg-[#FBF9F4] text-[#5E5B53] px-1.5 py-0.5 rounded border border-[#E3DED3] pointer-events-none">
+          <span className="absolute right-3 text-[10px] font-mono bg-[var(--panel)] text-[var(--ink-2)] px-1.5 py-0.5 rounded border border-[var(--rule)] pointer-events-none">
             {shortcut}
           </span>
         )}

@@ -13,6 +13,7 @@ import { TrustPage } from './components/ragseal/pages/TrustPage';
 import { ComparePage } from './components/ragseal/pages/ComparePage';
 import { BotsPage } from './components/ragseal/pages/BotsPage';
 import { TestSetsPage } from './components/ragseal/pages/TestSetsPage';
+import { SealPage } from './components/ragseal/pages/SealPage';
 
 import { INDUSTRY_PACKS } from './data/mockPacksDataset';
 import { MOCK_SYNTHETIC_QUESTIONS } from './data/mockAtsDataset';
@@ -177,6 +178,8 @@ export const App: React.FC = () => {
         {route === 'trust' && <TrustPage token={authToken} health={backendHealth} />}
 
         {route === 'compare' && <ComparePage token={authToken} />}
+
+        {route === 'seal' && <SealPage token={authToken} />}
 
         {route === 'learn' && (
           <div className="mx-auto max-w-7xl p-4 md:p-8">

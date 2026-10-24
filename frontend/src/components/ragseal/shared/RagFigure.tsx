@@ -3,14 +3,14 @@ import React, { useEffect, useState } from 'react';
 // Fig. 1: how a RAG chatbot answers (indexing lane + answering lane) and the three
 // places RAGSeal checks it, plus the replay loop that proves which part failed.
 
-const INK = '#1B1B18';
-const MUTED = '#5E5B53';
-const RULE = '#C9C2B3';
-const BOX = '#FBF9F4';
-const AMBER = '#B26B00';
-const RED = '#B3261E';
-const GREEN = '#1F7A4D';
-const BLUE = '#2F5D8A';
+const INK = 'var(--ink)';
+const MUTED = 'var(--ink-2)';
+const RULE = 'var(--rule-3)';
+const BOX = 'var(--panel)';
+const AMBER = 'var(--retr)';
+const RED = 'var(--gen)';
+const GREEN = 'var(--ok)';
+const BLUE = 'var(--accent)';
 
 const W = 140;
 const H = 54;
@@ -35,11 +35,11 @@ const Box: React.FC<{ x: number; y: number; title: string; sub?: string; stroke?
   y,
   title,
   sub,
-  stroke = '#D6D0C3',
+  stroke = 'var(--rule-2)',
   delay,
 }) => (
   <g className="fig-fade" style={{ animationDelay: `${delay}ms` }}>
-    <rect x={x} y={y} width={W} height={H} rx={8} fill={BOX} stroke={stroke} strokeWidth={stroke === '#D6D0C3' ? 1 : 1.6} />
+    <rect x={x} y={y} width={W} height={H} rx={8} fill={BOX} stroke={stroke} strokeWidth={stroke === 'var(--rule-2)' ? 1 : 1.6} />
     <text x={x + W / 2} y={sub ? y + 23 : y + 32} textAnchor="middle" fontSize={13.5} fontWeight={600} fill={INK}>
       {title}
     </text>
@@ -186,8 +186,8 @@ export const RagFigure: React.FC<{ caption?: boolean }> = ({ caption = true }) =
         )}
       </svg>
       {caption && (
-        <figcaption className="mt-3 text-[13px] leading-relaxed text-[#33322D]">
-          <span className="font-report text-[14px] italic text-[#1B1B18]">Fig. 1 — How a RAG chatbot answers, and where RAGSeal checks it.</span>{' '}
+        <figcaption className="mt-3 text-[13px] leading-relaxed text-[var(--ink-1)]">
+          <span className="font-report text-[14px] italic text-[var(--ink)]">Fig. 1 — How a RAG chatbot answers, and where RAGSeal checks it.</span>{' '}
           Documents are indexed once. For each question the retriever pulls a few chunks and the bot writes an answer from them. RAGSeal
           checks the retriever (1), the bot (2) and the final answer (3) separately, then replays a wrong answer with only the correct text
           to prove which part caused it.
