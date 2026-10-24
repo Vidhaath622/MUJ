@@ -393,7 +393,7 @@ const TurnView: React.FC<{
             style={selected && v ? { borderColor: `${tint(v.color, 0.4)}` } : undefined}
           >
             <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[var(--ink)]">
-              {(r?.generated_answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '') || <span className="text-[var(--ink-2)]">No answer.</span>}
+              <AnswerWithCitations text={r?.generated_answer ?? ''} />
             </p>
             {r && (
               <span className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -434,6 +434,7 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
   highlight,
   onOpen,
 }) => {
+  const [showAll, setShowAll] = React.useState(false);
   const v = verdictStyle(r.root_cause?.category ?? r.category);
   const m = r.metrics ?? {};
   const gold = new Set(r.gold_chunk_ids ?? []);
@@ -446,8 +447,9 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
     const color = isStale ? AMBER : isGold ? PASS : null;
     return { c, n: i + 1, tag, color, used: cited.has(c.chunk_id) };
   });
-  const shown = chunks.filter((x) => x.color || x.used || x.c.is_relevant !== false);
-  const hidden = chunks.length - shown.length;
+  const relevant = chunks.filter((x) => x.color || x.used || x.c.is_relevant !== false);
+  const hidden = chunks.length - relevant.length;
+  const shown = showAll ? chunks : relevant;
   const checks: [string, string, number | null | undefined, number][] = [
     ['Found the right text', 'retriever', m.context_relevance?.score, 0.7],
     ['Stuck to the text', 'bot', m.faithfulness?.score, 0.75],
@@ -487,7 +489,11 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
               </p>
             </div>
           ))}
-          {hidden > 0 && <p className="text-[11px] text-[var(--muted)]">+ {hidden} unrelated passage{hidden === 1 ? '' : 's'} hidden</p>}
+          {hidden > 0 && (
+            <button onClick={() => setShowAll((x) => !x)} className="text-[11px] text-[var(--ink-2)] underline-offset-2 transition-colors hover:text-[var(--ink)] hover:underline">
+              {showAll ? 'Hide' : 'Show'} {hidden} unrelated passage{hidden === 1 ? '' : 's'}
+            </button>
+          )}
         </div>
       </section>
 
@@ -590,3 +596,33 @@ const XrayEmpty: React.FC = () => (
     </p>
   </div>
 );
+
+/** Keeps the bot's [n] citation markers visible as small chips; a citation-only reply is shown as-is with a note. */
+const AnswerWithCitations: React.FC<{ text: string }> = ({ text }) => {
+  const prose = text.replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '').trim();
+  if (!text.trim()) return <span className="text-[var(--ink-2)]">No answer.</span>;
+  if (!prose)
+    return (
+      <>
+        <span className="font-mono">{text.trim()}</span>
+        <span className="ml-2 text-xs text-[var(--ink-2)]">citation-only reply: the bot gave no answer text</span>
+      </>
+    );
+  const parts = text.split(/(\[\d+(?:[-,]\s*\d+)*\])/g);
+  return (
+    <>
+      {parts.map((p, i) =>
+        /^\[\d/.test(p) ? (
+          <span
+            key={i}
+            className="mx-0.5 inline-flex -translate-y-px items-center rounded border border-[var(--rule)] bg-[var(--panel-2)] px-1 font-mono text-[10.5px] leading-[16px] text-[var(--ink-1)]"
+          >
+            {p.slice(1, -1)}
+          </span>
+        ) : (
+          <React.Fragment key={i}>{p}</React.Fragment>
+        )
+      )}
+    </>
+  );
+};

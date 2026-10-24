@@ -225,7 +225,16 @@ export async function postLabel(label: LabelInput, token: string): Promise<void>
   await call('/labels', token, { method: 'POST', body: JSON.stringify(label) });
 }
 
+export interface AgreementSnapshot {
+  n?: number;
+  human_human?: { agreement?: number | null; cohen_kappa?: number | null; n?: number };
+  pipeline_vs_consensus?: { agreement?: number | null; kappa?: number | null; false_pass?: number; false_fail?: number; n?: number };
+}
+
 export interface Agreement {
+  /** Labels as first given, before anyone saw a disagreement: the honest inter-annotator number. */
+  original?: AgreementSnapshot | null;
+  computed_from?: string;
   pack_id?: string | null;
   n_labels?: number;
   n_items_labeled?: number;

@@ -255,6 +255,22 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
       title="Agreement with human labels"
       note={`${n} of ${LABEL_TARGET}+ answers labeled by both people${agreement.labelers?.length ? ` · ${agreement.labelers.join(', ')}` : ''}`}
     >
+      {agreement.original && (
+        <div className="mb-6 rounded-xl border border-[var(--rule)] p-4">
+          <div className="mb-3 text-xs uppercase tracking-[0.1em] text-[var(--ink-2)]">
+            Inter-annotator agreement (before review) · labels as first given, n = {agreement.original.n ?? agreement.original.human_human?.n ?? '—'}
+          </div>
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            <Metric label="Humans agree with each other" value={pct(agreement.original.human_human?.agreement)} sub={`Cohen's κ ${fmtNum(agreement.original.human_human?.cohen_kappa)}`} />
+            <Metric label="Pipeline agrees with humans" value={pct(agreement.original.pipeline_vs_consensus?.agreement)} sub={`Cohen's κ ${fmtNum(agreement.original.pipeline_vs_consensus?.kappa)}`} />
+            <Metric label="False pass" value={agreement.original.pipeline_vs_consensus?.false_pass ?? '—'} sub="before review" />
+            <Metric label="False fail" value={agreement.original.pipeline_vs_consensus?.false_fail ?? '—'} sub="before review" />
+          </div>
+        </div>
+      )}
+      {agreement.original && (
+        <div className="mb-3 text-xs uppercase tracking-[0.1em] text-[var(--ink-2)]">After disagreement review (adjudicated)</div>
+      )}
       <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
         <Metric big label="Pipeline agrees with humans" value={pct(pv.agreement)} sub={`Cohen's κ ${fmtNum(pv.kappa)}`} color={tone(pv.agreement)} />
         <Metric

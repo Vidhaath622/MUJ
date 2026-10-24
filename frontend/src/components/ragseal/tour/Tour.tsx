@@ -40,6 +40,30 @@ const STEPS: Step[] = [
     title: 'Bring your own documents',
     body: 'Upload your own policy or manual, generate test questions with known answers, and check your bot the same way.',
   },
+  {
+    target: 'nav-diagnose',
+    route: 'diagnose',
+    title: 'Diagnose answers',
+    body: 'Every answer in a test, with the retrieved text beside it, three colour-coded checks and the replay proof.',
+  },
+  {
+    target: 'nav-impact',
+    route: 'impact',
+    title: 'Change impact',
+    body: 'Updated a document? RAGSeal finds what changed and shows which answers would still give users the old fact.',
+  },
+  {
+    target: 'nav-trust',
+    route: 'trust',
+    title: 'Checker trust',
+    body: 'Why you can believe the verdict: agreement with human labels, planted failures it caught, and stability when the grading model changes.',
+  },
+  {
+    target: '__none__',
+    route: 'overview',
+    title: 'You’re set',
+    body: 'Test a bot, find what broke, trust the verdict. Reopen this tour any time from “Guided tour” in the sidebar.',
+  },
 ];
 
 const SEEN_KEY = 'ragseal.tour.seen';
