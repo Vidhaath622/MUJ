@@ -168,7 +168,10 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
       if (e.metaKey || e.ctrlKey || e.altKey || !item) return;
       if (pickingType) {
         const n = Number(e.key);
-        if (n >= 1 && n <= types.length) {
+        if (e.key === '0' || e.key === 'Enter') {
+          e.preventDefault();
+          submit(false, null);
+        } else if (n >= 1 && n <= types.length) {
           e.preventDefault();
           submit(false, types[n - 1].id);
         } else if (e.key === 'Escape' || e.key === 'Backspace') {
@@ -384,7 +387,7 @@ const ActionBar: React.FC<{
       <div className="lab-panel lab-fade-up rounded-2xl p-4">
         <div className="mb-3 flex items-center justify-between text-[13px]">
           <span className="text-[#E8EAED]">
-            What went wrong? <span className="text-[#8A9099]">Press the number.</span>
+            Why is it wrong? <span className="text-[#8A9099]">Press a number, or <Key>0</Key> if you're not sure (that still counts).</span>
           </span>
           <button onClick={onCancel} className="flex items-center gap-1.5 text-xs text-[#8A9099] hover:text-white">
             <Key>Esc</Key> back
@@ -400,13 +403,16 @@ const ActionBar: React.FC<{
                   onClick={() => onType(f.id)}
                   disabled={saving}
                   title={f.hint}
-                  className="flex h-9 items-center gap-2 rounded-[9px] border px-3 text-[13px] text-[#E8EAED] transition-colors hover:bg-white/[0.03] disabled:opacity-50"
+                  className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border px-3 py-2 text-left text-[13px] text-[#E8EAED] transition-colors hover:bg-white/[0.03] disabled:opacity-50"
                   style={{ borderColor: tint(STAGE_COLOR[f.stage], 0.35) }}
                 >
                   <span style={{ color: STAGE_COLOR[f.stage] }}>
                     <Key>{f.key}</Key>
                   </span>
-                  {f.label}
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>{f.plain ?? f.label}</span>
+                    <span className="text-[11px] text-[#8A9099]">{f.hint}</span>
+                  </span>
                 </button>
               ))}
             </div>
