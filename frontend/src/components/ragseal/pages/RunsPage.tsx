@@ -203,7 +203,7 @@ const LiveRun: React.FC<{ progress: RunProgress; packId?: string }> = ({ progres
         <div className="flex items-baseline gap-2">
           <span className="text-[44px] font-semibold leading-none tracking-[-0.04em] tabular-nums">{done}</span>
           <span className="text-lg text-[#8A9099] tabular-nums">/ {total || '—'} questions</span>
-          {!!progress.failed && <span className="ml-2 text-sm text-[#F47783]">{progress.failed} not judged</span>}
+          {!!progress.failed && <span className="ml-2 text-sm text-[#F47783]">{progress.failed} not scored</span>}
         </div>
         <div className="flex gap-8 text-right">
           <Mini label="Elapsed" value={fmtDuration(progress.elapsed_ms)} />

@@ -23,41 +23,57 @@ export type Route = 'bots' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'la
 interface NavItem {
   id: Route;
   label: string;
+  hint: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
+// Story order: understand it, try it, dig into one answer, bring your own docs, run at scale,
+// then prove the checker itself can be trusted.
 const NAV: { group: string; items: NavItem[] }[] = [
   {
-    group: 'Evaluate',
+    group: 'Use it',
     items: [
-      { id: 'bots', label: 'Bots', icon: MessagesSquare },
-      { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-      { id: 'diagnose', label: 'Diagnose', icon: ScanSearch },
-      { id: 'runs', label: 'Runs', icon: PlayCircle },
-      { id: 'testsets', label: 'Test sets', icon: FlaskConical },
+      { id: 'overview', label: 'Start here', hint: 'What RAGSeal does, in one picture', icon: LayoutDashboard },
+      { id: 'bots', label: 'Try a chatbot', hint: 'Ask a bot; every reply gets checked', icon: MessagesSquare },
+      { id: 'diagnose', label: 'Diagnose answers', hint: 'See why a single answer went wrong', icon: ScanSearch },
+      { id: 'testsets', label: 'Documents & questions', hint: 'Upload a document, generate test questions', icon: FlaskConical },
+      { id: 'runs', label: 'Run a full test', hint: 'Check every question in a pack at once', icon: PlayCircle },
     ],
   },
   {
-    group: 'Trust',
+    group: 'Trust the checker',
     items: [
-      { id: 'label', label: 'Label studio', icon: Tags },
-      { id: 'trust', label: 'Evaluator trust', icon: ListChecks },
-      { id: 'compare', label: 'Compare versions', icon: GitCompareArrows },
+      { id: 'label', label: 'Label answers', hint: 'Humans mark answers right or wrong', icon: Tags },
+      { id: 'trust', label: 'Can you trust the checker?', hint: 'Does RAGSeal agree with humans?', icon: ListChecks },
+      { id: 'compare', label: 'Compare versions', hint: 'Did a change make the bot better or worse?', icon: GitCompareArrows },
     ],
   },
-  { group: 'Learn', items: [{ id: 'learn', label: 'How it works', icon: BookOpen }] },
+  { group: 'Learn', items: [{ id: 'learn', label: 'How it works', hint: 'The pipeline, step by step', icon: BookOpen }] },
 ];
 
 export const ROUTE_TITLE: Record<Route, string> = {
-  bots: 'Bots under test',
-  overview: 'Overview',
-  diagnose: 'Diagnose',
-  runs: 'Runs',
-  testsets: 'Test sets',
-  label: 'Label studio',
-  trust: 'Evaluator trust',
+  bots: 'Try a chatbot',
+  overview: 'Start here',
+  diagnose: 'Diagnose answers',
+  runs: 'Run a full test',
+  testsets: 'Documents & questions',
+  label: 'Label answers',
+  trust: 'Can you trust the checker?',
   compare: 'Compare versions',
   learn: 'How it works',
+};
+
+/** One plain sentence under each page title: what the page is for and what to do. */
+export const ROUTE_BLURB: Record<Route, string> = {
+  overview: 'RAGSeal tests a chatbot that answers from documents and tells you which part broke when it\u2019s wrong.',
+  bots: 'Ask a sample chatbot anything. Each reply is checked: did it find the right text, stick to it, and get it right?',
+  diagnose: 'Pick a question on the left to see the text the bot found, its answer, and who is to blame.',
+  testsets: 'Upload a document, read it, then generate test questions with known answers and check them.',
+  runs: 'Run every question in a pack in one go and watch the progress.',
+  label: 'Mark the bot\u2019s answers right or wrong yourself. We compare your labels with RAGSeal\u2019s.',
+  trust: 'Evidence that RAGSeal\u2019s verdicts can be trusted: agreement with humans, planted failures, and stability.',
+  compare: 'Run two versions of the bot on the same questions and see whether the change helped or hurt.',
+  learn: 'The full pipeline, explained step by step.',
 };
 
 const ROUTES = new Set<Route>(Object.keys(ROUTE_TITLE) as Route[]);
@@ -67,7 +83,7 @@ export function useHashRoute(): { route: Route; params: URLSearchParams; go: (r:
   const parse = () => {
     const raw = window.location.hash.replace(/^#\/?/, '');
     const [path, query] = raw.split('?');
-    const route = (ROUTES.has(path as Route) ? path : 'diagnose') as Route;
+    const route = (ROUTES.has(path as Route) ? path : 'overview') as Route;
     return { route, params: new URLSearchParams(query ?? '') };
   };
   const [state, setState] = useState(parse);
@@ -143,7 +159,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                         onNavigate(item.id);
                       }}
                       aria-current={active ? 'page' : undefined}
-                      title={item.label}
+                      title={`${item.label}: ${item.hint}`}
                       className={cn(
                         'flex h-9 items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors lg:justify-start',
                         active
@@ -152,7 +168,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                       )}
                     >
                       <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-white' : 'text-[#6F757E]')} />
-                      <span className="hidden lg:inline">{item.label}</span>
+                      <span className="hidden truncate lg:inline">{item.label}</span>
                     </a>
                   </li>
                 );
@@ -178,8 +194,11 @@ export const AppShell: React.FC<AppShellProps> = ({
     </aside>
 
     <div className="flex min-w-0 flex-1 flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-4 border-b border-[#17191D] px-6">
-        <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-white">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
+      <header className="flex min-h-14 shrink-0 items-center gap-4 border-b border-[#17191D] px-6 py-2">
+        <div className="min-w-0">
+          <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-white">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
+          <p className="truncate text-xs text-[#8A9099]">{ROUTE_BLURB[route]}</p>
+        </div>
         <div id={TOP_BAR_SLOT} className="ml-auto flex min-w-0 items-center gap-3">
           {topBarControls}
         </div>
@@ -189,7 +208,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   </div>
 );
 
-/** Which generator and judge the backend actually has loaded, straight from /api/health. */
+/** Which chatbot and grading model the backend actually has loaded, straight from /api/health. */
 const ModelStatus: React.FC<{ live: boolean; health: HealthResponse | null }> = ({ live, health }) => {
   if (!live || !health) {
     return (
@@ -210,7 +229,7 @@ const ModelStatus: React.FC<{ live: boolean; health: HealthResponse | null }> = 
       className="flex items-start justify-center gap-2.5 px-2.5 text-xs lg:justify-start"
       title={
         [gen?.error, judge?.error, health.engine_error].filter(Boolean).join(' · ') ||
-        `All models ready${poolText ? `. Judge pool: ${poolText}` : ''}`
+        `All models ready${poolText ? `. Grading models: ${poolText}` : ''}`
       }
     >
       <span
@@ -221,10 +240,10 @@ const ModelStatus: React.FC<{ live: boolean; health: HealthResponse | null }> = 
       />
       <div className="hidden min-w-0 leading-relaxed lg:block">
         <div className="truncate text-[#8A9099]">
-          Generator <span className="font-mono text-[#C9CDD3]">{gen?.name ?? health.generator_model ?? '—'}</span>
+          Chatbot model <span className="font-mono text-[#C9CDD3]">{gen?.name ?? health.generator_model ?? '—'}</span>
         </div>
         <div className="truncate text-[#8A9099]">
-          Judge <span className="font-mono text-[#C9CDD3]">{judgeName}</span>
+          Grading model <span className="font-mono text-[#C9CDD3]">{judgeName}</span>
           {pool.keys != null && pool.keys > 1 && <span className="text-[#6F757E]"> ×{pool.keys} keys</span>}
         </div>
       </div>

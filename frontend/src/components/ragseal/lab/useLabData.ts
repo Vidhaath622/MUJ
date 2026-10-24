@@ -23,6 +23,7 @@ export interface LabChunk {
   relevance_reason?: string;
   is_gold?: boolean;
   is_stale?: boolean;
+  filename?: string;
 }
 
 export interface LabClaim {

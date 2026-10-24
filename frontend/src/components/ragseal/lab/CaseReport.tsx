@@ -41,6 +41,10 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
     isStale: c.is_stale ?? stale.has(c.chunk_id),
     isCited: cited.has(c.chunk_id),
   }));
+  // Passages that matter stay visible; ones marked not relevant fold away to cut clutter.
+  const isOther = (c: (typeof chunks)[number]) => !c.isGold && !c.isStale && !c.isCited && c.chunk.is_relevant === false;
+  const mainChunks = chunks.filter((c) => !isOther(c));
+  const otherChunks = chunks.filter(isOther);
   const staleCount = chunks.filter((c) => c.isStale).length;
   const accuracy = m.answer_accuracy?.score ?? null;
   const answerWrong = accuracy != null && accuracy < ACCURACY_THRESHOLD;
@@ -114,7 +118,9 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
 
         <div className="flex min-w-0 flex-[1.4_1_420px] items-stretch">
           <Stage
-            name="Retriever"
+            name="Found the right text"
+            tech="retriever"
+            faultColor={AMBER}
             state={v.stages.retriever}
             value={
               staleCount > 0 ? (
@@ -125,24 +131,27 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
                 <CountUp value={m.context_relevance?.score} />
               )
             }
-            sub={`${chunks.length} chunks · relevance ${pct(m.context_relevance?.score)}`}
+            sub={`context relevance ${pct(m.context_relevance?.score)} · ${chunks.length} passages`}
             delay={120}
           />
           <Link fault={v.stages.retriever === 'fault' ? AMBER : null} delay={260} />
           <Stage
-            name="Generator"
+            name="Stuck to the text"
+            tech="bot"
+            faultColor={RED}
             state={v.stages.generator}
             value={<CountUp value={m.faithfulness?.score} />}
-            sub="faithful to its context"
+            sub="faithfulness to the passages"
             delay={340}
           />
           <Link fault={v.stages.generator === 'fault' ? RED : null} delay={480} />
           <Stage
-            name="Answer"
+            name="Correct answer"
+            tech="end to end"
             state={accuracy == null ? 'neutral' : answerWrong ? 'fault' : 'ok'}
             faultColor={RED}
             value={<CountUp value={accuracy} />}
-            sub={accuracy == null ? 'no known answer' : 'accurate vs known answer'}
+            sub={accuracy == null ? 'no known answer to compare' : 'accuracy vs the known answer'}
             label={accuracy == null ? '' : answerWrong ? 'wrong' : 'right'}
             delay={560}
           />
@@ -151,14 +160,27 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
 
       {/* Evidence beside answer */}
       <section className="grid min-h-0 flex-1 grid-cols-2 gap-4">
-        <Pane title="What the retriever found" note={`${chunks.length} chunks`} delay={120}>
-          {chunks.map((c) => (
-            <ChunkCard key={c.chunk.chunk_id} {...c} filename={c.chunk.document_id ? filenames[c.chunk.document_id] : undefined} />
+        <Pane title="Text the bot was given" note={`${chunks.length} passages`} delay={120}>
+          {mainChunks.map((c) => (
+            <ChunkCard key={c.chunk.chunk_id} {...c} filename={c.chunk.filename ?? (c.chunk.document_id ? filenames[c.chunk.document_id] : undefined)} />
           ))}
+          {otherChunks.length > 0 && (
+            <details className="group">
+              <summary className="cursor-pointer list-none text-xs text-[#8A9099] hover:text-white">
+                <span className="group-open:hidden">Show {otherChunks.length} other passage{otherChunks.length === 1 ? '' : 's'} (not relevant)</span>
+                <span className="hidden group-open:inline">Hide other passages</span>
+              </summary>
+              <div className="mt-3 space-y-3">
+                {otherChunks.map((c) => (
+                  <ChunkCard key={c.chunk.chunk_id} {...c} filename={c.chunk.filename ?? (c.chunk.document_id ? filenames[c.chunk.document_id] : undefined)} />
+                ))}
+              </div>
+            </details>
+          )}
           {!chunks.length && <p className="text-sm text-[#8A9099]">No chunks were retrieved.</p>}
         </Pane>
 
-        <Pane title="What the model answered" note={result.generator_model} mono delay={180}>
+        <Pane title="What the bot answered" note={result.generator_model} mono delay={180}>
           <p className="whitespace-pre-wrap text-[17px] leading-normal tracking-[-0.01em] text-[#F4F5F6]">
             {result.generated_answer ? (
               <Figures text={result.generated_answer} color={answerWrong ? RED : undefined} />
@@ -182,14 +204,15 @@ const STAGE_COLOR: Record<StageState, string> = { ok: PASS, fault: AMBER, neutra
 
 const Stage: React.FC<{
   name: string;
+  tech?: string;
   state: StageState;
   value: React.ReactNode;
   sub: string;
   delay: number;
   label?: string;
   faultColor?: string;
-}> = ({ name, state, value, sub, delay, label, faultColor }) => {
-  const color = state === 'fault' ? faultColor ?? (name === 'Generator' ? RED : AMBER) : STAGE_COLOR[state];
+}> = ({ name, tech, state, value, sub, delay, label, faultColor }) => {
+  const color = state === 'fault' ? faultColor ?? AMBER : STAGE_COLOR[state];
   const fault = state === 'fault';
   return (
     <div
@@ -203,9 +226,14 @@ const Stage: React.FC<{
         } as React.CSSProperties
       }
     >
-      <div className="flex justify-between text-xs">
-        <span className="font-medium text-[#E8EAED]">{name}</span>
-        <span style={{ color }}>{label ?? (fault ? 'fault' : state === 'ok' ? 'ok' : 'unclear')}</span>
+      <div className="flex items-start justify-between gap-2 text-xs">
+        <span className="min-w-0 leading-tight">
+          <span className="block font-medium text-[#E8EAED]">{name}</span>
+          {tech && <span className="block text-[10.5px] text-[#6F757E]">{tech}</span>}
+        </span>
+        <span className="shrink-0" style={{ color }}>
+          {label ?? (fault ? 'to blame' : state === 'ok' ? 'yes' : 'unclear')}
+        </span>
       </div>
       <div className="mt-2 truncate text-[21px] font-semibold tabular-nums tracking-[-0.02em] 2xl:text-[26px]" style={{ color }}>
         {value}
@@ -254,14 +282,14 @@ const ChunkCard: React.FC<{
   const irrelevant = !color && chunk.is_relevant === false;
   const tag = isStale
     ? isCited
-      ? 'Outdated · cited by model'
-      : 'Outdated version'
+      ? 'Old version · bot used it'
+      : 'Old version'
     : isGold
       ? isCited
-        ? 'Correct source · cited'
-        : 'Correct source'
+        ? 'Right text · bot used it'
+        : 'Right text'
       : isCited
-        ? 'Cited by model'
+        ? 'Bot used it'
         : irrelevant
           ? 'not relevant'
           : null;
@@ -275,7 +303,6 @@ const ChunkCard: React.FC<{
     >
       <div className="flex items-center gap-2 text-xs">
         <span className="truncate text-[#E8EAED]">{filename ?? chunk.document_id ?? 'document'}</span>
-        <span className="hidden font-mono text-[#7D838C] xl:inline">{chunk.chunk_id}</span>
         {tag && (
           <span
             className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px]"

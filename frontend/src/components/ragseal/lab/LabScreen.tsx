@@ -125,7 +125,7 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) 
           {selected === AD_HOC ? (
             lab.asking ? (
               <Centered>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Retrieving, answering and judging…
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finding text, answering and checking…
               </Centered>
             ) : lab.adHoc ? (
               <CaseReport result={lab.adHoc} staleChunkIds={[]} filenames={filenames} />
@@ -261,13 +261,12 @@ const PackSummary: React.FC<{
       )}
       {running && (
         <p className="mt-2 text-[11px] leading-snug text-[#8A9099]">
-          About 10 s a question on a cold judge; cached reruns take seconds.
+          About 10 s a question the first time; repeat runs take seconds.
         </p>
       )}
       {!running && run?.judge_model && (
         <p className="mt-2.5 truncate text-[11px] text-[#7D838C]">
-          Judge <span className="font-mono">{run.judge_model.split('/').pop()}</span> · {pct(run.gold_retrieval_rate)} gold
-          retrieved
+          Graded by <span className="font-mono">{run.judge_model.split('/').pop()}</span> · {pct(run.gold_retrieval_rate)} of questions got the right text
         </p>
       )}
     </section>

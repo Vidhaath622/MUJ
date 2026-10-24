@@ -195,15 +195,15 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
           )}
         </Panel>
 
-        <Panel title="Stability" note="same answers, different judge or order">
+        <Panel title="Stability" note="same answers, different grading model or order">
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-2.5">
-              <JudgeInput label="Judge A" value={judgeA} onChange={setJudgeA} />
-              <JudgeInput label="Judge B" value={judgeB} onChange={setJudgeB} />
+              <JudgeInput label="Grading model A" value={judgeA} onChange={setJudgeA} />
+              <JudgeInput label="Grading model B" value={judgeB} onChange={setJudgeB} />
             </div>
             <PrimaryButton onClick={runStabilityCheck} busy={checking} disabled={!token || !judgeA || !judgeB}>
               {!checking && <Scale className="h-3.5 w-3.5" />}
-              Swap judge and shuffle
+              Swap grading model and shuffle
             </PrimaryButton>
             {checking ? (
               <ProgressNote what="Re-scoring with both judges and shuffled orders" p={stabilityProgress} />
@@ -319,7 +319,7 @@ const ProgressNote: React.FC<{ what: string; p: RunProgress | null }> = ({ what,
           style={frac == null ? undefined : { width: `${frac * 100}%` }}
         />
       </div>
-      <p className="text-xs text-[#6F757E]">This shares the judge's rate limit with other runs, so it can take a few minutes.</p>
+      <p className="text-xs text-[#6F757E]">This shares the grading model's rate limit with other runs, so it can take a few minutes.</p>
     </div>
   );
 };
@@ -420,7 +420,7 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
     <div className="flex flex-col gap-4 border-t border-[#17191D] pt-4">
       {stable != null && (
         <div className="text-[15px] font-semibold" style={{ color: stable ? PASS : RED }}>
-          {stable ? 'Stable' : 'Unstable'} under judge swap and shuffling
+          {stable ? 'Stable' : 'Unstable'} when the grading model is swapped or the order shuffled
         </div>
       )}
       <div>

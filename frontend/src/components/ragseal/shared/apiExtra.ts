@@ -448,3 +448,17 @@ export async function evaluateTestSet(
   }
   return (await getRun(batchId, token)) as RunSummary;
 }
+
+// ---- Documents: read one document's passages (GET /api/documents/{id}) ----
+
+export interface DocumentDetail {
+  document_id: string;
+  filename: string;
+  chunk_count?: number;
+  pack_id?: string | null;
+  chunks?: { chunk_id: string; text: string }[];
+}
+
+export async function getDocument(documentId: string, token: string): Promise<DocumentDetail> {
+  return (await call<DocumentDetail>(`/documents/${encodeURIComponent(documentId)}`, token)).body;
+}

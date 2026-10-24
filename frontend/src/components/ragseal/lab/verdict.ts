@@ -72,7 +72,7 @@ export const VERDICTS: Record<Verdict, VerdictStyle> = {
   UNRESOLVED: {
     label: 'Not judged',
     short: 'Unjudged',
-    blame: 'The judge could not score this case; no guess was made.',
+    blame: 'The grading model could not score this case; no guess was made.',
     color: '#6B7079',
     severity: 4,
     stages: { retriever: 'neutral', generator: 'neutral' },
