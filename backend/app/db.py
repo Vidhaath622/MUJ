@@ -478,6 +478,9 @@ class Database:
             summary = json.loads(item.pop("summary") or "{}")
             item["overall_score"] = summary.get("overall_score")
             item["timing"] = summary.get("timing")
+            # Which bot setup ran it, so a list can tell a version-compare (v2) or connected-bot run apart.
+            item["profile"] = summary.get("profile")
+            item["answer_source"] = summary.get("answer_source")
             out.append(item)
         return out
 

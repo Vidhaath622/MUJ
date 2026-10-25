@@ -25,7 +25,7 @@ import { cn } from '../../../lib/utils';
 import { AuthUser } from '../../../types/ragseal';
 import { HealthResponse } from '../../../lib/api';
 
-export type Route = 'bots' | 'connect' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'impact' | 'label' | 'trust' | 'compare' | 'chunking' | 'seal' | 'learn';
+export type Route = 'bots' | 'connect' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'impact' | 'label' | 'trust' | 'compare' | 'chunking' | 'gate' | 'seal' | 'learn';
 
 interface NavItem {
   id: Route;
@@ -63,6 +63,7 @@ const NAV: { group: string; step?: number; items: NavItem[] }[] = [
     items: [
       { id: 'label', label: 'Label answers', hint: 'Humans mark answers right or wrong', icon: Tags },
       { id: 'trust', label: 'Checker trust', hint: 'Does RAGSeal agree with humans?', icon: ListChecks },
+      { id: 'gate', label: 'Release gate', hint: 'Block a release that made the bot worse', icon: ShieldCheck },
       { id: 'seal', label: 'The Seal', hint: 'A certificate and badge for a tested bot', icon: Stamp },
     ],
   },
@@ -81,6 +82,7 @@ export const ROUTE_TITLE: Record<Route, string> = {
   trust: 'Checker trust',
   compare: 'Compare versions',
   chunking: 'Chunking lab',
+  gate: 'Release gate',
   seal: 'The Seal',
   learn: 'How it works',
 };
@@ -98,6 +100,7 @@ export const ROUTE_BLURB: Record<Route, string> = {
   trust: 'Evidence that RAGSeal\u2019s verdicts can be trusted: agreement with humans, planted failures, and stability.',
   compare: 'Run two versions of the bot on the same questions and see whether the change helped or hurt.',
   chunking: 'Try chunk sizes and search modes on the same questions and see which finds the right text most often.',
+  gate: 'Pass or fail a bot release: the pass rate must clear your bar and nothing that worked before may break. Wire it into CI with an API token.',
   seal: 'A certificate for one bot, from its latest full test, with a badge you can paste anywhere.',
   learn: 'The full pipeline, explained step by step.',
 };
