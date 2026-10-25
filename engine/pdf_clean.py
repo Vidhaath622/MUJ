@@ -20,6 +20,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 MIN_PAGE_CHARS = 20  # less than this is treated as a page without text
+OCR_HEAVY_SHARE = 0.3  # OCR on this share of pages (or more) is a warning, not just a note
+MIN_DOCUMENT_CHARS = 1500  # less text than this in the whole document is a warning
 _SPACES = re.compile(r"[ \t ]+")
 
 
@@ -33,7 +35,9 @@ class PdfReport:
     wrap_repeats_removed: int = 0
     duplicate_lines_removed: int = 0
     ocr: str = "not needed"
+    # warnings: problems the user should look at (amber); notes: what cleaning did (neutral).
     warnings: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
 
 def _norm(line: str) -> str:
@@ -95,7 +99,12 @@ def extract_pages(data: bytes, report: PdfReport) -> list[tuple[int, str]]:
     elif report.ocr_pages:
         report.ocr = "tesseract"
     if report.ocr_pages:
-        report.warnings.append(f"Pages {_ranges(report.ocr_pages)} were read with OCR; check them for recognition errors.")
+        # A few scanned pages are routine; OCR on a large share of the document is worth checking.
+        heavy = len(report.ocr_pages) >= max(2, OCR_HEAVY_SHARE * report.pages)
+        (report.warnings if heavy else report.notes).append(
+            f"Pages {_ranges(report.ocr_pages)} were read with OCR"
+            + ("; check them for recognition errors." if heavy else ".")
+        )
     return pages
 
 
@@ -152,7 +161,7 @@ def remove_boilerplate(pages: list[tuple[int, list[str]]], report: PdfReport, ed
     for key in sorted(boiler, key=lambda k: -len(seen[k])):
         report.removed_boilerplate.append({"line": example[key], "pages": len(seen[key])})
     if boiler:
-        report.warnings.append(
+        report.notes.append(
             "Removed repeating header/footer lines: " + "; ".join(f"\"{b['line']}\" ({b['pages']} pages)" for b in report.removed_boilerplate[:3]) + "."
         )
     return [(n, [l for l in lines if not boiler.intersection(_boiler_keys(l, n))]) for n, lines in pages]
@@ -251,7 +260,18 @@ def finish_report(report: PdfReport, chunks: list[tuple[int, int, str]]) -> dict
     lengths = [len(t) for _, _, t in chunks]
     thin = sum(1 for n in lengths if n < 200)
     if thin:
-        report.warnings.append(f"{thin} of {len(chunks)} chunks are under 200 characters; questions are not generated from them.")
+        # Title and agenda slides are routinely thin; most of the document being thin is a problem.
+        (report.warnings if thin * 2 > len(chunks) else report.notes).append(
+            f"{thin} of {len(chunks)} chunks are under 200 characters; questions are not generated from them."
+        )
+    if sum(lengths) < MIN_DOCUMENT_CHARS:
+        report.warnings.append(
+            f"Only {sum(lengths)} characters of text were found; there is too little to test a RAG system on."
+        )
+    if report.wrap_repeats_removed:
+        report.notes.append(f"Fixed {report.wrap_repeats_removed} words repeated at line wraps.")
+    if report.duplicate_lines_removed:
+        report.notes.append(f"Removed {report.duplicate_lines_removed} duplicate lines (repeated diagram labels).")
     return {
         "pages": report.pages,
         "pages_with_text": report.pages_with_text,
@@ -264,4 +284,5 @@ def finish_report(report: PdfReport, chunks: list[tuple[int, int, str]]) -> dict
         "wrap_repeats_removed": report.wrap_repeats_removed,
         "duplicate_lines_removed": report.duplicate_lines_removed,
         "warnings": report.warnings,
+        "notes": report.notes,
     }

@@ -1,7 +1,7 @@
 import shutil
 
 from engine.ingest import parse_document
-from engine.pdf_clean import PdfReport, dedupe_lines, fix_wrap_repeats, remove_boilerplate
+from engine.pdf_clean import PdfReport, dedupe_lines, finish_report, fix_wrap_repeats, remove_boilerplate
 from engine.synth import has_substance
 
 
@@ -57,6 +57,9 @@ def test_slides_are_cleaned_merged_and_reported():
     assert {b["line"] for b in q["removed_boilerplate"]} >= {"Git 2026 - S&AI notes", "Page 1 of 12"}
     if not shutil.which("tesseract"):
         assert any("no readable text" in w and "5-6" in w for w in q["warnings"])
+    # Cleaning is reported as neutral notes; warnings are for problems only.
+    assert any(n.startswith("Removed repeating header/footer lines") for n in q["notes"])
+    assert not any("header/footer" in w for w in q["warnings"])
     text = "\n".join(c.text for c in doc.chunks)
     assert "Page " not in text and "S&AI notes" not in text  # footer and header gone
     for chunk in doc.chunks:
@@ -114,3 +117,19 @@ def test_image_only_pages_are_read_with_ocr_when_tesseract_is_installed():
 def test_repeated_numbers_across_lines_are_kept():
     report = PdfReport()
     assert fix_wrap_repeats(["3 ÷ 2 = 1 r 1", "1 ÷ 2 = 0 r 1"], report) == ["3 ÷ 2 = 1 r 1", "1 ÷ 2 = 0 r 1"]
+
+
+def test_little_text_and_mostly_thin_chunks_are_warnings():
+    doc = parse_document("tiny.pdf", make_pdf([["LINUX + GIT", "Presented by DevClub"], ["Agenda", "Thanks"]]), 700)
+    q = doc.quality
+    assert any(w.startswith("Only ") and "characters of text" in w for w in q["warnings"])
+    assert any("under 200 characters" in w for w in q["warnings"])  # most chunks thin: a warning
+    assert q["notes"] == []
+
+
+def test_cleaning_counts_are_notes():
+    report = PdfReport(pages=10, wrap_repeats_removed=3, duplicate_lines_removed=5)
+    out = finish_report(report, [(1, 2, "x" * 900), (3, 4, "y" * 900), (5, 5, "z" * 150)])
+    assert out["warnings"] == []
+    assert any("3 words repeated at line wraps" in n for n in out["notes"])
+    assert any("5 duplicate lines" in n for n in out["notes"]) and any("1 of 3 chunks" in n for n in out["notes"])
