@@ -122,7 +122,14 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       {active.length > 0 ? (
-        active.map((p) => <LiveRun key={p.batch_id} progress={p} packId={runs?.find((r) => r.batch_id === p.batch_id)?.pack_id} />)
+        active.map((p) => (
+          <LiveRun
+            key={p.batch_id}
+            progress={p}
+            packId={runs?.find((r) => r.batch_id === p.batch_id)?.pack_id}
+            combinedCpm={active.length > 1 ? active.reduce((sum, a) => sum + (a.cases_per_min ?? 0), 0) || null : null}
+          />
+        ))
       ) : (
         <SpeedBudget cpm={lastFinished?.timing?.cases_per_min ?? null} source={lastFinished} />
       )}
@@ -201,7 +208,9 @@ const StatusPill: React.FC<{ status: string }> = ({ status }) => {
 };
 
 /** One in-flight run: progress, timing, and whether this pace meets the 200-in-15-minutes budget. */
-const LiveRun: React.FC<{ progress: RunProgress; packId?: string }> = ({ progress, packId }) => {
+// Runs in parallel share the same keys and generator, so one run's pace understates the system:
+// with several running, the budget line uses their combined pace.
+const LiveRun: React.FC<{ progress: RunProgress; packId?: string; combinedCpm?: number | null }> = ({ progress, packId, combinedCpm }) => {
   const done = progress.done ?? 0;
   const total = progress.total ?? 0;
   const frac = total ? done / total : 0;
@@ -223,7 +232,7 @@ const LiveRun: React.FC<{ progress: RunProgress; packId?: string }> = ({ progres
         <div className="h-full rounded-full bg-[var(--ink)] transition-[width] duration-700 ease-out" style={{ width: `${frac * 100}%` }} />
       </div>
       <div className="mt-6 border-t border-[var(--rule)] pt-5">
-        <BudgetBar cpm={progress.cases_per_min ?? null} />
+        <BudgetBar cpm={combinedCpm ?? progress.cases_per_min ?? null} combined={!!combinedCpm} />
       </div>
     </Panel>
   );
@@ -240,7 +249,7 @@ const SpeedBudget: React.FC<{ cpm: number | null; source?: RunListItem }> = ({ c
 );
 
 /** Projects the current pace onto 200 questions against the 15-minute line. */
-const BudgetBar: React.FC<{ cpm: number | null }> = ({ cpm }) => {
+const BudgetBar: React.FC<{ cpm: number | null; combined?: boolean }> = ({ cpm, combined }) => {
   const projected = cpm ? (BUDGET_QUESTIONS / cpm) * 60_000 : null;
   const within = projected != null && projected <= BUDGET_MS;
   const scale = Math.max(BUDGET_MS * 1.35, projected ?? 0);
@@ -250,7 +259,7 @@ const BudgetBar: React.FC<{ cpm: number | null }> = ({ cpm }) => {
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px] text-[var(--ink-1)]">
           <Timer className="h-4 w-4 text-[var(--muted)]" />
-          {BUDGET_QUESTIONS} questions at this pace
+          {BUDGET_QUESTIONS} questions at {combined ? 'the combined pace of all running packs' : 'this pace'}
         </div>
         <div className="text-[13px]">
           {projected == null ? (
