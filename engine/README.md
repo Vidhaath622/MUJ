@@ -23,7 +23,7 @@ Providers per role (`RAGSEAL_GENERATOR_PROVIDER`, `RAGSEAL_JUDGE_PROVIDER`, `RAG
 |---|---|---|
 | generator (system under test) | ollama | `llama3.2:3b` (NIM `google/gemma-3-4b-it`, Groq `openai/gpt-oss-20b` if chosen) |
 | judge | groq, then nvidia, then ollama | Groq `openai/gpt-oss-120b`, NIM `mistralai/mistral-large-2-instruct`, Ollama `qwen3:8b` |
-| embeddings | ollama | `nomic-embed-text` (NIM `nvidia/llama-3.2-nv-embedqa-1b-v1` if chosen) |
+| embeddings | ollama | `nomic-embed-text` (NIM `nvidia/nemotron-3.5-embed-1b` if chosen) |
 
 Override any model with the env vars in `config.py` (`MODEL_DEFAULTS`). Hosted catalogs retire models, so `status()` checks each hosted model against the live `/models` list. There is no mock mode: a missing key or model makes `status()` report `evaluation_mode: "unavailable"`, and calls raise `ModelUnavailable`. Documents embedded with another embedding model are re-embedded automatically before search. Generation runs at temperature 0 with a fixed seed.
 

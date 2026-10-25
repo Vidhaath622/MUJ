@@ -31,7 +31,7 @@ def test_explicit_provider_and_models(monkeypatch):
     models = build_models(settings)
     assert models.judge.provider == "groq" and models.judge.model == "openai/gpt-oss-120b"
     assert models.generator.provider == "ollama" and models.generator.model == "llama3.2:3b"
-    assert models.embedder.provider == "nvidia" and models.embedder.model == "nvidia/llama-3.2-nv-embedqa-1b-v1"
+    assert models.embedder.provider == "nvidia" and models.embedder.model == "nvidia/nemotron-3.5-embed-1b"
 
 
 def test_unsupported_provider_is_rejected(monkeypatch):
