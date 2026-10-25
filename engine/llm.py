@@ -12,6 +12,7 @@ schema, so re-running a batch only pays for calls it has not seen before.
 from __future__ import annotations
 
 import hashlib
+import itertools
 import json
 import logging
 import re
@@ -137,25 +138,65 @@ class OllamaClient:
         return out
 
 
+def _duration(value: str) -> float | None:
+    """Groq's durations: "7.66s", "1m26.4s", "585ms" or plain seconds."""
+    match = re.fullmatch(r"(?:(\d+)m)?(?:([\d.]+)s)?|([\d.]+)ms", value.strip())
+    try:
+        if match and match.group(3):
+            return float(match.group(3)) / 1000
+        if match and (match.group(1) or match.group(2)):
+            return int(match.group(1) or 0) * 60 + float(match.group(2) or 0)
+        return float(value)
+    except ValueError:
+        return None
+
+
 def _retry_wait(resp: httpx.Response, attempt: int, cap: float = 60.0) -> float:
     """Seconds to wait before retrying: retry-after if given, else Groq's token-window reset, else backoff."""
     for header in ("retry-after", "x-ratelimit-reset-tokens"):
         value = resp.headers.get(header)
-        if not value:
-            continue
-        # Groq sends durations like "7.66s", "1m26.4s" or "585ms".
-        match = re.fullmatch(r"(?:(\d+)m)?(?:([\d.]+)s)?|([\d.]+)ms", value.strip())
-        try:
-            if match and match.group(3):
-                seconds = float(match.group(3)) / 1000
-            elif match and (match.group(1) or match.group(2)):
-                seconds = int(match.group(1) or 0) * 60 + float(match.group(2) or 0)
-            else:
-                seconds = float(value)
-        except ValueError:
-            continue
-        return min(max(seconds, 1.0), cap)
+        seconds = _duration(value) if value else None
+        if seconds is not None:
+            return min(max(seconds, 1.0), cap)
     return float(min(2**attempt, 30))
+
+
+@dataclass
+class RateState:
+    """A key's budget for one model, from the x-ratelimit headers of its last response.
+
+    Groq's token headers are per minute (refilling continuously); its request headers are per day.
+    """
+
+    tokens_limit: int
+    tokens_left: int
+    at: float  # time.monotonic() when that request was sent: the server counted its budget then
+    requests_left: int | None = None  # today
+    requests_reset_s: float = 0.0  # until the daily request count resets, from `at`
+
+    def free_in(self, tokens: int, reserved_tokens: int = 0, reserved_requests: int = 0) -> float:
+        """Seconds until a call costing `tokens` fits, counting calls sent since the response; 0 = now."""
+        now = time.monotonic()
+        need = min(tokens + reserved_tokens, self.tokens_limit)  # a call larger than the budget waits for a full one
+        available = min(self.tokens_limit, self.tokens_left + (now - self.at) * self.tokens_limit / 60)
+        wait = max(0.0, (need - available) * 60 / self.tokens_limit) if self.tokens_limit > 0 else 0.0
+        if self.requests_left is not None and self.requests_left - reserved_requests <= 0:
+            wait = max(wait, self.at + self.requests_reset_s - now)
+        return wait
+
+    @classmethod
+    def from_headers(cls, headers, sent_at: float | None = None) -> RateState | None:
+        try:
+            requests_left = headers.get("x-ratelimit-remaining-requests")
+            return cls(
+                int(headers["x-ratelimit-limit-tokens"]),
+                int(headers["x-ratelimit-remaining-tokens"]),
+                time.monotonic() if sent_at is None else sent_at,
+                int(requests_left) if requests_left is not None else None,
+                _duration(headers.get("x-ratelimit-reset-requests", "0")) or 0.0,
+            )
+        except (KeyError, ValueError):
+            return None
 
 
 class OpenAICompatClient:
@@ -175,6 +216,9 @@ class OpenAICompatClient:
         self.label = f"{name}#{OpenAICompatClient._count[name]}"
         self.usage: dict[str, int] = {}
         self.daily_caps: dict[str, dict] = {}
+        # Per model: the per-minute budget left after the last response, and the average reply length.
+        self.rate: dict[str, RateState] = {}
+        self.completion_avg: dict[str, float] = {}
 
     def list_models(self) -> set[str]:
         """The provider's live catalog, cached for five minutes. Hosted catalogs retire models without notice."""
@@ -204,12 +248,18 @@ class OpenAICompatClient:
     def _post(self, path: str, payload: dict, patient: bool = True) -> dict:
         last_error = "no attempt made"
         for attempt in range(8 if patient else 3):
+            sent_at = time.monotonic()
             try:
                 resp = self._http.post(path, json=payload, headers={"Authorization": f"Bearer {self._api_key}"})
             except httpx.HTTPError as exc:
                 last_error = str(exc)
                 time.sleep(min(2**attempt, 30))
                 continue
+            model = payload.get("model")
+            if model and (state := RateState.from_headers(resp.headers, sent_at)) is not None:
+                previous = self.rate.get(model)
+                if previous is None or state.at >= previous.at:  # replies can arrive out of order
+                    self.rate[model] = state
             if resp.status_code in (429, 500, 502, 503, 504):
                 # Free tiers rate-limit per minute; retry-after says how long to wait.
                 last_error = f"HTTP {resp.status_code}" + (" (rate limited)" if resp.status_code == 429 else "")
@@ -250,7 +300,11 @@ class OpenAICompatClient:
         start = time.perf_counter()
         data = self._post("/chat/completions", payload, patient)
         latency = int((time.perf_counter() - start) * 1000)
-        self.usage[model] = self.usage.get(model, 0) + int((data.get("usage") or {}).get("total_tokens", 0))
+        usage = data.get("usage") or {}
+        self.usage[model] = self.usage.get(model, 0) + int(usage.get("total_tokens", 0))
+        if usage.get("completion_tokens"):
+            previous = self.completion_avg.get(model)
+            self.completion_avg[model] = usage["completion_tokens"] if previous is None else 0.8 * previous + 0.2 * usage["completion_tokens"]
         text = data["choices"][0]["message"].get("content") or ""
         return Generation(text=_strip_thinking(text), model=model, latency_ms=latency)
 
@@ -371,11 +425,24 @@ class Judge:
         self._interactive_waiting = 0
         self._cooldown: dict[int, float] = {}
         self._ready: dict[int, tuple[float, bool]] = {}
+        # Calls in flight per member: (monotonic send time, estimated tokens). The member's last
+        # rate-limit headers do not count calls sent after them yet.
+        self._inflight: dict[int, list[tuple[float, int]]] = {id(m): [] for m in self.members}
+        self._answered: set[int] = set()  # members that have answered at least once (their limits may be known)
+        self._pace_lock = threading.RLock()
+        # Batch calls waiting for budget take turns in arrival order, so none starves past its deadline.
+        self._tickets = itertools.count()
+        self._queue: set[int] = set()
         self._local = threading.local()
         self.calls = 0
         self.cache_hits = 0
         self.fallback_calls = 0
         self.rate_limited = 0
+        # Where batch time goes: waiting for a key's budget (or a 429 cooldown), waiting for a free
+        # slot, and answered calls per API key. Batches report the change over their run.
+        self.rate_wait_s = 0.0
+        self.slot_wait_s = 0.0
+        self.calls_by_key: dict[str, int] = {}
 
     @property
     def mode(self) -> str:
@@ -441,6 +508,71 @@ class Judge:
         self._ready[id(member)] = (now, ok)
         return ok
 
+    # ------------------------------------------------------------ pacing
+
+    def _cost(self, member: ChatModel, system: str, user: str, schema: dict) -> int:
+        """Estimated tokens of one call: about 4 characters per prompt token (the prompt includes the
+        JSON schema _call appends), plus this model's usual reply."""
+        completion = getattr(getattr(member, "client", None), "completion_avg", {}).get(member.model, 400)
+        return (len(system) + len(user) + len(json.dumps(schema)) + 120) // 4 + int(completion) + 40
+
+    def _rate(self, member: ChatModel) -> RateState | None:
+        return getattr(getattr(member, "client", None), "rate", {}).get(member.model)
+
+    def _pending(self, member: ChatModel, since: float) -> tuple[int, int]:
+        """(tokens, calls) sent to `member` after `since` and still in flight."""
+        with self._pace_lock:
+            sent = [tokens for at, tokens in self._inflight[id(member)] if at > since]
+        return sum(sent), len(sent)
+
+    def _wait(self, counter: str, seconds: float) -> None:
+        time.sleep(seconds)
+        with self._lock:
+            setattr(self, counter, getattr(self, counter) + seconds)
+
+    def tokens_used(self) -> int:
+        """Tokens the hosted members' API keys have reported so far (each client counts its own)."""
+        clients = {id(m.client): m.client for m in self.members if getattr(m, "client", None) is not None}
+        return sum(sum(getattr(c, "usage", {}).values()) for c in clients.values())
+
+    def _reserve(self, member: ChatModel, cost: int, ticket: int | None = None) -> tuple[float, int] | None:
+        """Claim budget for one call on `member`, atomically; None when it has no room right now,
+        or when an older batch call is still waiting for budget (`ticket` orders batch calls).
+
+        Until a member first answers, its limits are unknown: one call at a time probes them."""
+        with self._pace_lock:
+            inflight = self._inflight[id(member)]
+            state = self._rate(member)
+            if state is not None:
+                if ticket is not None and any(t < ticket for t in self._queue):
+                    return None
+                if state.free_in(cost, *self._pending(member, state.at)) > 0:
+                    return None
+            elif inflight and id(member) not in self._answered:
+                return None
+            sent = (time.monotonic(), cost)
+            inflight.append(sent)
+            return sent
+
+    def _ready_at(self, member: ChatModel, now: float, cost: int) -> float:
+        """When `member` may take this call: after any 429 cooldown and, when its rate-limit headers
+        are known, once its per-minute token and request budget has room. Pacing to the budget
+        instead of running into 429s keeps every key busy at its limit."""
+        ready = self._cooldown.get(id(member), 0)
+        state = self._rate(member)
+        if state is not None:
+            ready = max(ready, now + state.free_in(cost, *self._pending(member, state.at)))
+        return ready
+
+    def _headroom(self, member: ChatModel) -> float:
+        """Tokens this member could take right now (unknown limits count as plenty)."""
+        state = self._rate(member)
+        if state is None:
+            return float("inf")
+        tokens, _ = self._pending(member, state.at)
+        refill = (time.monotonic() - state.at) * state.tokens_limit / 60
+        return min(state.tokens_limit, state.tokens_left + refill) - tokens
+
     def _call(self, member: ChatModel, system: str, user: str, schema: dict) -> dict:
         terse = "" if member.hosted else "\nKeep every reason under 8 words."  # a local model's time is mostly output tokens
         messages = [
@@ -489,6 +621,15 @@ class Judge:
                     self._interactive_waiting -= 1
 
     def _ask_live(self, system: str, user: str, schema: dict, interactive: bool) -> dict:
+        ticket = None if interactive else next(self._tickets)
+        try:
+            return self._ask_live_turn(system, user, schema, interactive, ticket)
+        finally:
+            if ticket is not None:
+                with self._pace_lock:
+                    self._queue.discard(ticket)
+
+    def _ask_live_turn(self, system: str, user: str, schema: dict, interactive: bool, ticket: int | None) -> dict:
         max_wait = min(self.max_wait_s, 3.0) if interactive else self.max_wait_s
         deadline = time.time() + 300
         last_error: Exception | None = None
@@ -497,17 +638,21 @@ class Judge:
             if not interactive and self._interactive_waiting:
                 time.sleep(0.2)  # someone is waiting on a live answer: let their call go first
                 continue
+            if ticket is not None:
+                with self._pace_lock:
+                    self._queue.add(ticket)  # waiting (again, after a failed attempt) in arrival order
             now = time.time()
             usable = [m for m in self.members if id(m) not in broken and self._member_ready(m)]
             if not usable:
                 raise last_error or ModelUnavailable("no judge model is available")
+            ready_at = {id(m): self._ready_at(m, now, self._cost(m, system, user, schema)) for m in usable}
             primaries = [m for m in usable if self._is_primary(m)]
-            open_primaries = [m for m in primaries if self._cooldown.get(id(m), 0) <= now]
-            primary_wait = min((self._cooldown.get(id(m), 0) - now for m in primaries), default=float("inf"))
+            open_primaries = [m for m in primaries if ready_at[id(m)] <= now]
+            primary_wait = min((ready_at[id(m)] - now for m in primaries), default=float("inf"))
             if open_primaries:
                 candidates = open_primaries
             elif primary_wait <= max_wait:
-                time.sleep(max(0.05, primary_wait))  # a short wait beats switching judges
+                self._wait("rate_wait_s", max(0.05, primary_wait))  # a short wait beats switching judges
                 continue
             else:
                 # A rate limit overflows to other hosted models only. The local model is the last
@@ -515,29 +660,38 @@ class Judge:
                 # generator under test.
                 hosted_usable = [m for m in usable if m.hosted]
                 pool = [m for m in (hosted_usable or usable) if not self._is_primary(m)]
-                candidates = [m for m in pool if self._cooldown.get(id(m), 0) <= now]
+                candidates = [m for m in pool if ready_at[id(m)] <= now]
                 if not candidates:
-                    reopen = min(self._cooldown.get(id(m), now) for m in (hosted_usable or usable))
+                    reopen = min(max(ready_at[id(m)], now) for m in (hosted_usable or usable))
                     local = [m for m in usable if not m.hosted]
                     # Every hosted judge is rate-limited (a daily cap can mean hours). A person waiting
                     # gets the local judge at once; a batch only once the wait is over ten minutes.
                     if local and reopen - now > (max_wait if interactive else 600):
                         candidates = local
                     else:
-                        time.sleep(min(2.0, max(0.1, reopen - now)))
+                        self._wait("rate_wait_s", min(2.0, max(0.1, reopen - now)))
                         continue
-            member = None
-            for m in candidates:
+            member = sent = None
+            budget_blocked = False
+            for m in sorted(candidates, key=self._headroom, reverse=True):  # the key with the most budget left first
                 if not interactive and not self._batch_slots[id(m)].acquire(blocking=False):
                     continue
                 if self._slots[id(m)].acquire(blocking=False):
-                    member = m
-                    break
+                    sent = self._reserve(m, self._cost(m, system, user, schema), ticket)
+                    if sent is not None:
+                        member = m
+                        break
+                    budget_blocked = True  # another call took the budget, or an older call goes first
+                    self._slots[id(m)].release()
                 if not interactive:
                     self._batch_slots[id(m)].release()
             if member is None:
-                time.sleep(0.1)  # every open member already has its maximum calls in flight
+                # Every open member is at its maximum calls in flight, or it is another call's turn.
+                self._wait("rate_wait_s" if budget_blocked else "slot_wait_s", 0.05 if budget_blocked else 0.1)
                 continue
+            if ticket is not None:
+                with self._pace_lock:
+                    self._queue.discard(ticket)
             slot = self._slots[id(member)]
             batch_slot = None if interactive else self._batch_slots[id(member)]
             try:
@@ -562,10 +716,16 @@ class Judge:
                     raise
                 continue
             finally:
+                with self._pace_lock:
+                    self._inflight[id(member)].remove(sent)
+                    self._answered.add(id(member))
                 slot.release()
                 if batch_slot is not None:
                     batch_slot.release()
             self.cache.put(self._key(member, system, user, schema), result)
+            key = f"{member.model} via {getattr(member.client, 'label', member.provider)}" if hasattr(member, "client") else member.model
+            with self._lock:
+                self.calls_by_key[key] = self.calls_by_key.get(key, 0) + 1
             if not self._is_primary(member):
                 with self._lock:
                     self.fallback_calls += 1

@@ -297,6 +297,9 @@ class Engine:
             case.test_id = case.test_id or f"tc_{i:02d}"
         calls_before, hits_before = self.judge.calls, self.judge.cache_hits
         limited_before = getattr(self.judge, "rate_limited", 0)
+        waits_before = (getattr(self.judge, "rate_wait_s", 0.0), getattr(self.judge, "slot_wait_s", 0.0))
+        keys_before = dict(getattr(self.judge, "calls_by_key", {}))
+        tokens_before = self.judge.tokens_used() if hasattr(self.judge, "tokens_used") else 0
         lock = threading.Lock()
         counts = {"done": 0, "failed": 0}
 
@@ -315,7 +318,9 @@ class Engine:
 
         # Several cases in flight: the local generator and the hosted judge overlap, and the
         # judge pool keeps each model inside its rate limit.
-        workers = max(1, min(concurrency or self.settings.batch_concurrency, len(cases) or 1))
+        hosted_keys = sum(1 for m in getattr(self.judge, "primary", []) if m.hosted)
+        default_workers = max(self.settings.batch_concurrency, min(16, 2 * hosted_keys))
+        workers = max(1, min(concurrency or default_workers, len(cases) or 1))
         if external is not None:
             workers = min(workers, max(1, external.config.max_concurrency))  # do not flood the user's bot
         with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -336,6 +341,10 @@ class Engine:
         agreement = judge_agreement(self.judge, labels, {c.test_id for c in cases}) if labels else None
 
         wall_ms = int((time.perf_counter() - started) * 1000)
+        judge_calls = self.judge.calls - calls_before
+        judge_tokens = (self.judge.tokens_used() if hasattr(self.judge, "tokens_used") else 0) - tokens_before
+        by_key = {k: n - keys_before.get(k, 0) for k, n in getattr(self.judge, "calls_by_key", {}).items() if n - keys_before.get(k, 0)}
+        case_timing = [ev.get("timing", {}) for ev in evaluations]
         fallback_models: dict[str, int] = {}
         for ev in evaluations:
             if ev.get("judge_fallback_used"):
@@ -364,11 +373,19 @@ class Engine:
                 "wall_ms": wall_ms,
                 "per_case_ms_avg": int(wall_ms / len(cases)) if cases else None,
                 "cases_per_min": round(len(cases) / (wall_ms / 60000), 2) if wall_ms else None,
-                "judge_calls": self.judge.calls - calls_before,
+                "judge_calls": judge_calls,
                 "judge_cache_hits": self.judge.cache_hits - hits_before,
                 "rate_limited_retries": getattr(self.judge, "rate_limited", 0) - limited_before,
                 "rule_shortcuts": sum(ev.get("timing", {}).get("rule_shortcuts", 0) for ev in evaluations),
                 "concurrency": workers,
+                # Where the time went (summed over cases, so they can exceed wall time when cases overlap).
+                "generation_s_total": round(sum(t.get("generation_ms", 0) or 0 for t in case_timing) / 1000, 1),
+                "judge_s_total": round(sum(t.get("judge_ms", 0) or 0 for t in case_timing) / 1000, 1),
+                "judge_rate_wait_s": round(getattr(self.judge, "rate_wait_s", 0.0) - waits_before[0], 1),
+                "judge_slot_wait_s": round(getattr(self.judge, "slot_wait_s", 0.0) - waits_before[1], 1),
+                "judge_tokens": judge_tokens,
+                "tokens_per_judge_call": round(judge_tokens / judge_calls) if judge_calls and judge_tokens else None,
+                "judge_calls_by_key": by_key,
             },
             "results": results,
         }

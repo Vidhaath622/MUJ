@@ -66,10 +66,11 @@ class Settings:
     chunk_chars: int = field(default_factory=lambda: int(_env("RAGSEAL_CHUNK_CHARS", "700")))
     seed: int = 42
     request_timeout_s: float = field(default_factory=lambda: float(_env("RAGSEAL_TIMEOUT_S", "180")))
+    # Cases evaluated at once; a hosted judge with many API keys raises it to two per key (at most 16).
     batch_concurrency: int = field(default_factory=lambda: int(_env("RAGSEAL_BATCH_CONCURRENCY", "6")))
-    # Extra Groq keys (GROQ_API_KEY_2, _3, _4) from other accounts: each has its own rate limit.
+    # Extra Groq keys (GROQ_API_KEY_2 ... _9) from other accounts: each has its own rate limit.
     groq_extra_keys: tuple[str, ...] = field(
-        default_factory=lambda: tuple(k for k in (_env(f"GROQ_API_KEY_{i}", "") for i in range(2, 5)) if k)
+        default_factory=lambda: tuple(k for k in (_env(f"GROQ_API_KEY_{i}", "") for i in range(2, 10)) if k)
     )
     # How long the primary judge may be waited for before a call overflows to another model.
     # 0 means overflow as soon as the primary is rate-limited.
