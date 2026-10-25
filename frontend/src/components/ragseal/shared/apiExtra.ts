@@ -629,3 +629,74 @@ export interface UploadQuality {
   notes?: string[];
   warnings?: string[];
 }
+
+// ---------- Chunking lab (R2) ----------
+
+export interface PackInfo {
+  pack_id: string;
+  name: string;
+  description?: string;
+  document_count?: number;
+  test_case_count?: number;
+}
+
+/** Every pack the backend knows (built-in and team packs), not just the three labelled ones. */
+export async function listPacks(token: string): Promise<PackInfo[]> {
+  const { body } = await call<PackInfo[]>('/packs', token);
+  return body;
+}
+
+export interface ChunkingLabRequest {
+  pack_id: string;
+  chunk_sizes?: number[];
+  modes?: ('dense' | 'hybrid')[];
+  rerank?: boolean[];
+  k?: number;
+  overlap?: number;
+}
+
+export interface ChunkingLabRow {
+  chunk_chars: number;
+  overlap?: number;
+  mode: 'dense' | 'hybrid';
+  rerank: boolean;
+  label?: string;
+  /** Keyed by the result's `metric` (context_recall_at_<k>); context_recall_at_4 at the default k. */
+  [metric: string]: unknown;
+  mrr: number;
+  questions_fully_covered?: number;
+  chunks?: number;
+  avg_chunk_chars?: number;
+  ms_per_question?: number;
+  rerank_calls?: number;
+}
+
+export interface ChunkingLabResult {
+  lab_id: string | null;
+  status: 'running' | 'done' | 'failed' | 'none';
+  progress?: { done?: number; total?: number; eta_ms?: number | null } | null;
+  created_at?: string;
+  pack_id?: string;
+  k?: number;
+  questions?: number;
+  metric?: string;
+  rows?: ChunkingLabRow[];
+  best?: ChunkingLabRow;
+  note?: string;
+  error?: string;
+}
+
+/** Starts a retrieval-only sweep; poll getChunkingLab with the returned lab_id. */
+export async function startChunkingLab(req: ChunkingLabRequest, token: string): Promise<{ lab_id: string; status: string; configs: number }> {
+  const { body } = await call<{ lab_id: string; status: string; configs: number }>('/lab/chunking', token, {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+  return body;
+}
+
+/** 202 + progress while running, the table when done; "latest" returns {status: "none"} before the first lab. */
+export async function getChunkingLab(labId: string, token: string): Promise<ChunkingLabResult> {
+  const { body } = await call<ChunkingLabResult>(`/lab/chunking/${encodeURIComponent(labId)}`, token);
+  return body;
+}
