@@ -3,13 +3,14 @@ import { AlertTriangle, FileCheck2 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { UploadQuality } from './apiExtra';
 
-/** One-line read-out of what the reader got out of an upload, plus its warnings (thin slides, skipped pages). */
+/** One-line read-out of what the reader got out of an upload, plus clean-up notes (neutral) and warnings (thin slides, skipped pages). */
 export const UploadQualityNote: React.FC<{ filename?: string; quality: UploadQuality; className?: string }> = ({
   filename,
   quality: q,
   className,
 }) => {
   const warnings = q.warnings ?? [];
+  const notes = q.notes ?? [];
   const parts = [
     q.pages != null && `${q.pages} page${q.pages === 1 ? '' : 's'}`,
     q.chunks != null && `${q.chunks} chunk${q.chunks === 1 ? '' : 's'}`,
@@ -31,6 +32,13 @@ export const UploadQualityNote: React.FC<{ filename?: string; quality: UploadQua
         <span className="min-w-0 truncate font-medium">{filename ? `Read ${filename}` : 'Document read'}</span>
       </div>
       {parts.length > 0 && <div className="mt-1 text-[var(--ink-1)]">{parts.join(' · ')}</div>}
+      {notes.length > 0 && (
+        <ul className="mt-1.5 space-y-1 text-[var(--ink-2)]">
+          {notes.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      )}
       {warnings.length > 0 && (
         <ul className="mt-1.5 space-y-1 text-[var(--ink-1)]">
           {warnings.map((w) => (

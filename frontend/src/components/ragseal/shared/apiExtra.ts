@@ -625,5 +625,7 @@ export interface UploadQuality {
   removed_boilerplate?: { line: string; pages: number }[];
   wrap_repeats_removed?: number;
   duplicate_lines_removed?: number;
+  /** Clean-up the reader did (footers removed, wraps fixed): worth knowing, not a problem. */
+  notes?: string[];
   warnings?: string[];
 }
