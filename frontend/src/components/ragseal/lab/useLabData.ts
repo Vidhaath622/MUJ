@@ -79,6 +79,8 @@ export interface LabResult {
     faithfulness?: number | null;
     verdict_effect?: string;
     context_chunk_ids?: string[];
+    /** Which half the verdict blames; the replay explanation follows it. */
+    blames?: 'retriever' | 'generator' | 'both';
   } | null;
   category?: string;
   judge_model?: string;
