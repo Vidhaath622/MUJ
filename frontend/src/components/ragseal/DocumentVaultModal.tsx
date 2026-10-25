@@ -11,6 +11,8 @@ import {
   RotateCw 
 } from 'lucide-react';
 import { DocumentItem } from '../../types/ragseal';
+import { UploadQualityNote } from './shared/UploadQualityNote';
+import { UploadQuality } from './shared/apiExtra';
 import { uploadDocument, fetchDocuments, ApiError } from '../../lib/api';
 
 interface DocumentVaultModalProps {
@@ -33,6 +35,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
   const [activeTab, setActiveTab] = useState<'inspect' | 'upload'>('inspect');
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadQuality, setUploadQuality] = useState<UploadQuality | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
   // Sync initial docs and fetch user's documents if token present
@@ -78,9 +81,11 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
     setIsUploading(true);
     setUploadError(null);
     setUploadStatus(null);
+    setUploadQuality(null);
     try {
       const res = await uploadDocument(file, token);
-      setUploadStatus(`Ingested ${res.filename} into SQLite store (${res.chunk_count} chunks created)`);
+      setUploadStatus(`Ingested ${res.filename} (${res.chunk_count} chunks created)`);
+      setUploadQuality(res.quality ?? null);
       if (onUploadSuccess) onUploadSuccess();
       // Fetch latest documents to update list
       const latest = await fetchDocuments(token);
@@ -293,6 +298,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                   <span>{uploadStatus}</span>
                 </div>
               )}
+              {uploadQuality && <UploadQualityNote quality={uploadQuality} />}
             </div>
           )}
         </div>

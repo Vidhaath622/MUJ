@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, FileText, ListChecks, Play, Sparkles, Upload } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { UploadQualityNote } from '../shared/UploadQualityNote';
 import { DocumentResponse, fetchDocuments, generateSynthetic, uploadDocument } from '../../../lib/api';
 import { LabResult } from '../lab/useLabData';
 import { pct, VERDICT_ORDER, VERDICTS, verdictStyle } from '../lab/verdict';
@@ -34,6 +35,8 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
   const [detailErr, setDetailErr] = useState<unknown>(null);
   const [tab, setTab] = useState<'read' | 'questions'>('read');
   const [uploading, setUploading] = useState(false);
+  // What the reader got out of the last upload: shown under the drop zone until the next one.
+  const [lastUpload, setLastUpload] = useState<DocumentResponse | null>(null);
   const [dragging, setDragging] = useState(false);
   const [count, setCount] = useState(5);
   const [generating, setGenerating] = useState(false);
@@ -95,8 +98,10 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
     if (!token) return;
     setUploading(true);
     setError(null);
+    setLastUpload(null);
     try {
       const d = await uploadDocument(file, token);
+      setLastUpload(d);
       await refreshDocs(d.document_id);
       setCases(null);
       setRun(null);
@@ -183,6 +188,7 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
             <span className="text-[13px] font-medium text-[var(--ink)]">{uploading ? 'Uploading…' : 'Drop a document here'}</span>
             <span className="text-xs text-[var(--ink-2)]">or click to choose · PDF, Markdown or text</span>
           </button>
+          {lastUpload?.quality && <UploadQualityNote filename={lastUpload.filename} quality={lastUpload.quality} />}
 
           <div className="lab-panel-flat flex min-h-0 flex-1 flex-col rounded-2xl">
             <div className="border-b border-[var(--rule)] px-4 py-3 text-[13px] font-medium text-[var(--ink)]">

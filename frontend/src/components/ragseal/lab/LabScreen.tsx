@@ -5,7 +5,8 @@ import { failureLabel } from '../shared/taxonomy';
 import { PackId } from '../../../types/ragseal';
 import { CaseReport } from './CaseReport';
 import { CountUp } from './motion';
-import { LabCase, LabRun, useLabData } from './useLabData';
+import { isExternalRun, LabCase, LabRun, useLabData } from './useLabData';
+import { SampleBadge } from '../shared/ui';
 import { AMBER, pct, tint, VERDICT_ORDER, VERDICTS, verdictStyle } from './verdict';
 
 interface LabScreenProps {
@@ -210,13 +211,16 @@ const PackSummary: React.FC<{
   const breakdown = run?.root_cause_breakdown ?? {};
   const n = Object.values(breakdown).reduce((a, b) => a + b, 0);
   const shown = VERDICT_ORDER.filter((k) => breakdown[k]);
+  const botInfo = isExternalRun(run) ? run!.results.find((r) => r.bot)?.bot : undefined;
+  const externalBot = botInfo ? botInfo.name || botInfo.host : null;
 
   return (
     <section className="lab-panel rounded-2xl p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="text-xs text-[var(--ink-2)]">
-          {packName}{packName.endsWith('set') ? '' : ' pack'} · {total} questions
+          {externalBot ? `Your bot · ${externalBot}` : `${packName}${packName.endsWith('set') ? '' : ' pack'}`} · {total} questions
         </div>
+        {run?.sample && <SampleBadge />}
       </div>
       <div className="mt-2.5 flex items-baseline gap-2.5">
         <span className="text-[52px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-[var(--ink)]">

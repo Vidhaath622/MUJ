@@ -15,6 +15,7 @@ import { LabelStudioPage } from './components/ragseal/pages/LabelStudioPage';
 import { TrustPage } from './components/ragseal/pages/TrustPage';
 import { ComparePage } from './components/ragseal/pages/ComparePage';
 import { BotsPage } from './components/ragseal/pages/BotsPage';
+import { ConnectBotPage } from './components/ragseal/pages/ConnectBotPage';
 import { TestSetsPage } from './components/ragseal/pages/TestSetsPage';
 import { SealPage } from './components/ragseal/pages/SealPage';
 
@@ -24,9 +25,40 @@ import { PackId, AuthUser, SyntheticTestCase } from './types/ragseal';
 import { 
   checkBackendHealth, 
   loginUser, 
+  fetchCurrentUser,
   fetchRunHistory, 
   HealthResponse
 } from './lib/api';
+
+const DEMO_EMAIL = 'demo@ragseal.dev';
+const SESSION_KEY = 'ragseal.session';
+
+// A real account (email or Google) stays signed in across refreshes; the demo account is
+// signed in fresh on every load, so its token is never stored.
+function rememberSession(user: AuthUser, token: string) {
+  try {
+    if (user.email === DEMO_EMAIL) localStorage.removeItem(SESSION_KEY);
+    else localStorage.setItem(SESSION_KEY, JSON.stringify({ token }));
+  } catch {
+    // storage unavailable: the user signs in again after a refresh
+  }
+}
+
+function forgetSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch {
+    // storage unavailable: nothing was stored
+  }
+}
+
+function storedToken(): string | null {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null')?.token ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export const App: React.FC = () => {
   const { route, params, go } = useHashRoute();
@@ -72,6 +104,20 @@ export const App: React.FC = () => {
       if (health) {
         setBackendHealth(health);
         setIsLiveBackend(true);
+        // A remembered real account wins; an expired or revoked token falls back to the demo.
+        const saved = storedToken();
+        if (saved) {
+          try {
+            const user = await fetchCurrentUser(saved);
+            if (!mounted) return;
+            setAuthToken(saved);
+            setCurrentUser(user);
+            setAuthChecked(true);
+            return;
+          } catch {
+            forgetSession();
+          }
+        }
         // Login seeded demo user to obtain real JWT token
         try {
           const auth = await loginUser('demo@ragseal.dev', 'demo1234');
@@ -132,6 +178,7 @@ export const App: React.FC = () => {
       <SignInScreen
         backendDown={!isLiveBackend}
         onSignedIn={(user, token) => {
+          rememberSession(user, token);
           setCurrentUser(user);
           setAuthToken(token);
           setIsAuthOpen(false);
@@ -150,12 +197,24 @@ export const App: React.FC = () => {
         live={isLiveBackend}
         user={currentUser}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onSignIn={
+          currentUser?.email === DEMO_EMAIL
+            ? () => {
+                // Leave the demo for the sign-in screen, which offers email and Google.
+                forgetSession();
+                setAuthToken(null);
+                setCurrentUser(null);
+              }
+            : undefined
+        }
         fitScreen={route === 'diagnose' || route === 'label' || route === 'bots' || route === 'testsets'}
       >
         {/* Keyed by route so each page eases in instead of cutting. h-full, not flex-1: <main> is not a
             flex container, so fit-to-screen pages need an explicit height or <main> clips them. */}
         <div key={route} className="page-enter flex h-full min-h-0 flex-col">
         {route === 'bots' && <BotsPage token={authToken} initialPack={activePackId} />}
+
+        {route === 'connect' && <ConnectBotPage token={authToken} initialPack={activePackId} onOpenRun={openRun} />}
 
         {route === 'testsets' && <TestSetsPage token={authToken} />}
 
@@ -250,6 +309,7 @@ export const App: React.FC = () => {
         onLogin={(user, token) => {
           setCurrentUser(user);
           if (token) {
+            rememberSession(user, token);
             setAuthToken(token);
             fetchRunHistory(token).then((runs) => {
               if (runs && runs.length > 0) setServerRunHistory(runs);
@@ -257,6 +317,7 @@ export const App: React.FC = () => {
           }
         }}
         onLogout={() => {
+          forgetSession();
           setCurrentUser(null);
           setAuthToken(null);
         }}
