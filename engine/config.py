@@ -26,7 +26,7 @@ MODEL_DEFAULTS = {
     ("judge", "nvidia"): ("NVIDIA_JUDGE_MODEL", "mistralai/mistral-large-2-instruct"),
     ("judge", "groq"): ("RAGSEAL_GROQ_MODEL", "openai/gpt-oss-120b"),
     ("embeddings", "ollama"): ("RAGSEAL_EMBED_MODEL", "nomic-embed-text"),
-    ("embeddings", "nvidia"): ("NVIDIA_EMBED_MODEL", "nvidia/llama-3.2-nv-embedqa-1b-v1"),
+    ("embeddings", "nvidia"): ("NVIDIA_EMBED_MODEL", "nvidia/nemotron-3.5-embed-1b"),
 }
 
 # "auto" picks the first provider in this order that is configured (Ollama always is).
