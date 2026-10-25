@@ -376,7 +376,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
       <section className={cn('min-w-0 flex-[55] flex-col', mobilePane === 'chat' ? 'flex' : 'hidden lg:flex')}>
         {/* Summary of the two choices; "change" reopens the steps */}
         <div className="flex shrink-0 items-center gap-3 border-b border-[var(--rule)] px-4 py-2.5 sm:px-5">
-          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[var(--ink)]">
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[0.875rem] text-[var(--ink)]">
             {usingOwnBot ? <Plug className="h-4 w-4 shrink-0 text-[var(--ink-2)]" /> : <Bot className="h-4 w-4 shrink-0 text-[var(--ink-2)]" />}
             <span className="font-medium">{botLabel}</span>
             <span className="text-[var(--muted)]">answering from</span>
@@ -385,7 +385,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
           </span>
           <button
             onClick={() => (setupOpen ? closeSetup() : setSetupOpen(true))}
-            className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--rule-2)] px-2.5 py-1 text-[12px] text-[var(--ink-1)] transition-colors hover:border-[var(--rule-3)] hover:text-[var(--ink)]"
+            className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--rule-2)] px-2.5 py-1 text-[0.8125rem] text-[var(--ink-1)] transition-colors hover:border-[var(--rule-3)] hover:text-[var(--ink)]"
           >
             {setupOpen ? 'Done' : 'Change'}
             <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', setupOpen && 'rotate-180')} />
@@ -424,7 +424,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                 />
 
                 {missingKeys.length > 0 && (
-                  <div className="rounded-xl border border-[color:color-mix(in_srgb,var(--retr)_40%,transparent)] bg-[color:color-mix(in_srgb,var(--retr)_8%,transparent)] px-3.5 py-2.5 text-[12.5px] text-[var(--ink-1)]">
+                  <div className="rounded-xl border border-[color:color-mix(in_srgb,var(--retr)_40%,transparent)] bg-[color:color-mix(in_srgb,var(--retr)_8%,transparent)] px-3.5 py-2.5 text-[0.84375rem] text-[var(--ink-1)]">
                     {botLabel} needs its {missingKeys.map((h) => h.name).join(', ')} header to answer. Add it under{' '}
                     <button onClick={() => setSetupOpen(true)} className="font-medium text-[var(--ink)] underline underline-offset-2">
                       Change
@@ -434,7 +434,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                 )}
 
                 {example === undefined && !userTurns.length && (
-                  <div className="flex items-center gap-2 text-[13px] text-[var(--ink-2)]">
+                  <div className="flex items-center gap-2 text-[0.875rem] text-[var(--ink-2)]">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading a real exchange from the latest test…
                   </div>
                 )}
@@ -442,7 +442,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                 {turns.map((t) => (
                   <React.Fragment key={t.id}>
                     {t.example && (
-                      <div className="-mb-2 flex items-center gap-2 text-[12px] text-[var(--ink-2)]">
+                      <div className="-mb-2 flex items-center gap-2 text-[0.8125rem] text-[var(--ink-2)]">
                         <span className="h-px flex-1 bg-[var(--rule)]" /> From the latest test run <span className="h-px flex-1 bg-[var(--rule)]" />
                       </div>
                     )}
@@ -460,7 +460,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                       }}
                     />
                     {t.example && (
-                      <div className="mt-1 flex items-center gap-2 text-[13px] font-medium text-[var(--ink-1)]">
+                      <div className="mt-1 flex items-center gap-2 text-[0.875rem] font-medium text-[var(--ink-1)]">
                         Now try it yourself <span aria-hidden="true">↓</span>
                       </div>
                     )}
@@ -470,8 +470,8 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                 {tricks.length > 0 && !busy && (
                   <div data-tour="tricks">
                     <div className="mb-2 flex items-baseline justify-between gap-3">
-                      <span className="text-[13px] font-semibold text-[var(--ink)]">Can you trick it?</span>
-                      <span className="text-[11.5px] text-[var(--muted)]">Real test questions with a known answer: click one to ask it</span>
+                      <span className="text-[0.875rem] font-semibold text-[var(--ink)]">Can you trick it?</span>
+                      <span className="text-[0.78125rem] text-[var(--muted)]">Real test questions with a known answer: click one to ask it</span>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                       {tricks.map((c) => {
@@ -484,13 +484,13 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                             className="group flex flex-col gap-2 rounded-xl border border-[var(--rule)] bg-[var(--panel)] p-3 text-left transition-colors hover:border-[var(--rule-2)] disabled:opacity-50"
                           >
                             <span
-                              className="self-start rounded-full px-2 py-0.5 text-[10.5px] font-medium"
+                              className="self-start rounded-full px-2 py-0.5 text-[0.71875rem] font-medium"
                               style={{ background: `${tint(meta.accent, 0.1)}`, color: meta.accent }}
                             >
                               {trap.badge}
                             </span>
-                            <span className="line-clamp-3 text-[13px] leading-snug text-[var(--ink)]">{c.question}</span>
-                            <span className="text-[11px] leading-snug text-[var(--muted)]">{trap.teaser}</span>
+                            <span className="line-clamp-3 text-[0.875rem] leading-snug text-[var(--ink)]">{c.question}</span>
+                            <span className="text-[0.75rem] leading-snug text-[var(--muted)]">{trap.teaser}</span>
                           </button>
                         );
                       })}
@@ -523,7 +523,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                     ? `${botLabel} needs its key first`
                     : usingOwnBot ? `Ask ${botLabel} anything…` : `Ask the ${meta.domain.toLowerCase()} bot anything…`
                 }
-                className="h-10 flex-1 bg-transparent text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
+                className="h-10 flex-1 bg-transparent text-[0.9375rem] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
               />
             </label>
             <button
@@ -556,12 +556,12 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
               <ArrowLeft className="h-3 w-3" /> Chat
             </button>
             <div>
-              <div className="text-[13px] font-semibold text-[var(--ink)]">X-ray of this reply</div>
-              <div className="hidden sm:block text-[11px] text-[var(--ink-2)]">What the bot read, three checks, and who is to blame</div>
+              <div className="text-[0.875rem] font-semibold text-[var(--ink)]">X-ray of this reply</div>
+              <div className="hidden sm:block text-[0.75rem] text-[var(--ink-2)]">What the bot read, three checks, and who is to blame</div>
             </div>
           </div>
           {xrayTurn?.example && (
-            <span className="rounded-full border border-[var(--rule-2)] px-2 py-0.5 text-[10.5px] text-[var(--review)]">From latest test</span>
+            <span className="rounded-full border border-[var(--rule-2)] px-2 py-0.5 text-[0.71875rem] text-[var(--review)]">From latest test</span>
           )}
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -570,7 +570,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
           ) : xrayTurn.pending ? (
             <XrayPending />
           ) : xrayTurn.error ? (
-            <p className="text-[13px] text-[var(--gen-deep)]">{xrayTurn.error}</p>
+            <p className="text-[0.875rem] text-[var(--gen-deep)]">{xrayTurn.error}</p>
           ) : xrayTurn.result ? (
             <Xray
               key={`${threadKey}:${xrayTurn.id}`}
@@ -610,7 +610,7 @@ const SourceChip: React.FC<{ source: Source }> = ({ source }) => (
   <span
     title={SOURCE_CHIP[source].title}
     className={cn(
-      'shrink-0 rounded-full border px-2 py-0.5 text-[10.5px] font-medium',
+      'shrink-0 rounded-full border px-2 py-0.5 text-[0.71875rem] font-medium',
       source === 'fictional' ? 'border-[var(--rule-2)] text-[var(--ink-2)]' : 'border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] text-[var(--ok)]'
     )}
   >
@@ -620,9 +620,9 @@ const SourceChip: React.FC<{ source: Source }> = ({ source }) => (
 
 const StepLabel: React.FC<{ n: number; title: string; hint: string }> = ({ n, title, hint }) => (
   <div className="flex items-baseline gap-2.5">
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--ink)] font-mono text-[10.5px] text-[var(--paper)]">{n}</span>
-    <span className="text-[15px] font-semibold text-[var(--ink)]">{title}</span>
-    <span className="text-[12px] text-[var(--muted)]">{hint}</span>
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--ink)] font-mono text-[0.71875rem] text-[var(--paper)]">{n}</span>
+    <span className="text-[1rem] font-semibold text-[var(--ink)]">{title}</span>
+    <span className="text-[0.8125rem] text-[var(--muted)]">{hint}</span>
   </div>
 );
 
@@ -661,12 +661,12 @@ const Setup: React.FC<{
           <ChoiceCard selected={botChoice === 'sample'} onClick={() => onBot('sample')}>
             <div className="flex items-center gap-2.5">
               <Bot className="h-5 w-5 text-[var(--ink-1)]" />
-              <span className="text-[14.5px] font-semibold text-[var(--ink)]">RAGSeal sample bot</span>
-              <span className="ml-auto rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[10.5px] text-[var(--ink-2)]">Default</span>
+              <span className="text-[0.90625rem] font-semibold text-[var(--ink)]">RAGSeal sample bot</span>
+              <span className="ml-auto rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[0.71875rem] text-[var(--ink-2)]">Default</span>
             </div>
             <ul className="mt-2.5 space-y-1.5">
               {sampleFeatures.map((f) => (
-                <li key={f} className="flex gap-2 text-[12.5px] leading-snug text-[var(--ink-1)]">
+                <li key={f} className="flex gap-2 text-[0.84375rem] leading-snug text-[var(--ink-1)]">
                   <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" /> {f}
                 </li>
               ))}
@@ -677,12 +677,12 @@ const Setup: React.FC<{
             <ChoiceCard selected={botChoice === 'yours'} onClick={() => onBot('yours')}>
               <div className="flex items-center gap-2.5">
                 <Plug className="h-5 w-5 text-[var(--ink-1)]" />
-                <span className="truncate text-[14.5px] font-semibold text-[var(--ink)]">{savedBot.name?.trim() || 'Your bot'}</span>
-                <span className="ml-auto rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[10.5px] text-[var(--ink-2)]">Your bot</span>
+                <span className="truncate text-[0.90625rem] font-semibold text-[var(--ink)]">{savedBot.name?.trim() || 'Your bot'}</span>
+                <span className="ml-auto rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[0.71875rem] text-[var(--ink-2)]">Your bot</span>
               </div>
-              <ul className="mt-2.5 space-y-1.5 text-[12.5px] leading-snug text-[var(--ink-1)]">
+              <ul className="mt-2.5 space-y-1.5 text-[0.84375rem] leading-snug text-[var(--ink-1)]">
                 <li className="flex gap-2">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" /> Saved on Connect your bot: <span className="font-mono text-[11.5px]">{botHost(savedBot.url)}</span>
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" /> Saved on Connect your bot: <span className="font-mono text-[0.78125rem]">{botHost(savedBot.url)}</span>
                 </li>
                 <li className="flex gap-2">
                   <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
@@ -698,14 +698,14 @@ const Setup: React.FC<{
                 savedBot.headers
                   .filter((h) => h.name.trim())
                   .map((h) => (
-                    <label key={h.name} className="mt-2.5 flex items-center gap-2 text-[12px] text-[var(--ink-2)]" onClick={(e) => e.stopPropagation()}>
+                    <label key={h.name} className="mt-2.5 flex items-center gap-2 text-[0.8125rem] text-[var(--ink-2)]" onClick={(e) => e.stopPropagation()}>
                       <span className="shrink-0 font-mono">{h.name}</span>
                       <input
                         type="password"
                         value={botKeys[h.name] ?? ''}
                         onChange={(e) => onKey(h.name, e.target.value)}
                         placeholder="value (kept in this tab only)"
-                        className="h-8 flex-1 rounded-lg border border-[var(--rule-2)] bg-[var(--paper)] px-2.5 text-[12.5px] text-[var(--ink)] focus:outline-none"
+                        className="h-8 flex-1 rounded-lg border border-[var(--rule-2)] bg-[var(--paper)] px-2.5 text-[0.84375rem] text-[var(--ink)] focus:outline-none"
                       />
                     </label>
                   ))}
@@ -717,12 +717,12 @@ const Setup: React.FC<{
             >
               <span className="flex items-center gap-2.5">
                 <Plug className="h-5 w-5 text-[var(--ink-2)]" />
-                <span className="text-[14.5px] font-semibold text-[var(--ink)]">Your own bot</span>
+                <span className="text-[0.90625rem] font-semibold text-[var(--ink)]">Your own bot</span>
               </span>
-              <span className="text-[12.5px] leading-snug text-[var(--ink-2)]">
+              <span className="text-[0.84375rem] leading-snug text-[var(--ink-2)]">
                 Point RAGSeal at your chatbot’s URL and chat with it here, with every reply checked the same way.
               </span>
-              <span className="flex items-center gap-1 text-[12.5px] font-medium text-[var(--ink)]">
+              <span className="flex items-center gap-1 text-[0.84375rem] font-medium text-[var(--ink)]">
                 Connect one <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </a>
@@ -735,7 +735,7 @@ const Setup: React.FC<{
         <div className="flex flex-col gap-4">
           {grouped.map(({ group, items }) => (
             <div key={group}>
-              <div className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--muted)]">{group}</div>
+              <div className="mb-1.5 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-[var(--muted)]">{group}</div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {items.map((p) => {
                   const m = dataMeta(p);
@@ -752,11 +752,11 @@ const Setup: React.FC<{
                     >
                       <DataIcon meta={m} size={28} />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium text-[var(--ink)]">{dataTitle(m)}</span>
-                        <span className="mt-0.5 line-clamp-2 block text-[11.5px] leading-snug text-[var(--ink-2)]">{m.about || p.description}</span>
+                        <span className="block truncate text-[0.875rem] font-medium text-[var(--ink)]">{dataTitle(m)}</span>
+                        <span className="mt-0.5 line-clamp-2 block text-[0.78125rem] leading-snug text-[var(--ink-2)]">{m.about || p.description}</span>
                         <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           <SourceChip source={m.source} />
-                          {p.questions != null && <span className="text-[10.5px] text-[var(--muted)]">{p.questions} questions</span>}
+                          {p.questions != null && <span className="text-[0.71875rem] text-[var(--muted)]">{p.questions} questions</span>}
                         </span>
                       </span>
                     </button>
@@ -770,7 +770,7 @@ const Setup: React.FC<{
 
       <button
         onClick={onStart}
-        className="flex items-center gap-2 self-start rounded-xl bg-[var(--ink)] px-4 py-2.5 text-[13.5px] font-medium text-[var(--paper)] transition-opacity hover:opacity-90"
+        className="flex items-center gap-2 self-start rounded-xl bg-[var(--ink)] px-4 py-2.5 text-[0.90625rem] font-medium text-[var(--paper)] transition-opacity hover:opacity-90"
       >
         Start chatting <ArrowRight className="h-4 w-4" />
       </button>
@@ -809,10 +809,10 @@ const DataHeader: React.FC<{
         <DataIcon meta={meta} size={44} />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--ink)]">{dataTitle(meta)}</span>
+            <span className="text-[1.125rem] font-semibold tracking-[-0.01em] text-[var(--ink)]">{dataTitle(meta)}</span>
             <SourceChip source={meta.source} />
           </div>
-          <div className="mt-0.5 text-[13px] leading-snug text-[var(--ink-1)]">
+          <div className="mt-0.5 text-[0.875rem] leading-snug text-[var(--ink-1)]">
             {meta.about}{' '}
             {pack ? (
               <>
@@ -834,12 +834,12 @@ const DataHeader: React.FC<{
           {pack.documents.map((d) => {
             const tag = superseded.has(d.document_id) ? 'older version' : distractors.has(d.document_id) ? 'look-alike' : null;
             return (
-              <li key={d.document_id} className="flex items-center gap-2 text-[12.5px] text-[var(--ink-1)]">
+              <li key={d.document_id} className="flex items-center gap-2 text-[0.84375rem] text-[var(--ink-1)]">
                 <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
-                <span className="truncate font-mono text-[11.5px]">{d.filename}</span>
+                <span className="truncate font-mono text-[0.78125rem]">{d.filename}</span>
                 {tag && (
                   <span
-                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px]"
+                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[0.71875rem]"
                     style={tag === 'older version' ? { background: `${tint(AMBER, 0.13)}`, color: AMBER } : { background: 'var(--panel-2)', color: 'var(--ink-2)' }}
                   >
                     {tag}
@@ -848,7 +848,7 @@ const DataHeader: React.FC<{
               </li>
             );
           })}
-          {option.description && <li className="mt-1 text-[11.5px] leading-snug text-[var(--muted)]">{option.description}</li>}
+          {option.description && <li className="mt-1 text-[0.78125rem] leading-snug text-[var(--muted)]">{option.description}</li>}
         </ul>
       )}
     </div>
@@ -879,7 +879,7 @@ const TurnView: React.FC<{
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex justify-end">
-        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-[var(--panel-2)] px-4 py-2.5 text-[14px] leading-relaxed text-[var(--ink)]">
+        <div className="max-w-[78%] rounded-2xl rounded-br-md bg-[var(--panel-2)] px-4 py-2.5 text-[0.9375rem] leading-relaxed text-[var(--ink)]">
           {turn.question}
         </div>
       </div>
@@ -898,7 +898,7 @@ const TurnView: React.FC<{
             ))}
           </div>
         ) : turn.error ? (
-          <div className="rounded-2xl rounded-bl-md border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] bg-[color:color-mix(in_srgb,var(--gen)_10%,transparent)] px-4 py-2.5 text-[13px] text-[var(--gen-deep)]">
+          <div className="rounded-2xl rounded-bl-md border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] bg-[color:color-mix(in_srgb,var(--gen)_10%,transparent)] px-4 py-2.5 text-[0.875rem] text-[var(--gen-deep)]">
             Couldn’t answer: {turn.error}
           </div>
         ) : (
@@ -913,7 +913,7 @@ const TurnView: React.FC<{
             )}
             style={selected && v ? { borderColor: `${tint(v.color, 0.4)}` } : undefined}
           >
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[var(--ink)]">
+            <p className="whitespace-pre-wrap text-[0.9375rem] leading-relaxed text-[var(--ink)]">
               <AnswerWithCitations text={r?.generated_answer ?? ''} chunks={r?.retrieved_chunks ?? []} filenames={filenames} onCite={onCite} />
             </p>
             {r && (
@@ -928,13 +928,13 @@ const TurnView: React.FC<{
                       onCite(chunk.chunk_id);
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && onCite(chunk.chunk_id)}
-                    className="rounded-md border border-[var(--rule-2)] px-1.5 py-0.5 text-[11px] text-[var(--review)] hover:border-[var(--rule-3)] hover:text-[var(--ink)]"
+                    className="rounded-md border border-[var(--rule-2)] px-1.5 py-0.5 text-[0.75rem] text-[var(--review)] hover:border-[var(--rule-3)] hover:text-[var(--ink)]"
                   >
                     [{n}] {chunk.filename ?? filenames[chunk.document_id ?? ''] ?? 'document'}
                   </span>
                 ))}
                 {v && (
-                  <span className="ml-auto flex items-center gap-1.5 text-[11px] font-medium" style={{ color: v.color }}>
+                  <span className="ml-auto flex items-center gap-1.5 text-[0.75rem] font-medium" style={{ color: v.color }}>
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: v.color }} />
                     {v.label}
                   </span>
@@ -942,7 +942,7 @@ const TurnView: React.FC<{
               </span>
             )}
             {r && v && !passed && reason && (
-              <span className="mt-2 flex items-start gap-2 border-t border-[var(--rule)] pt-2 text-[12px] leading-snug text-[var(--ink-1)]">
+              <span className="mt-2 flex items-start gap-2 border-t border-[var(--rule)] pt-2 text-[0.8125rem] leading-snug text-[var(--ink-1)]">
                 <span className="line-clamp-2 flex-1">{reason}</span>
                 <button
                   onClick={(e) => {
@@ -1009,7 +1009,7 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
                 background: color ? `${tint(color, 0.06)}` : 'var(--panel)',
               }}
             >
-              <div className="flex items-center gap-2 text-[11px]">
+              <div className="flex items-center gap-2 text-[0.75rem]">
                 <span className="font-mono text-[var(--muted)]">[{n}]</span>
                 <span className="truncate text-[var(--ink-1)]">{c.filename ?? filenames[c.document_id ?? ''] ?? 'document'}</span>
                 <span className="ml-auto flex shrink-0 items-center gap-1.5">
@@ -1019,13 +1019,13 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
                   </span>
                 </span>
               </div>
-              <p className="mt-1.5 line-clamp-3 text-[12.5px] leading-relaxed text-[var(--ink-1)]">
+              <p className="mt-1.5 line-clamp-3 text-[0.84375rem] leading-relaxed text-[var(--ink-1)]">
                 {c.text.replace(/^#+\s.*\n+/, '').replace(/\s*\n+\s*/g, ' ')}
               </p>
             </div>
           ))}
           {hidden > 0 && (
-            <button onClick={() => setShowAll((x) => !x)} className="text-[11px] text-[var(--ink-2)] underline-offset-2 transition-colors hover:text-[var(--ink)] hover:underline">
+            <button onClick={() => setShowAll((x) => !x)} className="text-[0.75rem] text-[var(--ink-2)] underline-offset-2 transition-colors hover:text-[var(--ink)] hover:underline">
               {showAll ? 'Hide' : 'Show'} {hidden} unrelated passage{hidden === 1 ? '' : 's'}
             </button>
           )}
@@ -1056,10 +1056,10 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] text-[var(--ink)]">{label}</span>
-                  <span className="block text-[10.5px] text-[var(--muted)]">{ok == null ? 'no known answer to compare' : tech}</span>
+                  <span className="block text-[0.875rem] text-[var(--ink)]">{label}</span>
+                  <span className="block text-[0.71875rem] text-[var(--muted)]">{ok == null ? 'no known answer to compare' : tech}</span>
                 </span>
-                <span className="text-[15px] font-semibold tabular-nums" style={{ color: ok == null ? 'var(--muted)' : ok ? PASS : RED }}>
+                <span className="text-[1rem] font-semibold tabular-nums" style={{ color: ok == null ? 'var(--muted)' : ok ? PASS : RED }}>
                   {pct(score)}
                 </span>
               </li>
@@ -1071,10 +1071,10 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
       <section data-tour="verdict" className="stamp-land" style={{ animationDelay: `${base + 900}ms` }}>
         <SectionLabel n={3}>Verdict</SectionLabel>
         <div className="mt-2 rounded-xl border px-4 py-3" style={{ borderColor: `${tint(v.color, 0.33)}`, background: 'var(--panel)' }}>
-          <div className="stamp my-1 text-[17px] leading-none" style={{ color: v.color }}>
+          <div className="stamp my-1 text-[1.125rem] leading-none" style={{ color: v.color }}>
             {v.label}
           </div>
-          <p className="mt-1 text-[13px] leading-relaxed text-[var(--ink-1)]">{r.root_cause?.summary ?? v.blame}</p>
+          <p className="mt-1 text-[0.875rem] leading-relaxed text-[var(--ink-1)]">{r.root_cause?.summary ?? v.blame}</p>
         </div>
       </section>
 
@@ -1082,24 +1082,24 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
         <section className="xray-in" style={{ animationDelay: `${base + 1300}ms` }}>
           <SectionLabel n={4}>Replay: the proof</SectionLabel>
           <div className="mt-2 rounded-xl border border-[var(--rule-2)] bg-[var(--panel)] px-4 py-3">
-            <div className="flex items-center gap-2 text-[12px] text-[var(--review)]">
+            <div className="flex items-center gap-2 text-[0.8125rem] text-[var(--review)]">
               With only the right text
               <ArrowRight className="h-3 w-3" />
               <span className="font-medium" style={{ color: fixed ? PASS : RED }}>
                 {fixed ? 'fixed' : 'still wrong'} ({pct(replay.answer_accuracy)})
               </span>
             </div>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--ink)]">
+            <p className="mt-1.5 text-[0.875rem] leading-relaxed text-[var(--ink)]">
               {(replay.answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '')}
             </p>
-            <p className="mt-1.5 text-[11.5px] text-[var(--ink-2)]">
+            <p className="mt-1.5 text-[0.78125rem] text-[var(--ink-2)]">
               {fixed ? 'So the retriever caused it: the bot was fine once it had the right text.' : 'So the bot is at fault: even the right text didn’t help.'}
             </p>
           </div>
         </section>
       )}
 
-      <button onClick={onOpen} className="flex items-center gap-1.5 self-start text-[13px] font-medium text-[var(--ink)] hover:underline">
+      <button onClick={onOpen} className="flex items-center gap-1.5 self-start text-[0.875rem] font-medium text-[var(--ink)] hover:underline">
         Open full diagnosis <ArrowRight className="h-3.5 w-3.5" />
       </button>
     </div>
@@ -1107,8 +1107,8 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
 };
 
 const SectionLabel: React.FC<{ n: number; children: React.ReactNode }> = ({ n, children }) => (
-  <div className="flex items-center gap-2 text-[12.5px] font-medium text-[var(--ink-1)]">
-    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--rule-2)] font-mono text-[9.5px] text-[var(--ink-1)]">{n}</span>
+  <div className="flex items-center gap-2 text-[0.84375rem] font-medium text-[var(--ink-1)]">
+    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--rule-2)] font-mono text-[0.6875rem] text-[var(--ink-1)]">{n}</span>
     {children}
   </div>
 );
@@ -1116,7 +1116,7 @@ const SectionLabel: React.FC<{ n: number; children: React.ReactNode }> = ({ n, c
 const XrayPending: React.FC = () => (
   <div className="flex flex-col gap-3">
     {['Finding the text to read…', 'Writing the answer…', 'Checking it three ways…'].map((s, i) => (
-      <div key={s} className="xray-in flex items-center gap-2.5 text-[13px] text-[var(--ink-2)]" style={{ animationDelay: `${i * 600}ms` }}>
+      <div key={s} className="xray-in flex items-center gap-2.5 text-[0.875rem] text-[var(--ink-2)]" style={{ animationDelay: `${i * 600}ms` }}>
         <Loader2 className="h-3.5 w-3.5 animate-spin" /> {s}
       </div>
     ))}
@@ -1125,7 +1125,7 @@ const XrayPending: React.FC = () => (
 
 const XrayEmpty: React.FC = () => (
   <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-    <div className="text-[13px] text-[var(--ink-1)]">Ask the bot something</div>
+    <div className="text-[0.875rem] text-[var(--ink-1)]">Ask the bot something</div>
     <p className="max-w-[300px] text-xs leading-relaxed text-[var(--muted)]">
       Each reply is X-rayed here: the text it read, whether it found and stuck to the right text, and whether the answer is correct.
     </p>
@@ -1169,7 +1169,7 @@ const AnswerWithCitations: React.FC<{
                 onCite(chunk.chunk_id);
               }}
               className={cn(
-                'inline-flex -translate-y-px items-center rounded border border-[var(--rule)] bg-[var(--panel-2)] px-1 font-mono text-[10.5px] leading-[16px] text-[var(--ink-1)]',
+                'inline-flex -translate-y-px items-center rounded border border-[var(--rule)] bg-[var(--panel-2)] px-1 font-mono text-[0.71875rem] leading-[16px] text-[var(--ink-1)]',
                 chunk && 'cursor-pointer hover:border-[var(--rule-3)] hover:text-[var(--ink)]'
               )}
             >
@@ -1177,10 +1177,10 @@ const AnswerWithCitations: React.FC<{
             </span>
             {chunk && (
               <span className="pointer-events-none invisible absolute bottom-full left-1/2 z-30 mb-2 w-[300px] -translate-x-1/2 rounded-xl border border-[var(--rule-2)] bg-[var(--paper)] p-3 text-left opacity-0 shadow-lg transition-opacity group-hover/cite:visible group-hover/cite:opacity-100 group-focus-within/cite:visible group-focus-within/cite:opacity-100">
-                <span className="block truncate font-mono text-[10.5px] text-[var(--muted)]">
+                <span className="block truncate font-mono text-[0.71875rem] text-[var(--muted)]">
                   {chunk.filename ?? filenames[chunk.document_id ?? ''] ?? 'document'}
                 </span>
-                <span className="mt-1 line-clamp-5 block whitespace-normal font-sans text-[12px] leading-relaxed text-[var(--ink-1)]">
+                <span className="mt-1 line-clamp-5 block whitespace-normal font-sans text-[0.8125rem] leading-relaxed text-[var(--ink-1)]">
                   {chunk.text.replace(/^#+\s.*\n+/, '').replace(/\s*\n+\s*/g, ' ')}
                 </span>
               </span>

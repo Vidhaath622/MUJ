@@ -499,17 +499,17 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
                       </span>
                     )}
                   </div>
-                  <h2 className="mt-2 text-[22px] font-semibold leading-snug tracking-[-0.02em] text-[var(--ink)]">{item.question}</h2>
+                  <h2 className="mt-2 text-[1.375rem] font-semibold leading-snug tracking-[-0.02em] text-[var(--ink)]">{item.question}</h2>
 
                   <div className="mt-5 text-xs text-[var(--ink-2)]">Known answer</div>
-                  <p className="mt-1 text-[15px] leading-relaxed text-[var(--ink-1)]">
+                  <p className="mt-1 text-[1rem] leading-relaxed text-[var(--ink-1)]">
                     {item.expected_abstain
                       ? 'Not in the documents. The right reply is to say so, not to answer.'
                       : knownAnswer || '— (none given)'}
                   </p>
 
                   <div className="mt-5 text-xs text-[var(--ink-2)]">Model answer</div>
-                  <p className="mt-1 whitespace-pre-wrap text-[17px] leading-relaxed tracking-[-0.01em] text-[var(--ink)]">
+                  <p className="mt-1 whitespace-pre-wrap text-[1.125rem] leading-relaxed tracking-[-0.01em] text-[var(--ink)]">
                     {item.generated_answer || '— (no answer)'}
                   </p>
                 </div>
@@ -521,14 +521,14 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Optional note (Esc to leave the field)"
-                      className="h-full flex-1 bg-transparent text-[13px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
+                      className="h-full flex-1 bg-transparent text-[0.875rem] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
                     />
                   </label>
                 </div>
               </section>
 
               <section className="lab-panel-flat flex min-h-0 flex-col overflow-hidden rounded-2xl">
-                <div className="flex items-baseline justify-between border-b border-[var(--rule)] px-5 py-3.5 text-[13px]">
+                <div className="flex items-baseline justify-between border-b border-[var(--rule)] px-5 py-3.5 text-[0.875rem]">
                   <span className="font-medium">What the model was given</span>
                   <span className="text-xs text-[var(--ink-2)]">{item.retrieved_chunks?.length ?? 0} chunks</span>
                 </div>
@@ -539,7 +539,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
                         <span className="truncate text-[var(--ink-1)]">{c.filename ?? c.document_name ?? c.document_id ?? 'document'}</span>
                         <span className="font-mono text-[var(--muted)]">{c.chunk_id}</span>
                       </div>
-                      <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--ink-1)]">
+                      <p className="mt-1.5 whitespace-pre-wrap text-[0.875rem] leading-relaxed text-[var(--ink-1)]">
                         {c.text.replace(/^#+\s.*\n+/, '')}
                       </p>
                     </article>
@@ -588,7 +588,7 @@ const ReviewNote: React.FC<{ item: DisagreementItem; labeler: string; left: numb
   const mine = item.labels?.[labeler];
   const said = mine == null ? 'nothing yet' : mine.correct ? 'Correct' : `Wrong${mine.failure_type ? ` (${failureLabel(mine.failure_type)})` : ''}`;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--retr)] bg-[color:color-mix(in_srgb,var(--retr)_8%,transparent)] px-4 py-2.5 text-[13px]">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--retr)] bg-[color:color-mix(in_srgb,var(--retr)_8%,transparent)] px-4 py-2.5 text-[0.875rem]">
       <span className="text-[var(--ink)]">
         You said <span className="font-semibold">{said}</span>. Your teammate disagreed. Look again: press{' '}
         <span className="font-mono">1</span> for correct or <span className="font-mono">2</span> for wrong. Your new answer replaces the old one.
@@ -614,24 +614,24 @@ const ChooseLabeler: React.FC<{
       <div className="lab-panel lab-fade-up w-full max-w-xl rounded-2xl p-7">
         {pending ? (
           <>
-            <div className="flex items-center gap-2 text-[13px] font-medium text-[var(--retr)]">
+            <div className="flex items-center gap-2 text-[0.875rem] font-medium text-[var(--retr)]">
               <PenLine className="h-4 w-4" /> Confirm
             </div>
             <h2 className="mt-2 text-lg font-semibold tracking-[-0.01em]">You're about to label as {pending}</h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-[var(--ink-2)]">
+            <p className="mt-2 text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
               Every label you give replaces {pending}'s label on that answer, and changes the team's live agreement numbers.
               The headline agreement on Checker trust comes from a stored snapshot of the first labels, so it won't move.
             </p>
             <div className="mt-6 flex flex-wrap gap-2.5">
               <button
                 onClick={() => onChoose(pending)}
-                className="rounded-[9px] bg-[var(--ink)] px-4 py-2 text-[13px] font-medium text-[var(--paper)] hover:opacity-90"
+                className="rounded-[9px] bg-[var(--ink)] px-4 py-2 text-[0.875rem] font-medium text-[var(--paper)] hover:opacity-90"
               >
                 Label as {pending}
               </button>
               <button
                 onClick={() => setPending(null)}
-                className="rounded-[9px] border border-[var(--rule-2)] px-4 py-2 text-[13px] text-[var(--ink)] hover:bg-[var(--panel-2)]"
+                className="rounded-[9px] border border-[var(--rule-2)] px-4 py-2 text-[0.875rem] text-[var(--ink)] hover:bg-[var(--panel-2)]"
               >
                 Cancel
               </button>
@@ -640,7 +640,7 @@ const ChooseLabeler: React.FC<{
         ) : (
           <>
             <h2 className="text-lg font-semibold tracking-[-0.01em]">Who is labelling?</h2>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--ink-2)]">
+            <p className="mt-1.5 text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
               Two teammates labelled the same answers independently. Only answers they both agree on count as ground truth for
               checking RAGSeal. If you're not one of them, browse read-only.
             </p>
@@ -649,7 +649,7 @@ const ChooseLabeler: React.FC<{
                 <button
                   key={name}
                   onClick={() => (name === current ? onCancel() : setPending(name))}
-                  className="h-12 rounded-xl border border-[var(--rule-2)] text-[15px] font-medium text-[var(--ink)] transition-colors hover:border-[var(--rule-3)] hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]"
+                  className="h-12 rounded-xl border border-[var(--rule-2)] text-[1rem] font-medium text-[var(--ink)] transition-colors hover:border-[var(--rule-3)] hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]"
                 >
                   {name}
                   {name === current && <span className="ml-1.5 text-xs font-normal text-[var(--ink-2)]">(current)</span>}
@@ -658,7 +658,7 @@ const ChooseLabeler: React.FC<{
             </div>
             <button
               onClick={onGuest}
-              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--rule-2)] text-[14px] text-[var(--ink-1)] transition-colors hover:border-[var(--rule-3)] hover:text-[var(--ink)]"
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--rule-2)] text-[0.9375rem] text-[var(--ink-1)] transition-colors hover:border-[var(--rule-3)] hover:text-[var(--ink)]"
             >
               <Eye className="h-4 w-4" /> Just browse, read-only
             </button>
@@ -679,7 +679,7 @@ const Progress: React.FC<{ labeled: number; total: number; index: number; onSumm
   onSummary,
 }) => (
   <div className="flex items-center gap-4">
-    <div className="text-[13px] text-[var(--ink-1)]">
+    <div className="text-[0.875rem] text-[var(--ink-1)]">
       <span className="font-semibold tabular-nums text-[var(--ink)]">{labeled}</span>
       <span className="text-[var(--ink-2)]"> of {total} labeled</span>
     </div>
@@ -699,7 +699,7 @@ const Progress: React.FC<{ labeled: number; total: number; index: number; onSumm
 
 /** Read-only header: where you are, and the way to label for real. */
 const GuestNote: React.FC<{ index: number; total: number; onBack: () => void; onLabel: () => void }> = ({ index, total, onBack, onLabel }) => (
-  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--rule)] bg-[var(--panel)] px-4 py-2.5 text-[13px]">
+  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--rule)] bg-[var(--panel)] px-4 py-2.5 text-[0.875rem]">
     <span className="flex items-center gap-2 text-[var(--ink-1)]">
       <Eye className="h-4 w-4 text-[var(--ink-2)]" /> Read-only. You see what both teammates said and RAGSeal's verdict.
     </span>
@@ -736,14 +736,14 @@ const GuestBar: React.FC<{
           const v = view?.labels[name];
           const color = v == null ? 'var(--muted)' : v === 'correct' ? PASS : RED;
           return (
-            <span key={name} className="rounded-full px-3 py-1 text-[13px]" style={{ color, background: tint(color, 0.1) }}>
+            <span key={name} className="rounded-full px-3 py-1 text-[0.875rem]" style={{ color, background: tint(color, 0.1) }}>
               <span className="text-[var(--ink-2)]">{name}: </span>
               <span className="font-medium">{v ? describeLabel(v) : 'not labelled'}</span>
             </span>
           );
         })}
         <span className="mx-1 hidden h-5 w-px bg-[var(--rule)] sm:block" />
-        <span className="rounded-full px-3 py-1 text-[13px]" style={verdict ? { color: verdict.color, background: tint(verdict.color, 0.1) } : undefined}>
+        <span className="rounded-full px-3 py-1 text-[0.875rem]" style={verdict ? { color: verdict.color, background: tint(verdict.color, 0.1) } : undefined}>
           <span className="text-[var(--ink-2)]">RAGSeal: </span>
           <span className="font-medium">{verdict ? verdict.label : '—'}</span>
         </span>
@@ -834,21 +834,21 @@ const PackSummary: React.FC<{
   const otherPacks = Math.max(0, packs.length - LABELLED_PACKS.length);
   const complete = labeler != null && labelled != null && labelled >= total;
 
-  const btn = 'rounded-[9px] border border-[var(--rule-2)] px-3.5 py-2 text-[13px] text-[var(--ink)] hover:bg-[var(--panel-2)]';
-  const primary = 'rounded-[9px] bg-[var(--ink)] px-3.5 py-2 text-[13px] font-medium text-[var(--paper)] hover:opacity-90';
+  const btn = 'rounded-[9px] border border-[var(--rule-2)] px-3.5 py-2 text-[0.875rem] text-[var(--ink)] hover:bg-[var(--panel-2)]';
+  const primary = 'rounded-[9px] bg-[var(--ink)] px-3.5 py-2 text-[0.875rem] font-medium text-[var(--paper)] hover:opacity-90';
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="lab-fade-up mx-auto flex w-full max-w-[1180px] flex-col gap-5 px-6 py-8 lg:py-12">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="max-w-2xl">
-            <div className={cn('text-[13px] font-medium', complete ? 'text-[var(--ok)]' : 'text-[var(--ink-2)]')}>
+            <div className={cn('text-[0.875rem] font-medium', complete ? 'text-[var(--ok)]' : 'text-[var(--ink-2)]')}>
               {complete ? 'Pack complete' : labeler ? `Labelling as ${labeler}` : 'Human labels · read-only'}
             </div>
-            <h2 className="mt-1.5 text-[26px] font-semibold leading-tight tracking-[-0.02em] text-[var(--ink)]">
+            <h2 className="mt-1.5 text-[1.625rem] font-semibold leading-tight tracking-[-0.02em] text-[var(--ink)]">
               {complete ? `All ${total} labelled in ${name}` : `${name}: what two people said, and whether RAGSeal agreed`}
             </h2>
-            <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--ink-2)]">
+            <p className="mt-2 text-[0.90625rem] leading-relaxed text-[var(--ink-2)]">
               {complete
                 ? 'Thanks. Here is how your labels compare with your teammate’s and with RAGSeal’s verdicts.'
                 : `Two teammates marked each of the ${total} answers right or wrong without seeing RAGSeal’s verdict. Their agreed answers are the ground truth RAGSeal is checked against.`}
@@ -902,7 +902,7 @@ const PackSummary: React.FC<{
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_1fr]">
               <section className="lab-panel rounded-2xl p-5">
-                <h3 className="text-[15px] font-semibold tracking-[-0.01em]">Where people split</h3>
+                <h3 className="text-[1rem] font-semibold tracking-[-0.01em]">Where people split</h3>
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <SplitCount
                     n={openNow ?? humanSplits.length}
@@ -914,13 +914,13 @@ const PackSummary: React.FC<{
                 {split.length > 0 && (
                   <ul className="mt-4 divide-y divide-[var(--rule)] border-t border-[var(--rule)]">
                     {split.slice(0, 4).map((d) => (
-                      <li key={`${d.kind}-${d.test_id}`} className="flex items-start justify-between gap-3 py-2.5 text-[13px]">
+                      <li key={`${d.kind}-${d.test_id}`} className="flex items-start justify-between gap-3 py-2.5 text-[0.875rem]">
                         <span className="min-w-0">
                           <span className="font-mono text-xs text-[var(--muted)]">{d.test_id}</span>{' '}
                           <span className="text-[var(--ink-1)]">{d.question}</span>
                           {d.humans && <span className="block text-xs text-[var(--ink-2)]">{d.humans}</span>}
                         </span>
-                        <span className="shrink-0 rounded-full border border-[var(--rule)] px-2 py-0.5 text-[11px] text-[var(--ink-2)]">
+                        <span className="shrink-0 rounded-full border border-[var(--rule)] px-2 py-0.5 text-[0.75rem] text-[var(--ink-2)]">
                           {d.kind === 'human_vs_human' ? 'humans split' : `RAGSeal: ${d.pipeline ? verdictStyle(d.pipeline).short : '—'}`}
                         </span>
                       </li>
@@ -931,8 +931,8 @@ const PackSummary: React.FC<{
 
               <section className="lab-panel rounded-2xl p-5">
                 <div className="flex items-baseline justify-between">
-                  <h3 className="text-[15px] font-semibold tracking-[-0.01em]">Labelled packs</h3>
-                  <span className="pr-[68px] text-[11px] text-[var(--muted)]">teammates agree</span>
+                  <h3 className="text-[1rem] font-semibold tracking-[-0.01em]">Labelled packs</h3>
+                  <span className="pr-[68px] text-[0.75rem] text-[var(--muted)]">teammates agree</span>
                 </div>
                 <ul className="mt-3 space-y-2.5">
                   {LABELLED_PACKS.map((p) => {
@@ -943,7 +943,7 @@ const PackSummary: React.FC<{
                     const here = p.id === packId;
                     return (
                       <li key={p.id} className="flex items-center gap-3">
-                        <span className="w-24 shrink-0 text-[13px] text-[var(--ink)]">{p.label}</span>
+                        <span className="w-24 shrink-0 text-[0.875rem] text-[var(--ink)]">{p.label}</span>
                         <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--panel-3)]">
                           <span className="block h-full rounded-full bg-[var(--ok)]" style={{ width: `${frac * 100}%` }} />
                         </span>
@@ -980,10 +980,10 @@ const PackSummary: React.FC<{
 
 const SummaryStat: React.FC<{ value: string; label: string; note?: string; bar?: number; tone?: string }> = ({ value, label, note, bar, tone }) => (
   <div className="lab-panel rounded-2xl p-5">
-    <div className="text-[32px] font-semibold leading-none tracking-[-0.03em] tabular-nums" style={tone ? { color: tone } : undefined}>
+    <div className="text-[2rem] font-semibold leading-none tracking-[-0.03em] tabular-nums" style={tone ? { color: tone } : undefined}>
       {value}
     </div>
-    <div className="mt-2 text-[13px] font-medium text-[var(--ink)]">{label}</div>
+    <div className="mt-2 text-[0.875rem] font-medium text-[var(--ink)]">{label}</div>
     {bar != null && (
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--panel-3)]">
         <div className="h-full rounded-full bg-[var(--ok)]" style={{ width: `${Math.min(1, bar) * 100}%` }} />
@@ -996,13 +996,13 @@ const SummaryStat: React.FC<{ value: string; label: string; note?: string; bar?:
 const SplitCount: React.FC<{ n: number; label: string; hint: string }> = ({ n, label, hint }) => (
   <div className="rounded-xl border border-[var(--rule)] px-4 py-3">
     <div className="text-2xl font-semibold tabular-nums tracking-[-0.02em]">{n}</div>
-    <div className="mt-0.5 text-[13px] text-[var(--ink)]">{label}</div>
+    <div className="mt-0.5 text-[0.875rem] text-[var(--ink)]">{label}</div>
     <div className="text-xs text-[var(--ink-2)]">{hint}</div>
   </div>
 );
 
 const Key: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-[5px] border border-current px-1 font-mono text-[11px] opacity-80">
+  <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-[5px] border border-current px-1 font-mono text-[0.75rem] opacity-80">
     {children}
   </kbd>
 );
@@ -1054,7 +1054,7 @@ const ActionBar: React.FC<{
   if (picking) {
     return (
       <div className="lab-panel lab-fade-up shrink-0 rounded-2xl p-4">
-        <div className="mb-3 flex items-center justify-between gap-4 text-[13px]">
+        <div className="mb-3 flex items-center justify-between gap-4 text-[0.875rem]">
           <span className="text-[var(--ink)]">
             Why is it wrong? <span className="text-[var(--ink-2)]">Pick the closest reason. Not sure is a fine answer.</span>
           </span>
@@ -1065,7 +1065,7 @@ const ActionBar: React.FC<{
         <div className="flex flex-wrap gap-x-6 gap-y-3">
           {groups.map((g) => (
             <div key={g.stage || 'other'} className="flex flex-wrap items-center gap-2">
-              {g.stage && <span className="mr-1 text-[11px] text-[var(--muted)]">{g.stage}</span>}
+              {g.stage && <span className="mr-1 text-[0.75rem] text-[var(--muted)]">{g.stage}</span>}
               {g.items.map((f) => {
                 const chosen = f.id === currentType;
                 return (
@@ -1075,7 +1075,7 @@ const ActionBar: React.FC<{
                     disabled={saving}
                     title={f.hint}
                     aria-pressed={chosen}
-                    className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border px-3 py-2 text-left text-[13px] text-[var(--ink)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] disabled:opacity-50"
+                    className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border px-3 py-2 text-left text-[0.875rem] text-[var(--ink)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] disabled:opacity-50"
                     style={{
                       borderColor: chosen ? STAGE_COLOR[f.stage] : tint(STAGE_COLOR[f.stage], 0.35),
                       background: chosen ? tint(STAGE_COLOR[f.stage], 0.12) : undefined,
@@ -1087,9 +1087,9 @@ const ActionBar: React.FC<{
                     <span className="flex flex-col items-start leading-tight">
                       <span>
                         {f.plain ?? f.label}
-                        {chosen && <span className="ml-1.5 text-[11px] text-[var(--ink-2)]">(your label)</span>}
+                        {chosen && <span className="ml-1.5 text-[0.75rem] text-[var(--ink-2)]">(your label)</span>}
                       </span>
-                      <span className="text-[11px] text-[var(--ink-2)]">{f.hint}</span>
+                      <span className="text-[0.75rem] text-[var(--ink-2)]">{f.hint}</span>
                     </span>
                   </button>
                 );
@@ -1100,7 +1100,7 @@ const ActionBar: React.FC<{
             onClick={onUnsure}
             disabled={saving}
             aria-pressed={current === 'wrong'}
-            className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border border-[var(--rule-2)] px-3 py-2 text-left text-[13px] text-[var(--ink)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] disabled:opacity-50"
+            className="flex min-h-[52px] items-center gap-2.5 rounded-[9px] border border-[var(--rule-2)] px-3 py-2 text-left text-[0.875rem] text-[var(--ink)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] disabled:opacity-50"
             style={current === 'wrong' ? { borderColor: 'var(--ink-2)', background: 'color-mix(in srgb, var(--ink) 6%, transparent)' } : undefined}
           >
             <span className="text-[var(--ink-2)]">
@@ -1109,9 +1109,9 @@ const ActionBar: React.FC<{
             <span className="flex flex-col items-start leading-tight">
               <span>
                 Wrong, not sure why
-                {current === 'wrong' && <span className="ml-1.5 text-[11px] text-[var(--ink-2)]">(your label)</span>}
+                {current === 'wrong' && <span className="ml-1.5 text-[0.75rem] text-[var(--ink-2)]">(your label)</span>}
               </span>
-              <span className="text-[11px] text-[var(--ink-2)]">Still counts as wrong.</span>
+              <span className="text-[0.75rem] text-[var(--ink-2)]">Still counts as wrong.</span>
             </span>
           </button>
         </div>
@@ -1139,7 +1139,7 @@ const ActionBar: React.FC<{
       ) : (
         <button
           onClick={onSkip}
-          className="flex h-14 shrink-0 items-center gap-2 rounded-xl border border-[var(--rule)] px-4 text-[13px] text-[var(--ink-2)] transition-colors hover:text-[var(--ink)]"
+          className="flex h-14 shrink-0 items-center gap-2 rounded-xl border border-[var(--rule)] px-4 text-[0.875rem] text-[var(--ink-2)] transition-colors hover:text-[var(--ink)]"
         >
           <SkipForward className="h-4 w-4" /> Skip <span className="text-[var(--muted)]"><Key>S</Key></span>
         </button>
@@ -1182,7 +1182,7 @@ const BigChoice: React.FC<{
     disabled={disabled}
     aria-pressed={selected}
     className={cn(
-      'flex h-14 min-w-0 flex-1 items-center justify-center gap-3 rounded-xl border text-[15px] font-semibold transition-colors disabled:opacity-50'
+      'flex h-14 min-w-0 flex-1 items-center justify-center gap-3 rounded-xl border text-[1rem] font-semibold transition-colors disabled:opacity-50'
     )}
     style={{
       borderColor: selected ? color : tint(color, 0.45),
@@ -1193,7 +1193,7 @@ const BigChoice: React.FC<{
   >
     {icon}
     {children}
-    {selected && <span className="text-[12px] font-medium opacity-80">· your label</span>}
+    {selected && <span className="text-[0.8125rem] font-medium opacity-80">· your label</span>}
     <Key>{hotkey}</Key>
   </button>
 );
@@ -1203,11 +1203,11 @@ const WaitingForRun: React.FC<{ p: RunProgress }> = ({ p }) => {
   return (
     <div className="lab-panel mx-auto max-w-xl rounded-2xl p-7">
       <h2 className="text-lg font-semibold tracking-[-0.01em]">Waiting for this pack's run to finish</h2>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--ink-2)]">
+      <p className="mt-1.5 text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
         A run over the full question set is still scoring answers. Labelling starts on that run so both of you label the
         same answers. This page refreshes on its own.
       </p>
-      <div className="mt-5 flex items-baseline justify-between text-[13px]">
+      <div className="mt-5 flex items-baseline justify-between text-[0.875rem]">
         <span className="font-mono text-xs text-[var(--ink-2)]">{p.batch_id}</span>
         <span className="tabular-nums text-[var(--ink-1)]">
           {p.done ?? 0} / {p.total ?? '—'} answers
