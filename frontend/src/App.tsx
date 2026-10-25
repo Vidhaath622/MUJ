@@ -52,6 +52,36 @@ function forgetSession() {
   }
 }
 
+// Every new browser session starts on the sign-in screen. Once someone is in, this tab remembers
+// how (demo or a real account), so reloads go straight back to the app.
+const ENTERED_KEY = 'ragseal.entered';
+type Entered = 'demo' | 'account';
+
+function enteredAs(): Entered | null {
+  try {
+    const v = sessionStorage.getItem(ENTERED_KEY);
+    return v === 'demo' || v === 'account' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+function markEntered(user: AuthUser) {
+  try {
+    sessionStorage.setItem(ENTERED_KEY, user.email === DEMO_EMAIL ? 'demo' : 'account');
+  } catch {
+    // storage unavailable: the next reload shows sign-in again
+  }
+}
+
+function clearEntered() {
+  try {
+    sessionStorage.removeItem(ENTERED_KEY);
+  } catch {
+    // storage unavailable: nothing was stored
+  }
+}
+
 function storedToken(): string | null {
   try {
     return JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null')?.token ?? null;
@@ -80,8 +110,12 @@ export const App: React.FC = () => {
   const [isLiveBackend, setIsLiveBackend] = useState<boolean>(true);
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
-  // True once the startup auto-login has finished, so the sign-in screen never flashes during it.
+  // True once the startup check has finished, so the sign-in screen never flashes during it.
   const [authChecked, setAuthChecked] = useState<boolean>(false);
+  // How this tab got in earlier (null = a new session, which starts on the sign-in screen).
+  const [entered] = useState<Entered | null>(enteredAs);
+  // A real account remembered on this device, offered on the sign-in screen as "Continue as".
+  const [remembered, setRemembered] = useState<{ user: AuthUser; token: string } | null>(null);
   const [, setServerRunHistory] = useState<any[]>([]);
 
   const [isDocVaultOpen, setIsDocVaultOpen] = useState<boolean>(false);
@@ -89,11 +123,9 @@ export const App: React.FC = () => {
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
 
   // Default logged in user per contract: demo@ragseal.dev
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>({
-    id: 'usr_seeded_demo',
-    email: 'demo@ragseal.dev',
-    name: 'Lead Evaluator',
-  });
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() =>
+    entered === 'demo' ? { id: 'usr_seeded_demo', email: DEMO_EMAIL, name: 'Lead Evaluator' } : null
+  );
 
   // Check health and auto-login on startup
   useEffect(() => {
@@ -104,21 +136,31 @@ export const App: React.FC = () => {
       if (health) {
         setBackendHealth(health);
         setIsLiveBackend(true);
-        // A remembered real account wins; an expired or revoked token falls back to the demo.
+        // A remembered real account is checked first; an expired or revoked token is dropped.
         const saved = storedToken();
+        let savedUser: AuthUser | null = null;
         if (saved) {
           try {
-            const user = await fetchCurrentUser(saved);
-            if (!mounted) return;
-            setAuthToken(saved);
-            setCurrentUser(user);
-            setAuthChecked(true);
-            return;
+            savedUser = await fetchCurrentUser(saved);
           } catch {
             forgetSession();
           }
         }
-        // Login seeded demo user to obtain real JWT token
+        if (!mounted) return;
+        // A new session (or an account whose token lapsed) starts on the sign-in screen.
+        if (!entered || (entered === 'account' && !savedUser)) {
+          if (saved && savedUser) setRemembered({ user: savedUser, token: saved });
+          clearEntered();
+          setAuthChecked(true);
+          return;
+        }
+        if (saved && savedUser) {
+          setAuthToken(saved);
+          setCurrentUser(savedUser);
+          setAuthChecked(true);
+          return;
+        }
+        // This tab entered as the demo earlier: sign it in again for a fresh token.
         try {
           const auth = await loginUser('demo@ragseal.dev', 'demo1234');
           if (!mounted) return;
@@ -143,7 +185,7 @@ export const App: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [entered]);
 
   // Current active industry pack
   const currentPack = INDUSTRY_PACKS[activePackId] || INDUSTRY_PACKS.recruitment;
@@ -172,13 +214,26 @@ export const App: React.FC = () => {
     if (h) setIsLiveBackend(true);
   };
 
+  // A new session waits on a blank page for the startup check, so the app never flashes first.
+  if (!authChecked && !entered) {
+    return <div className="min-h-screen bg-[var(--paper)]" />;
+  }
+
   // #/signin also opens it on purpose (e.g. to demo the screen without signing out).
+  // Any other deep link (#/diagnose…) stays in the address bar and opens once signed in.
   if ((authChecked && !authToken) || window.location.hash.startsWith('#/signin')) {
     return (
       <SignInScreen
         backendDown={!isLiveBackend}
+        remembered={remembered}
+        onForget={() => {
+          forgetSession();
+          setRemembered(null);
+        }}
         onSignedIn={(user, token) => {
           rememberSession(user, token);
+          markEntered(user);
+          setRemembered(null);
           setCurrentUser(user);
           setAuthToken(token);
           setIsAuthOpen(false);
@@ -202,6 +257,7 @@ export const App: React.FC = () => {
             ? () => {
                 // Leave the demo for the sign-in screen, which offers email and Google.
                 forgetSession();
+                clearEntered();
                 setAuthToken(null);
                 setCurrentUser(null);
               }
@@ -310,6 +366,7 @@ export const App: React.FC = () => {
           setCurrentUser(user);
           if (token) {
             rememberSession(user, token);
+            markEntered(user);
             setAuthToken(token);
             fetchRunHistory(token).then((runs) => {
               if (runs && runs.length > 0) setServerRunHistory(runs);
@@ -318,6 +375,7 @@ export const App: React.FC = () => {
         }}
         onLogout={() => {
           forgetSession();
+          clearEntered();
           setCurrentUser(null);
           setAuthToken(null);
         }}

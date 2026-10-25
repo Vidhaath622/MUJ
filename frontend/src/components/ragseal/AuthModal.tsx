@@ -160,7 +160,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <GoogleSignInButton
-                width={400}
                 onSignedIn={(user, token) => {
                   onLogin(user, token);
                   onClose();
