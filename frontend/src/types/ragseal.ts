@@ -45,6 +45,8 @@ export interface Replay {
   answer_accuracy: number | null;
   faithfulness: number;
   verdict_effect: string;
+  /** Which half the verdict blames; the replay explanation follows it. */
+  blames?: 'retriever' | 'generator' | 'both';
 }
 
 export interface EvidenceItem {
