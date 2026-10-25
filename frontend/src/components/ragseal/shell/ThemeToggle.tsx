@@ -55,7 +55,7 @@ export const ThemeToggle: React.FC = () => {
       }}
       aria-label={`Switch to ${next} theme`}
       title={`Switch to ${next} theme`}
-      className="mt-2 flex h-9 w-full items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] lg:justify-start"
+      className="mt-2 flex h-9 w-full items-center justify-center gap-2.5 rounded-lg px-2.5 text-[0.875rem] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] lg:justify-start"
     >
       <span className="flex h-6 w-6 shrink-0 items-center justify-center">
         {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

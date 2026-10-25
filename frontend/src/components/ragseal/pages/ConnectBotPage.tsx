@@ -257,7 +257,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
   const canRun = !!token && !!form.url.trim() && !progress && !starting;
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
+    <div className="mx-auto flex max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-5 px-6 py-6">
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -276,7 +276,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
             </Field>
             <Field label="Endpoint URL" hint="RAGSeal sends a POST with the question and reads the answer and the passages it used.">
               <input
-                className={cn(INPUT, 'font-mono text-[12.5px]')}
+                className={cn(INPUT, 'font-mono text-[0.84375rem]')}
                 value={form.url}
                 placeholder="https://your-bot.example.com/ask"
                 spellCheck={false}
@@ -289,14 +289,14 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
                 {form.headers.map((h, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <input
-                      className={cn(INPUT, 'w-[40%] font-mono text-[12.5px]')}
+                      className={cn(INPUT, 'w-[40%] font-mono text-[0.84375rem]')}
                       value={h.name}
                       placeholder="Authorization"
                       aria-label="Header name"
                       onChange={(e) => set('headers', form.headers.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
                     />
                     <input
-                      className={cn(INPUT, 'min-w-0 flex-1 font-mono text-[12.5px]')}
+                      className={cn(INPUT, 'min-w-0 flex-1 font-mono text-[0.84375rem]')}
                       type="password"
                       value={h.value}
                       placeholder="value"
@@ -331,7 +331,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
                 checked={form.accepts_contexts}
                 onChange={(e) => set('accepts_contexts', e.target.checked)}
               />
-              <span className="text-[13px] leading-relaxed">
+              <span className="text-[0.875rem] leading-relaxed">
                 <span className="font-medium text-[var(--ink)]">Accepts contexts (enables replay)</span>
                 <span className="block text-xs text-[var(--ink-2)]">
                   If your bot answers from passages sent in <span className="font-mono">{form.contexts_field || 'contexts'}</span>, RAGSeal
@@ -347,16 +347,16 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
               </summary>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <Field label="Question field">
-                  <input className={cn(INPUT, 'font-mono text-[12.5px]')} value={form.question_field} onChange={(e) => set('question_field', e.target.value)} />
+                  <input className={cn(INPUT, 'font-mono text-[0.84375rem]')} value={form.question_field} onChange={(e) => set('question_field', e.target.value)} />
                 </Field>
                 <Field label="Contexts field">
-                  <input className={cn(INPUT, 'font-mono text-[12.5px]')} value={form.contexts_field} onChange={(e) => set('contexts_field', e.target.value)} />
+                  <input className={cn(INPUT, 'font-mono text-[0.84375rem]')} value={form.contexts_field} onChange={(e) => set('contexts_field', e.target.value)} />
                 </Field>
                 <Field label="Answer path" hint="e.g. data.reply">
-                  <input className={cn(INPUT, 'font-mono text-[12.5px]')} value={form.answer_path} onChange={(e) => set('answer_path', e.target.value)} />
+                  <input className={cn(INPUT, 'font-mono text-[0.84375rem]')} value={form.answer_path} onChange={(e) => set('answer_path', e.target.value)} />
                 </Field>
                 <Field label="Passages path" hint="e.g. sources[*].text">
-                  <input className={cn(INPUT, 'font-mono text-[12.5px]')} value={form.contexts_path} onChange={(e) => set('contexts_path', e.target.value)} />
+                  <input className={cn(INPUT, 'font-mono text-[0.84375rem]')} value={form.contexts_path} onChange={(e) => set('contexts_path', e.target.value)} />
                 </Field>
                 <Field label="Timeout (seconds)">
                   <input
@@ -369,7 +369,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
                   />
                 </Field>
               </div>
-              <pre className="mt-3 overflow-x-auto rounded-xl bg-[var(--panel)] px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-[var(--ink-1)]">
+              <pre className="mt-3 overflow-x-auto rounded-xl bg-[var(--panel)] px-3.5 py-3 font-mono text-[0.78125rem] leading-relaxed text-[var(--ink-1)]">
 {`POST ${form.url.trim() || '<your url>'}
 { "${form.question_field || 'question'}": "…"${form.accepts_contexts ? `, "${form.contexts_field || 'contexts'}": ["…"]` : ''} }
 
@@ -395,7 +395,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 px-6 text-center">
               <Plug className="h-5 w-5 text-[var(--muted)]" />
               <div className="text-sm font-medium text-[var(--ink-1)]">Not tested yet</div>
-              <p className="max-w-sm text-[13px] leading-relaxed text-[var(--ink-2)]">
+              <p className="max-w-sm text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
                 Fill in your bot&rsquo;s URL and press Test connection. No bot handy? Use our sample bot to see how it works.
               </p>
             </div>
@@ -406,7 +406,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
       <Panel raised title="Run a test pack against this bot" note="the same questions, traps and replay as our own bot">
         <div className="flex flex-wrap items-center gap-3">
           <PackSwitcher value={packId} onChange={choosePack} />
-          <div className="flex items-center gap-0.5 rounded-[10px] border border-[var(--panel-2)] p-[3px] text-[13px]">
+          <div className="flex items-center gap-0.5 rounded-[10px] border border-[var(--panel-2)] p-[3px] text-[0.875rem]">
             {[true, false].map((q) => (
               <button
                 key={String(q)}
@@ -441,7 +441,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
                 <li key={r.batch_id}>
                   <button
                     onClick={() => onOpenRun(r.batch_id, r.pack_id)}
-                    className="flex w-full items-center gap-3 py-2 text-left text-[13px] hover:text-[var(--ink)]"
+                    className="flex w-full items-center gap-3 py-2 text-left text-[0.875rem] hover:text-[var(--ink)]"
                   >
                     <span className="min-w-0 flex-1 truncate text-[var(--ink)]">{r.bot}</span>
                     <span className="text-[var(--ink-2)]">
@@ -461,7 +461,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
 };
 
 const INPUT =
-  'h-10 w-full rounded-[10px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 text-[13.5px] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--rule-3)]';
+  'h-10 w-full rounded-[10px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 text-[0.90625rem] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--rule-3)]';
 
 function hostOf(url: string): string {
   try {
@@ -475,7 +475,7 @@ const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode 
   <div className="flex flex-col gap-1.5">
     <span className="text-xs font-medium text-[var(--ink-1)]">{label}</span>
     {children}
-    {hint && <span className="text-[11.5px] leading-snug text-[var(--ink-2)]">{hint}</span>}
+    {hint && <span className="text-[0.78125rem] leading-snug text-[var(--ink-2)]">{hint}</span>}
   </div>
 );
 
@@ -484,7 +484,7 @@ const TestReport: React.FC<{ test: BotTestResult }> = ({ test }) => {
   const replay = test.replay === 'available';
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.875rem]">
         <span className="flex items-center gap-2 font-medium" style={{ color: test.ok ? PASS : RED }}>
           {test.ok ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
           {test.ok ? 'Connected' : 'Couldn’t reach your bot'}
@@ -508,7 +508,7 @@ const TestReport: React.FC<{ test: BotTestResult }> = ({ test }) => {
       {test.question && test.ok && (
         <div>
           <div className="text-xs text-[var(--ink-2)]">Asked: {test.question}</div>
-          <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-normal text-[var(--ink)]">{test.answer || 'Empty answer.'}</p>
+          <p className="mt-1.5 whitespace-pre-wrap text-[1rem] leading-normal text-[var(--ink)]">{test.answer || 'Empty answer.'}</p>
         </div>
       )}
 
@@ -553,7 +553,7 @@ const RunProgressBar: React.FC<{ progress: RunProgress }> = ({ progress }) => {
   const total = progress.total ?? 0;
   return (
     <div className="mt-5">
-      <div className="flex items-baseline justify-between text-[13px]">
+      <div className="flex items-baseline justify-between text-[0.875rem]">
         <span className="text-[var(--ink)]">
           <span className="font-semibold tabular-nums">{done}</span>
           <span className="text-[var(--ink-2)]"> / {total || '—'} questions scored</span>
@@ -580,10 +580,10 @@ const RunResult: React.FC<{ summary: RunSummary; onOpen: () => void }> = ({ summ
     <div className="mt-5 flex flex-wrap items-end justify-between gap-5">
       <div>
         <div className="flex items-baseline gap-2.5">
-          <span className="text-[40px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-[var(--ink)]">
+          <span className="text-[2.5rem] font-semibold leading-none tracking-[-0.04em] tabular-nums text-[var(--ink)]">
             {pct(summary.aggregates?.pass_rate)}
           </span>
-          <span className="text-[13px] text-[var(--ink-2)]">answered accurately · {summary.total_evaluated ?? n} questions</span>
+          <span className="text-[0.875rem] text-[var(--ink-2)]">answered accurately · {summary.total_evaluated ?? n} questions</span>
         </div>
         {n > 0 && (
           <div className="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-xs">

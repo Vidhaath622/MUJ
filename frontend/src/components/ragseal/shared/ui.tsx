@@ -33,7 +33,7 @@ export const Panel: React.FC<{
 }> = ({ title, note, className, bodyClassName, raised, children }) => (
   <section className={cn(raised ? 'lab-panel' : 'lab-panel-flat', 'flex min-h-0 flex-col rounded-2xl', className)}>
     {title && (
-      <div className="flex items-baseline justify-between gap-3 border-b border-[var(--rule)] px-5 py-3.5 text-[13px]">
+      <div className="flex items-baseline justify-between gap-3 border-b border-[var(--rule)] px-5 py-3.5 text-[0.875rem]">
         <h2 className="font-medium text-[var(--ink)]">{title}</h2>
         {note && <span className="text-xs text-[var(--ink-2)]">{note}</span>}
       </div>
@@ -54,7 +54,7 @@ export const Metric: React.FC<{
     <div
       className={cn(
         'mt-1 font-semibold tabular-nums tracking-[-0.03em]',
-        big ? 'text-[40px] leading-none' : 'text-[22px] leading-tight'
+        big ? 'text-[2.5rem] leading-none' : 'text-[1.375rem] leading-tight'
       )}
       style={{ color: color ?? 'var(--ink)' }}
     >
@@ -77,7 +77,7 @@ export const PackSwitcher: React.FC<{
   const options: (PackOption | { id: PackId; label: string; group?: string; questions?: number })[] = packs ?? all;
   if (options.length > MAX_TABS) return <PackMenu value={value} onChange={onChange} options={options} />;
   return (
-    <div className="flex max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-[10px] border border-[var(--panel-2)] p-[3px] text-xs sm:text-[13px] no-scrollbar" role="tablist">
+    <div className="flex max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-[10px] border border-[var(--panel-2)] p-[3px] text-xs sm:text-[0.875rem] no-scrollbar" role="tablist">
       {options.map((p) => (
         <button
           key={p.id}
@@ -107,7 +107,7 @@ const PackMenu: React.FC<{
   const groups = PACK_GROUPS.map((g) => ({ g, items: options.filter((o) => (o.group ?? 'Other') === g) })).filter((x) => x.items.length);
   const known = options.some((o) => o.id === value);
   return (
-    <label className="relative flex shrink-0 items-center rounded-[10px] border border-[var(--panel-2)] text-xs sm:text-[13px]">
+    <label className="relative flex shrink-0 items-center rounded-[10px] border border-[var(--panel-2)] text-xs sm:text-[0.875rem]">
       <span className="sr-only">Test pack</span>
       <select
         value={known ? value : ''}
@@ -142,7 +142,7 @@ export const PrimaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElemen
     {...rest}
     disabled={disabled || busy}
     className={cn(
-      'flex h-[34px] items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-[var(--ink)] px-3.5 text-[13px] font-semibold text-[var(--paper)] transition-colors hover:bg-[var(--ink-1)] disabled:cursor-not-allowed disabled:bg-[var(--panel-2)] disabled:text-[var(--ink-2)]',
+      'flex h-[34px] items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-[var(--ink)] px-3.5 text-[0.875rem] font-semibold text-[var(--paper)] transition-colors hover:bg-[var(--ink-1)] disabled:cursor-not-allowed disabled:bg-[var(--panel-2)] disabled:text-[var(--ink-2)]',
       className
     )}
   >
@@ -155,7 +155,7 @@ export const GhostButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>
   <button
     {...rest}
     className={cn(
-      'flex h-[34px] items-center gap-2 whitespace-nowrap rounded-[9px] border border-[var(--rule-2)] px-3 text-[13px] text-[var(--ink-1)] transition-colors hover:border-[var(--rule-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50',
+      'flex h-[34px] items-center gap-2 whitespace-nowrap rounded-[9px] border border-[var(--rule-2)] px-3 text-[0.875rem] text-[var(--ink-1)] transition-colors hover:border-[var(--rule-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50',
       className
     )}
   >
@@ -178,7 +178,7 @@ export const EmptyState: React.FC<{
   >
     {icon && <div className="mb-1 text-[var(--muted)]">{icon}</div>}
     <div className="text-sm font-medium text-[var(--ink-1)]">{title}</div>
-    {children && <div className="max-w-md text-[13px] leading-relaxed text-[var(--ink-2)]">{children}</div>}
+    {children && <div className="max-w-md text-[0.875rem] leading-relaxed text-[var(--ink-2)]">{children}</div>}
   </div>
 );
 
@@ -247,7 +247,7 @@ export const SampleBadge: React.FC<{ className?: string }> = ({ className }) => 
   <span
     title="A sample run from the demo account. Run this pack to get your own."
     className={cn(
-      'inline-flex items-center rounded-full border border-[var(--rule-2)] px-1.5 py-px text-[10.5px] font-medium text-[var(--ink-2)]',
+      'inline-flex items-center rounded-full border border-[var(--rule-2)] px-1.5 py-px text-[0.71875rem] font-medium text-[var(--ink-2)]',
       className
     )}
   >

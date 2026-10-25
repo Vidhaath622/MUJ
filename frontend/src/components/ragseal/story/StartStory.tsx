@@ -153,7 +153,7 @@ export const StartStory: React.FC<StartStoryProps> = ({ token, latest, onOpenPac
 
   if (reduced) {
     return (
-      <div className="mx-auto flex max-w-[1240px] flex-col gap-6 px-6 py-6">
+      <div className="mx-auto flex max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-6 px-6 py-6">
         {hero ? (
           [0.99, 1.99, 2.99, 3.99, 4.99, 5.99, 6.99].map((c) => (
             <div key={c} className="overflow-hidden rounded-2xl" style={{ height: 620, border: '1px solid var(--rule)', background: 'var(--panel)' }}>
@@ -198,7 +198,7 @@ export const StartStory: React.FC<StartStoryProps> = ({ token, latest, onOpenPac
 };
 
 const EmptyHero: React.FC<{ latest: Latest | null }> = ({ latest }) => (
-  <div className="rounded-2xl px-6 py-5 text-[14px]" style={{ border: '1px solid var(--rule)', background: 'var(--panel)', color: 'var(--ink-2)' }}>
+  <div className="rounded-2xl px-6 py-5 text-[0.9375rem]" style={{ border: '1px solid var(--rule)', background: 'var(--panel)', color: 'var(--ink-2)' }}>
     {latest ? 'Run the Banking pack once to see one question followed end to end here.' : 'Loading the latest test run…'}
   </div>
 );
@@ -257,7 +257,7 @@ const Stage: React.FC<{
 
   return (
     <div
-      className="relative mx-auto flex h-full max-w-[1240px] 2xl:max-w-[1520px] flex-col justify-center px-4 sm:px-8 lg:pr-14 pb-4 sm:pb-6 pt-5 sm:pt-7"
+      className="relative mx-auto flex h-full max-w-[77.5rem] 2xl:max-w-[88rem] 2xl:max-w-[1520px] flex-col justify-center px-4 sm:px-8 lg:pr-14 pb-4 sm:pb-6 pt-5 sm:pt-7"
       style={{ opacity: 1 - outro, transform: `translateX(${jitter}px) scale(${1 - 0.03 * outro})` }}
     >
       {/* Progress bar */}
@@ -273,7 +273,7 @@ const Stage: React.FC<{
           const o = still ? (Math.floor(c) === i ? 1 : 0) : i === 0 ? fadeOut : seg(c, i - 0.04, i + 0.05) * fadeOut;
           return (
             <div key={i} className="absolute inset-0" style={{ opacity: o, transform: `translateY(${(1 - o) * 8}px)` }}>
-              <div className="flex items-baseline gap-2 sm:gap-3 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--ink-2)' }}>
+              <div className="flex items-baseline gap-2 sm:gap-3 font-mono text-[0.71875rem] sm:text-[0.75rem] uppercase tracking-[0.14em]" style={{ color: 'var(--ink-2)' }}>
                 <span>{String(i + 1).padStart(2, '0')} / {String(CHAPTERS).padStart(2, '0')}</span>
                 <span>{cap.eyebrow}</span>
                 {i === 1 && docCount > 0 && (
@@ -282,7 +282,7 @@ const Stage: React.FC<{
                   </span>
                 )}
               </div>
-              <h2 className="mt-1 sm:mt-2 max-w-[1120px] text-[20px] sm:text-[26px] md:text-[31px] leading-[1.15]" style={{ color: 'var(--ink)' }}>
+              <h2 className="mt-1 sm:mt-2 max-w-[1120px] text-[1.25rem] sm:text-[1.625rem] md:text-[1.9375rem] leading-[1.15]" style={{ color: 'var(--ink)' }}>
                 {cap.title}
               </h2>
             </div>
@@ -297,7 +297,7 @@ const Stage: React.FC<{
       >
         {/* Chat */}
         <div className="lab-fade-up flex min-h-0 flex-col gap-3 rounded-2xl p-5" style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}>
-          <div className="flex items-center gap-2.5 text-[12px]" style={{ color: 'var(--ink-2)' }}>
+          <div className="flex items-center gap-2.5 text-[0.8125rem]" style={{ color: 'var(--ink-2)' }}>
             <span className="relative flex h-7 w-7 items-center justify-center rounded-full" style={{ background: tint('--ink', 8), color: 'var(--ink)' }}>
               <Bot className="h-4 w-4" />
               <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" style={{ background: 'var(--ok)', border: '2px solid var(--panel)' }} />
@@ -306,11 +306,11 @@ const Stage: React.FC<{
               <span style={{ color: 'var(--ink)' }}>{PERSONA.banking}</span> · chatbot
             </span>
           </div>
-          <div className="ml-auto max-w-[92%] rounded-2xl rounded-br-md px-4 py-3 text-[15px] leading-snug" style={{ background: 'var(--ink)', color: 'var(--paper)' }}>
+          <div className="ml-auto max-w-[92%] rounded-2xl rounded-br-md px-4 py-3 text-[1rem] leading-snug" style={{ background: 'var(--ink)', color: 'var(--paper)' }}>
             {hero.query}
           </div>
           {c < 3.05 && (
-            <div className="flex items-center gap-2 text-[12.5px]" style={{ color: 'var(--ink-2)', opacity: waitGenerator }}>
+            <div className="flex items-center gap-2 text-[0.84375rem]" style={{ color: 'var(--ink-2)', opacity: waitGenerator }}>
               <span className="inline-flex items-center gap-1 rounded-2xl rounded-bl-md px-3 py-2.5" style={{ background: 'var(--paper)', border: '1px solid var(--rule)' }}>
                 {[0, 1, 2].map((i) => (
                   <span key={i} className={still ? '' : 'typing-dot'} style={{ animationDelay: `${i * 0.15}s` }}>
@@ -324,7 +324,7 @@ const Stage: React.FC<{
 
           {c >= 3.05 && (
             <div
-              className="relative max-w-[94%] rounded-2xl rounded-bl-md px-4 py-3 text-[15px] leading-snug"
+              className="relative max-w-[94%] rounded-2xl rounded-bl-md px-4 py-3 text-[1rem] leading-snug"
               style={{
                 background: 'var(--paper)',
                 border: `1px solid ${c >= 5.5 ? tint('--ok', 45) : c >= 4 ? tint('--gen', 40) : 'var(--rule)'}`,
@@ -336,14 +336,14 @@ const Stage: React.FC<{
                   <Figures text={shownAnswer} keep={keep} color={c >= 4 ? 'var(--gen)' : 'var(--ink)'} />
                   {!still && typing < 1 && c < 5 && <Caret />}
                   {typing >= 1 && c < 5 && cited.size > 0 && (
-                    <div className="mt-2 font-mono text-[11px]" style={{ color: 'var(--ink-2)' }}>
+                    <div className="mt-2 font-mono text-[0.75rem]" style={{ color: 'var(--ink-2)' }}>
                       cites {chunks.filter((ch) => cited.has(ch.chunk_id)).map((ch) => ch.filename ?? ch.chunk_id).join(', ')}
                     </div>
                   )}
                 </>
               ) : (
                 <>
-                  <div className="mb-1 font-mono text-[10.5px] uppercase tracking-[0.12em]" style={{ color: 'var(--ok)' }}>
+                  <div className="mb-1 font-mono text-[0.71875rem] uppercase tracking-[0.12em]" style={{ color: 'var(--ok)' }}>
                     Replay
                   </div>
                   <Figures text={shownReplay} keep={keep} color="var(--ok)" />
@@ -354,7 +354,7 @@ const Stage: React.FC<{
                     </span>
                   )}
                   {retype >= 1 && answer && (
-                    <div className="mt-2 text-[12px] line-through" style={{ color: 'var(--ink-2)' }}>
+                    <div className="mt-2 text-[0.8125rem] line-through" style={{ color: 'var(--ink-2)' }}>
                       {answer}
                     </div>
                   )}
@@ -363,7 +363,7 @@ const Stage: React.FC<{
             </div>
           )}
           {c >= 3.05 && hero.ground_truth && (
-            <div className="mt-auto text-[12px]" style={{ color: 'var(--ink-2)', opacity: seg(c, 3.8, 4.1) }}>
+            <div className="mt-auto text-[0.8125rem]" style={{ color: 'var(--ink-2)', opacity: seg(c, 3.8, 4.1) }}>
               Known answer: <span style={{ color: 'var(--ink)' }}>{hero.ground_truth}</span>
             </div>
           )}
@@ -374,7 +374,7 @@ const Stage: React.FC<{
           {/* Waiting: what the retriever is about to do, over a faint field of passages */}
           {c < 1 && (
             <div className="absolute inset-0 flex flex-col p-5" style={{ opacity: waitRetriever }}>
-              <div className="font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)' }}>
+              <div className="font-mono text-[0.75rem] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)' }}>
                 Retriever · waiting
               </div>
               <div className="mt-4 grid flex-1 content-start gap-[6px] opacity-60" style={{ gridTemplateColumns: 'repeat(6, minmax(0,1fr))' }}>
@@ -386,7 +386,7 @@ const Stage: React.FC<{
                   />
                 ))}
               </div>
-              <p className="mt-3 max-w-[440px] text-[13.5px] leading-snug" style={{ color: 'var(--ink-2)' }}>
+              <p className="mt-3 max-w-[440px] text-[0.90625rem] leading-snug" style={{ color: 'var(--ink-2)' }}>
                 Next, it searches {passageCount ? `${passageCount} passages from ` : ''}
                 {docCount ? `${docCount} bank documents` : 'the bank’s documents'} and hands the bot the best {chunks.length || 4}. One of them is out of date.
               </p>
@@ -402,7 +402,7 @@ const Stage: React.FC<{
                   className="rounded-xl px-3 py-3"
                   style={{ border: '1px solid var(--rule)', background: 'var(--paper)', opacity: t, transform: `translateY(${(1 - t) * -28}px)` }}
                 >
-                  <div className="truncate font-mono text-[12px]" style={{ color: 'var(--ink)' }}>
+                  <div className="truncate font-mono text-[0.8125rem]" style={{ color: 'var(--ink)' }}>
                     {d.filename}
                   </div>
                   <div className="mt-2 flex gap-[3px]">
@@ -436,7 +436,7 @@ const Stage: React.FC<{
 
           {/* Retrieved passages */}
           <div className="absolute inset-0 flex flex-col gap-2.5 overflow-hidden p-5">
-            <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)', opacity: pick }}>
+            <div className="flex items-center justify-between font-mono text-[0.75rem] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)', opacity: pick }}>
               <span>What the bot read</span>
               <span>top {chunks.length}</span>
             </div>
@@ -458,7 +458,7 @@ const Stage: React.FC<{
                     transform: `translateY(${(1 - t) * 16}px) translateX(${out * 36}px)`,
                   }}
                 >
-                  <div className="flex items-center gap-2 text-[11.5px]">
+                  <div className="flex items-center gap-2 text-[0.78125rem]">
                     <span className="truncate font-mono" style={{ color: 'var(--ink)' }}>
                       {ch.filename ?? ch.document_id}
                     </span>
@@ -467,11 +467,11 @@ const Stage: React.FC<{
                         · {heading}
                       </span>
                     )}
-                    <span className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-medium" style={{ color: `var(${tone})`, background: tint(tone, 12) }}>
+                    <span className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[0.71875rem] font-medium" style={{ color: `var(${tone})`, background: tint(tone, 12) }}>
                       {out > 0.5 ? 'Removed for replay' : tag}
                     </span>
                   </div>
-                  <p className="mt-1 line-clamp-2 text-[12.5px] leading-snug" style={{ color: 'var(--ink-2)' }}>
+                  <p className="mt-1 line-clamp-2 text-[0.84375rem] leading-snug" style={{ color: 'var(--ink-2)' }}>
                     <Figures text={body} keep={keep} color={`var(${tone})`} />
                   </p>
                   {out > 0 && (
@@ -485,7 +485,7 @@ const Stage: React.FC<{
 
         {/* Checks */}
         <div className="flex min-h-0 flex-col gap-3 rounded-2xl p-5" style={{ background: 'var(--panel)', border: '1px solid var(--rule)', opacity: c < 1 ? 0.75 : c < 4 ? 0.5 : 1 }}>
-          <div className="font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)' }}>
+          <div className="font-mono text-[0.75rem] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)' }}>
             RAGSeal’s checks{c < 4 ? ' · waiting' : ''}
           </div>
           {checks.map((k, i) => {
@@ -497,10 +497,10 @@ const Stage: React.FC<{
               <div key={k.label} className="flex items-center gap-3" style={{ opacity: c < 4 ? 0.45 : 0.25 + 0.75 * t }}>
                 <Dial value={value * t} color={good ? 'var(--ok)' : 'var(--gen)'} />
                 <div className="min-w-0">
-                  <div className="text-[14px] font-medium" style={{ color: 'var(--ink)' }}>
+                  <div className="text-[0.9375rem] font-medium" style={{ color: 'var(--ink)' }}>
                     {k.label}
                   </div>
-                  <div className="text-[11.5px]" style={{ color: 'var(--ink-2)' }}>
+                  <div className="text-[0.78125rem]" style={{ color: 'var(--ink-2)' }}>
                     {k.tech} ·{' '}
                     {c < 4 ? (
                       'not scored yet'
@@ -514,13 +514,13 @@ const Stage: React.FC<{
             );
           })}
           {c < 4.05 && (
-            <p className="mt-auto text-[13px] leading-snug" style={{ color: 'var(--ink-2)', opacity: waitChecks }}>
+            <p className="mt-auto text-[0.875rem] leading-snug" style={{ color: 'var(--ink-2)', opacity: waitChecks }}>
               Once the bot answers, RAGSeal scores the retriever, the generator and the final answer separately.
             </p>
           )}
           {faithfulButWrong && (
             <div
-              className="mt-auto rounded-xl px-3.5 py-3 text-[14px] leading-snug"
+              className="mt-auto rounded-xl px-3.5 py-3 text-[0.9375rem] leading-snug"
               style={{ background: tint('--gen', 8), border: `1px solid ${tint('--gen', 35)}`, color: 'var(--ink)', opacity: seg(c, 4.65, 4.95) * (1 - seg(c, 5.4, 5.6)) }}
             >
               <span style={{ fontWeight: 600 }}>Faithful, and still wrong.</span> It stuck to the text it was given. The text was the problem.
@@ -537,7 +537,7 @@ const Stage: React.FC<{
             style={{ background: `repeating-linear-gradient(0deg, ${tint('--ink', 6)} 0px, ${tint('--ink', 6)} 1px, transparent 1px, transparent 4px)` }}
           />
           <div className="absolute left-0 right-0 h-16" style={{ top: 0, background: tint('--ink', 8), transform: `translateY(${(1 - rewind) * (height - 64)}px)` }} />
-          <div className="absolute right-10 top-8 font-mono text-[18px] font-semibold tracking-[0.24em]" style={{ color: 'var(--ink)' }}>
+          <div className="absolute right-10 top-8 font-mono text-[1.125rem] font-semibold tracking-[0.24em]" style={{ color: 'var(--ink)' }}>
             ◀◀ REWIND
           </div>
         </div>
@@ -547,7 +547,7 @@ const Stage: React.FC<{
       {stampIn > 0 && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-5">
           <div
-            className="rounded-lg px-7 py-3 font-mono text-[44px] font-bold uppercase tracking-[0.08em]"
+            className="rounded-lg px-7 py-3 font-mono text-[2.75rem] font-bold uppercase tracking-[0.08em]"
             style={{
               color: 'var(--retr)',
               border: '5px double var(--retr)',
@@ -559,7 +559,7 @@ const Stage: React.FC<{
             {(hero.root_cause?.category ?? 'RETRIEVAL_FAILURE').replace(/_/g, ' ')}
           </div>
           <div
-            className="max-w-[640px] rounded-2xl px-6 py-4 text-center text-[15px] leading-relaxed"
+            className="max-w-[640px] rounded-2xl px-6 py-4 text-center text-[1rem] leading-relaxed"
             style={{ background: 'var(--panel)', border: '1px solid var(--rule)', color: 'var(--ink)', opacity: causeIn, transform: `translateY(${(1 - causeIn) * 10}px)` }}
           >
             {hero.root_cause?.summary && (
@@ -582,14 +582,14 @@ const Stage: React.FC<{
       {!still && (
         <div className="relative mt-4 flex h-11 shrink-0 items-center justify-center" style={{ opacity: 1 - seg(c, 6.9, 7.1) }}>
           <div
-            className="flex items-center gap-3 rounded-full py-1.5 pl-3 pr-1.5 text-[13.5px]"
+            className="flex items-center gap-3 rounded-full py-1.5 pl-3 pr-1.5 text-[0.90625rem]"
             style={{ opacity: cue, pointerEvents: cue > 0.2 ? 'auto' : 'none', background: 'var(--panel)', border: '1px solid var(--rule)', color: 'var(--ink)' }}
           >
             <ScrollMouse />
             <span>Scroll to follow the question</span>
             <button
               onClick={onNext}
-              className="inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-opacity hover:opacity-85"
+              className="inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[0.875rem] font-medium transition-opacity hover:opacity-85"
               style={{ background: 'var(--ink)', color: 'var(--paper)' }}
             >
               Next <ChevronDown className="h-3.5 w-3.5" />
@@ -597,7 +597,7 @@ const Stage: React.FC<{
           </div>
           <button
             onClick={onSkip}
-            className="absolute right-0 hidden items-center gap-1 text-[12.5px] transition-opacity hover:opacity-70 sm:inline-flex"
+            className="absolute right-0 hidden items-center gap-1 text-[0.84375rem] transition-opacity hover:opacity-70 sm:inline-flex"
             style={{ color: 'var(--ink-2)' }}
           >
             Skip to results <ArrowRight className="h-3.5 w-3.5" />
@@ -667,7 +667,7 @@ const Rail: React.FC<{ c: number; onJump: (i: number) => void; onNext: () => voi
             }}
           />
           <span
-            className="pointer-events-none absolute right-7 whitespace-nowrap rounded-md px-2 py-1 font-mono text-[10.5px] uppercase tracking-[0.1em] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+            className="pointer-events-none absolute right-7 whitespace-nowrap rounded-md px-2 py-1 font-mono text-[0.71875rem] uppercase tracking-[0.1em] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
             style={{ background: 'var(--panel)', border: '1px solid var(--rule)', color: 'var(--ink)' }}
           >
             {String(i + 1).padStart(2, '0')} · {cap.eyebrow}
@@ -695,12 +695,12 @@ const Outro: React.FC<{
   const more = usePacks().filter((p) => !PACKS.some((q) => q.id === p.id));
   return (
   <div className="flex items-center justify-center px-8" style={style}>
-    <div className="flex w-full max-w-[1100px] flex-col gap-6">
+    <div className="flex w-full max-w-[68.75rem] 2xl:max-w-[80rem] flex-col gap-6">
       <div>
-        <div className="font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--ink-2)' }}>
+        <div className="font-mono text-[0.75rem] uppercase tracking-[0.14em]" style={{ color: 'var(--ink-2)' }}>
           08 / 08 · Every answer
         </div>
-        <h2 className="mt-2 text-[34px] leading-[1.12]" style={{ color: 'var(--ink)' }}>
+        <h2 className="mt-2 text-[2.125rem] leading-[1.12]" style={{ color: 'var(--ink)' }}>
           {CAPTIONS[7].title}
         </h2>
       </div>
@@ -724,10 +724,10 @@ const Outro: React.FC<{
               style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}
             >
               <div className="flex items-baseline justify-between">
-                <span className="text-[14px] font-medium" style={{ color: 'var(--ink)' }}>
+                <span className="text-[0.9375rem] font-medium" style={{ color: 'var(--ink)' }}>
                   {p.label}
                 </span>
-                <span className="text-[26px] font-semibold tabular-nums" style={{ color: 'var(--ink)' }}>
+                <span className="text-[1.625rem] font-semibold tabular-nums" style={{ color: 'var(--ink)' }}>
                   {s?.aggregates?.pass_rate != null ? `${Math.round(s.aggregates.pass_rate * 100)}%` : '—'}
                 </span>
               </div>
@@ -738,7 +738,7 @@ const Outro: React.FC<{
                     <span key={k} className="rounded-[2px]" style={{ flex: b[k], background: `var(${v})` }} />
                   ))}
               </div>
-              <span className="text-[12px]" style={{ color: 'var(--ink-2)' }}>
+              <span className="text-[0.8125rem]" style={{ color: 'var(--ink-2)' }}>
                 {s ? `correct of ${s.total_evaluated} questions · open the diagnosis →` : 'No finished test yet'}
               </span>
             </button>
@@ -746,7 +746,7 @@ const Outro: React.FC<{
         })}
       </div>
       {more.length > 0 && (
-        <p className="-mt-2 text-[13px] leading-relaxed" style={{ color: 'var(--ink-2)' }}>
+        <p className="-mt-2 text-[0.875rem] leading-relaxed" style={{ color: 'var(--ink-2)' }}>
           Plus {more.length} more test packs, including{' '}
           {more
             .slice(0, 4)
@@ -776,8 +776,8 @@ const Cta: React.FC<{ icon: React.ReactNode; title: string; body: string; onClic
   >
     <span className="shrink-0">{icon}</span>
     <span className="min-w-0 flex-1">
-      <span className="block text-[15px] font-semibold">{title}</span>
-      <span className="block text-[12.5px]" style={{ opacity: 0.75 }}>
+      <span className="block text-[1rem] font-semibold">{title}</span>
+      <span className="block text-[0.84375rem]" style={{ opacity: 0.75 }}>
         {body}
       </span>
     </span>

@@ -148,7 +148,7 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
   const resultFor = (testId: string) => results.find((r) => r.test_id === testId);
 
   return (
-    <div className="mx-auto flex h-full min-h-0 max-w-[1320px] flex-col gap-4 px-6 py-5">
+    <div className="mx-auto flex h-full min-h-0 max-w-[82.5rem] 2xl:max-w-[92rem] flex-col gap-4 px-6 py-5">
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 lg:grid-cols-[300px_1fr]">
@@ -185,13 +185,13 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
             )}
           >
             <Upload className="h-5 w-5 text-[var(--ink-1)]" />
-            <span className="text-[13px] font-medium text-[var(--ink)]">{uploading ? 'Uploading…' : 'Drop a document here'}</span>
+            <span className="text-[0.875rem] font-medium text-[var(--ink)]">{uploading ? 'Uploading…' : 'Drop a document here'}</span>
             <span className="text-xs text-[var(--ink-2)]">or click to choose · PDF, Markdown or text</span>
           </button>
           {lastUpload?.quality && <UploadQualityNote filename={lastUpload.filename} quality={lastUpload.quality} />}
 
           <div className="lab-panel-flat flex min-h-0 flex-1 flex-col rounded-2xl">
-            <div className="border-b border-[var(--rule)] px-4 py-3 text-[13px] font-medium text-[var(--ink)]">
+            <div className="border-b border-[var(--rule)] px-4 py-3 text-[0.875rem] font-medium text-[var(--ink)]">
               Documents {docs && <span className="font-normal text-[var(--ink-2)]">· {docs.length}</span>}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-2">
@@ -215,8 +215,8 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
                         >
                           <FileText className={cn('mt-0.5 h-4 w-4 shrink-0', active ? 'text-[var(--ink)]' : 'text-[var(--muted)]')} />
                           <span className="min-w-0">
-                            <span className={cn('block truncate text-[13px]', active ? 'text-[var(--ink)]' : 'text-[var(--ink-1)]')}>{d.filename}</span>
-                            <span className="text-[11px] text-[var(--ink-2)]">
+                            <span className={cn('block truncate text-[0.875rem]', active ? 'text-[var(--ink)]' : 'text-[var(--ink-1)]')}>{d.filename}</span>
+                            <span className="text-[0.75rem] text-[var(--ink-2)]">
                               {pack ? `Sample · ${PACK_LABEL[pack] ?? pack}` : 'Your upload'} · {d.chunk_count} passages
                             </span>
                           </span>
@@ -234,12 +234,12 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
         <section className="lab-panel-flat flex min-h-0 flex-col rounded-2xl">
           <div className="flex flex-wrap items-center gap-3 border-b border-[var(--rule)] px-5 py-3">
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[15px] font-semibold text-[var(--ink)]">{doc?.filename ?? 'Pick a document'}</div>
+              <div className="truncate text-[1rem] font-semibold text-[var(--ink)]">{doc?.filename ?? 'Pick a document'}</div>
               <div className="text-xs text-[var(--ink-2)]">
                 Questions come with a known answer and the passage that contains it; a few trick questions are mixed in.
               </div>
             </div>
-            <div className="flex items-center gap-0.5 rounded-[10px] border border-[var(--panel-2)] p-[3px] text-[13px]" role="radiogroup" aria-label="How many questions">
+            <div className="flex items-center gap-0.5 rounded-[10px] border border-[var(--panel-2)] p-[3px] text-[0.875rem]" role="radiogroup" aria-label="How many questions">
               {COUNTS.map((c) => (
                 <button
                   key={c}
@@ -261,7 +261,7 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
             </PrimaryButton>
           </div>
 
-          <div className="flex gap-1 border-b border-[var(--rule)] px-4 text-[13px]">
+          <div className="flex gap-1 border-b border-[var(--rule)] px-4 text-[0.875rem]">
             <TabButton active={tab === 'read'} onClick={() => setTab('read')} icon={<BookOpen className="h-3.5 w-3.5" />}>
               Read the document
             </TabButton>
@@ -299,8 +299,8 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
                 <article className="mx-auto max-w-[760px] space-y-4 px-6 py-6">
                   {detail.chunks.map((c, i) => (
                     <div key={c.chunk_id} className="group relative">
-                      <span className="absolute -left-6 top-0.5 font-mono text-[10.5px] text-[var(--muted)]">{i + 1}</span>
-                      <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[var(--ink-1)]">{c.text.replace(/^#+\s*/gm, '')}</p>
+                      <span className="absolute -left-6 top-0.5 font-mono text-[0.71875rem] text-[var(--muted)]">{i + 1}</span>
+                      <p className="whitespace-pre-wrap text-[0.9375rem] leading-relaxed text-[var(--ink-1)]">{c.text.replace(/^#+\s*/gm, '')}</p>
                     </div>
                   ))}
                   <p className="pt-2 text-xs text-[var(--muted)]">
@@ -327,9 +327,9 @@ export const TestSetsPage: React.FC<TestSetsPageProps> = ({ token }) => {
                         className={cn('grid w-full grid-cols-[1fr_auto] gap-6 px-5 py-3.5 text-left', r && 'hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]')}
                       >
                         <span className="min-w-0">
-                          {c.type && <span className="text-[11px] text-[var(--ink-2)]">{TYPE_LABEL[c.type] ?? c.type}</span>}
-                          <span className="mt-0.5 block text-[14px] text-[var(--ink)]">{c.question}</span>
-                          <span className="mt-1 block text-[13px] text-[var(--ink-2)]">
+                          {c.type && <span className="text-[0.75rem] text-[var(--ink-2)]">{TYPE_LABEL[c.type] ?? c.type}</span>}
+                          <span className="mt-0.5 block text-[0.9375rem] text-[var(--ink)]">{c.question}</span>
+                          <span className="mt-1 block text-[0.875rem] text-[var(--ink-2)]">
                             Correct answer: <span className="text-[var(--ink-1)]">{c.ground_truth_answer || 'the bot should say it’s not in the document'}</span>
                           </span>
                           {c.context_snippet && (

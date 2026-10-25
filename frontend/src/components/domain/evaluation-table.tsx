@@ -59,7 +59,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
             <button
               key={f}
               onClick={() => setSelectedFilter(f)}
-              className={`px-2 py-0.5 rounded text-[10px] font-mono transition border ${
+              className={`px-2 py-0.5 rounded text-[0.71875rem] font-mono transition border ${
                 selectedFilter === f
                   ? 'bg-[var(--accent)] text-[var(--accent)] border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] font-semibold'
                   : 'bg-[var(--panel)] text-[var(--ink-2)] border-[var(--rule)] hover:text-[var(--ink)]'
@@ -73,7 +73,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs font-sans">
-          <thead className="bg-[var(--panel)] font-mono uppercase text-[var(--ink-2)] text-[10px] border-b border-[var(--rule)] tracking-wider">
+          <thead className="bg-[var(--panel)] font-mono uppercase text-[var(--ink-2)] text-[0.71875rem] border-b border-[var(--rule)] tracking-wider">
             <tr>
               <th className="py-3 px-4">Test ID / Query</th>
               <th className="py-3 px-3 text-center">Retriever</th>
@@ -102,13 +102,13 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
                 >
                   <td className="py-3.5 px-4 font-medium text-[var(--ink)] max-w-xs">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] text-[var(--accent)] font-bold bg-[var(--accent-tint)] px-1.5 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)]">
+                      <span className="font-mono text-[0.71875rem] text-[var(--accent)] font-bold bg-[var(--accent-tint)] px-1.5 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)]">
                         {item.id}
                       </span>
                       <span className="truncate" title={item.query}>{item.query}</span>
                     </div>
                     {item.summaryNote && (
-                      <div className="text-[11px] text-[var(--ink-2)] truncate pl-1 mt-0.5">
+                      <div className="text-[0.75rem] text-[var(--ink-2)] truncate pl-1 mt-0.5">
                         {item.summaryNote}
                       </div>
                     )}
@@ -128,7 +128,7 @@ export const EvaluationTable: React.FC<EvaluationTableProps> = ({
 
                   <td className="py-3.5 px-3 text-center font-mono">
                     {item.accuracyScore === null ? (
-                      <span className="text-[var(--retr)] font-medium text-[11px] bg-[var(--retr-tint)] px-1.5 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--retr)_40%,transparent)]">
+                      <span className="text-[var(--retr)] font-medium text-[0.75rem] bg-[var(--retr-tint)] px-1.5 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--retr)_40%,transparent)]">
                         REVIEW (No GT)
                       </span>
                     ) : (

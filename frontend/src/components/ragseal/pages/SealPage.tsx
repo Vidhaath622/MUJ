@@ -116,14 +116,14 @@ export const SealPage: React.FC<{ token: string | null }> = ({ token }) => {
   };
 
   return (
-    <div className="mx-auto flex max-w-[1100px] flex-col gap-5 px-6 py-6">
+    <div className="mx-auto flex max-w-[68.75rem] 2xl:max-w-[80rem] flex-col gap-5 px-6 py-6">
       <TopBarControls>
         <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ border: '1px solid var(--rule)' }}>
           {packs.map((p) => (
             <button
               key={p}
               onClick={() => setPack(p)}
-              className="rounded-md px-3 py-1 text-[13px] transition-colors"
+              className="rounded-md px-3 py-1 text-[0.875rem] transition-colors"
               style={p === pack ? { background: 'var(--ink)', color: 'var(--paper)' } : { color: 'var(--ink-2)' }}
             >
               {PACK_NAME[p] ?? p}
@@ -143,16 +143,16 @@ export const SealPage: React.FC<{ token: string | null }> = ({ token }) => {
           >
             <div className="flex flex-wrap items-start justify-between gap-6 sm:gap-8">
               <div className="min-w-0 flex-1">
-                <div className="font-mono text-[11px] uppercase tracking-[0.16em]" style={{ color: 'var(--ink-2)' }}>
+                <div className="font-mono text-[0.75rem] uppercase tracking-[0.16em]" style={{ color: 'var(--ink-2)' }}>
                   Certificate of evaluation · {run.batch_id}
                 </div>
-                <h2 className="mt-3 text-[28px] sm:text-[34px] md:text-[40px] leading-[1.05]" style={{ color: 'var(--ink)' }}>
+                <h2 className="mt-3 text-[1.75rem] sm:text-[2.125rem] md:text-[2.5rem] leading-[1.05]" style={{ color: 'var(--ink)' }}>
                   {bot.name}
                 </h2>
-                <div className="mt-1 text-[15px]" style={{ color: 'var(--ink-2)' }}>
+                <div className="mt-1 text-[1rem]" style={{ color: 'var(--ink-2)' }}>
                   {bot.role} · {PACK_NAME[pack] ?? pack} pack · evaluated {date}
                 </div>
-                <p className="mt-5 max-w-[520px] text-[14px] leading-relaxed" style={{ color: 'var(--ink-1, var(--ink))' }}>
+                <p className="mt-5 max-w-[520px] text-[0.9375rem] leading-relaxed" style={{ color: 'var(--ink-1, var(--ink))' }}>
                   RAGSeal asked this bot {run.total_evaluated} questions with known answers, including outdated-version, look-alike and
                   not-in-the-documents traps, and checked its retriever and its generator separately.
                 </p>
@@ -173,7 +173,7 @@ export const SealPage: React.FC<{ token: string | null }> = ({ token }) => {
               />
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-[12px]" style={{ color: 'var(--ink-2)' }}>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-[0.8125rem]" style={{ color: 'var(--ink-2)' }}>
               <span>
                 Bot <span className="font-mono">{run.generator_model ?? '—'}</span> · graded by <span className="font-mono">{(run.judge_model ?? '—').split('/').pop()}</span>
               </span>
@@ -184,17 +184,17 @@ export const SealPage: React.FC<{ token: string | null }> = ({ token }) => {
           {/* Badge */}
           <section className="flex flex-wrap items-center gap-4 rounded-2xl px-6 py-5" style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}>
             <div className="min-w-0 flex-1">
-              <div className="text-[15px] font-medium" style={{ color: 'var(--ink)' }}>
+              <div className="text-[1rem] font-medium" style={{ color: 'var(--ink)' }}>
                 Embeddable badge
               </div>
-              <div className="text-[13px]" style={{ color: 'var(--ink-2)' }}>
+              <div className="text-[0.875rem]" style={{ color: 'var(--ink-2)' }}>
                 Paste into a README or status page. It states the pass rate and the date of this run, nothing more.
               </div>
             </div>
             <BadgePreview text={`RAGSeal verified · ${passRate != null ? Math.round(passRate * 100) : '—'}% · ${date}`} tone={g?.tone ?? '--ok'} />
             <button
               onClick={copyBadge}
-              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-medium transition-transform hover:-translate-y-0.5"
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[0.875rem] font-medium transition-transform hover:-translate-y-0.5"
               style={{ background: 'var(--ink)', color: 'var(--paper)' }}
             >
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -209,13 +209,13 @@ export const SealPage: React.FC<{ token: string | null }> = ({ token }) => {
 
 const Stat: React.FC<{ label: string; value: string; sub: string; tone?: string }> = ({ label, value, sub, tone }) => (
   <div className="flex flex-col gap-1 px-4 py-4" style={{ background: 'var(--panel)' }}>
-    <span className="text-[11.5px]" style={{ color: 'var(--ink-2)' }}>
+    <span className="text-[0.78125rem]" style={{ color: 'var(--ink-2)' }}>
       {label}
     </span>
-    <span className="text-[28px] font-semibold leading-none tabular-nums" style={{ color: tone ? `var(${tone})` : 'var(--ink)' }}>
+    <span className="text-[1.75rem] font-semibold leading-none tabular-nums" style={{ color: tone ? `var(${tone})` : 'var(--ink)' }}>
       {value}
     </span>
-    <span className="text-[11.5px]" style={{ color: 'var(--ink-2)' }}>
+    <span className="text-[0.78125rem]" style={{ color: 'var(--ink-2)' }}>
       {sub}
     </span>
   </div>
@@ -250,7 +250,7 @@ const SealEmblem: React.FC<{ passRate: number; grade: Grade }> = ({ passRate, gr
 };
 
 const BadgePreview: React.FC<{ text: string; tone: string }> = ({ text, tone }) => (
-  <span className="inline-flex items-center overflow-hidden rounded-md font-mono text-[12px]" style={{ border: `1px solid var(${tone})` }}>
+  <span className="inline-flex items-center overflow-hidden rounded-md font-mono text-[0.8125rem]" style={{ border: `1px solid var(${tone})` }}>
     <span className="px-2 py-1" style={{ background: `var(${tone})`, color: 'var(--paper)' }}>
       ✓
     </span>

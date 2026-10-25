@@ -77,7 +77,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             )}
             <div>
               {componentType && (
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--ink-2)] font-semibold block">
+                <span className="text-[0.71875rem] font-mono uppercase tracking-wider text-[var(--ink-2)] font-semibold block">
                   Component: {componentType} • {metricKey}
                 </span>
               )}
@@ -105,7 +105,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                   <HelpCircle className="w-4 h-4" />
                   <span>No Ground Truth</span>
                 </div>
-                <div className="text-[11px] font-mono text-[var(--ink-2)]">
+                <div className="text-[0.75rem] font-mono text-[var(--ink-2)]">
                   Target: &ge; {normalizedThreshold.toFixed(0)}% (Awaiting Benchmark)
                 </div>
               </div>
@@ -119,7 +119,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                     ({(normalizedScore / 100).toFixed(2)})
                   </span>
                 </div>
-                <div className="text-[11px] font-mono text-[var(--ink-2)] mt-0.5">
+                <div className="text-[0.75rem] font-mono text-[var(--ink-2)] mt-0.5">
                   Target: &ge; {normalizedThreshold.toFixed(0)}%
                 </div>
               </div>
@@ -151,12 +151,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
         {/* Hallucinated Claims Indicator if any */}
         {hallucinatedClaims && hallucinatedClaims.length > 0 && (
-          <div className="mt-2 p-2 rounded bg-[var(--gen-tint)] border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] text-[11px] text-[var(--gen)]">
+          <div className="mt-2 p-2 rounded bg-[var(--gen-tint)] border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] text-[0.75rem] text-[var(--gen)]">
             <span className="font-semibold block mb-0.5 flex items-center gap-1">
               <AlertTriangle className="w-3 h-3 text-[var(--gen)]" />
               Hallucination Detected:
             </span>
-            <ul className="list-disc list-inside space-y-0.5 text-[var(--gen)] font-mono text-[10px]">
+            <ul className="list-disc list-inside space-y-0.5 text-[var(--gen)] font-mono text-[0.71875rem]">
               {hallucinatedClaims.map((claim, idx) => (
                 <li key={idx} className="truncate">"{claim}"</li>
               ))}
@@ -165,7 +165,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         )}
       </div>
 
-      <div className="pt-3 mt-3 border-t border-[var(--rule)] flex items-center justify-between text-[11px] font-mono text-[var(--ink-2)]">
+      <div className="pt-3 mt-3 border-t border-[var(--rule)] flex items-center justify-between text-[0.75rem] font-mono text-[var(--ink-2)]">
         <span className="text-[var(--ink-2)]">
           [{judgedBy === 'model' ? 'Model-Judged' : 'Rule-Judged'}]
         </span>

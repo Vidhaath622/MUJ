@@ -17,7 +17,7 @@ const badgeVariants = cva(
         neon: 'bg-[var(--accent)] text-[var(--accent)] border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] shadow-[0_0_12px_rgba(56,189,248,0.2)]',
       },
       size: {
-        sm: 'text-[10px] px-2 py-0.2',
+        sm: 'text-[0.71875rem] px-2 py-0.2',
         default: 'text-xs px-2.5 py-0.5',
         lg: 'text-sm px-3.5 py-1',
       },

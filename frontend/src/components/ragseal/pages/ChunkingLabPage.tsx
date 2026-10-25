@@ -184,12 +184,12 @@ export const ChunkingLabPage: React.FC<ChunkingLabPageProps> = ({ token }) => {
     setForm((f) => ({ ...f, modes: f.modes.includes(m) ? f.modes.filter((x) => x !== m) : [...f.modes, m] }));
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
+    <div className="mx-auto flex max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-5 px-6 py-6">
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       <div className="grid gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
         <Panel className="lg:self-start" title="Set up the sweep" note={`${configs} setup${configs === 1 ? '' : 's'}`} bodyClassName="flex flex-col gap-5 p-5">
-          <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">
+          <p className="text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
             RAGSeal tunes your bot: try chunk sizes and search modes on the same test questions and see which finds the right text most
             often. Retrieval only, no chatbot or grading cost.
           </p>
@@ -209,7 +209,7 @@ export const ChunkingLabPage: React.FC<ChunkingLabPageProps> = ({ token }) => {
               {SIZE_CHOICES.map((s) => (
                 <Chip key={s} on={form.sizes.includes(s)} onClick={() => toggleSize(s)} disabled={!form.sizes.includes(s) && form.sizes.length >= MAX_SIZES}>
                   {s}
-                  {s === CURRENT.chunk_chars && <span className="ml-1 text-[10.5px] opacity-70">today</span>}
+                  {s === CURRENT.chunk_chars && <span className="ml-1 text-[0.71875rem] opacity-70">today</span>}
                 </Chip>
               ))}
             </div>
@@ -233,7 +233,7 @@ export const ChunkingLabPage: React.FC<ChunkingLabPageProps> = ({ token }) => {
               checked={form.rerank}
               onChange={(e) => setForm((f) => ({ ...f, rerank: e.target.checked }))}
             />
-            <span className="text-[13px] leading-relaxed">
+            <span className="text-[0.875rem] leading-relaxed">
               <span className="font-medium text-[var(--ink)]">Also try reranking</span>
               <span className="block text-xs text-[var(--ink-2)]">
                 Fetches 20 passages and lets the grading model pick the best {form.k}. Slower: about 2–5 s per question for each chunk size,
@@ -309,7 +309,7 @@ const Running: React.FC<{ lab: ChunkingLabResult; packName: string }> = ({ lab, 
   return (
     <Panel title="Running" note={packName}>
       <div className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between text-[13px]">
+        <div className="flex items-baseline justify-between text-[0.875rem]">
           <span className="text-[var(--ink)]">
             {done} of {total || '…'} setups tried
           </span>
@@ -354,9 +354,9 @@ const Results: React.FC<{ lab: ChunkingLabResult; packName: string }> = ({ lab, 
       </Panel>
 
       <Panel title="Every setup" note={`recall@${k} = right passages found in the top ${k}`} bodyClassName="overflow-x-auto p-0">
-        <table className="w-full min-w-[640px] text-[12.5px]">
+        <table className="w-full min-w-[640px] text-[0.84375rem]">
           <thead>
-            <tr className="border-b border-[var(--rule)] text-left text-[11.5px] text-[var(--ink-2)]">
+            <tr className="border-b border-[var(--rule)] text-left text-[0.78125rem] text-[var(--ink-2)]">
               <th className="px-5 py-2.5 font-medium">Setup</th>
               <th className="px-3 py-2.5 text-right font-medium">Recall@{k}</th>
               <th className="px-3 py-2.5 text-right font-medium">MRR</th>
@@ -384,7 +384,7 @@ const Results: React.FC<{ lab: ChunkingLabResult; packName: string }> = ({ lab, 
                 <td className="px-3 py-2.5 text-right text-[var(--ink-1)]">{r.avg_chunk_chars != null ? Math.round(r.avg_chunk_chars) : '—'}</td>
                 <td className="px-5 py-2.5 text-right text-[var(--ink-1)]">
                   {r.ms_per_question != null ? perQuestion(r.ms_per_question) : '—'}
-                  {r.rerank_calls ? <span className="block text-[11px] text-[var(--ink-2)]">{r.rerank_calls} grading calls</span> : null}
+                  {r.rerank_calls ? <span className="block text-[0.75rem] text-[var(--ink-2)]">{r.rerank_calls} grading calls</span> : null}
                 </td>
               </tr>
             ))}
@@ -409,7 +409,7 @@ const Verdict: React.FC<{ best?: ChunkingLabRow; current?: ChunkingLabRow; recal
       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: tint(PASS, 0.14), color: PASS }}>
         <Trophy className="h-4 w-4" />
       </span>
-      <p className="text-[17px] leading-snug text-[var(--ink)]">
+      <p className="text-[1.125rem] leading-snug text-[var(--ink)]">
         <span className="font-medium">{rowLabel(best)}</span> finds {pct1(recall(best))} of the right passages
         {current && !sameRow(best, current) && gain != null ? (
           <>
@@ -451,7 +451,7 @@ const Bars: React.FC<{ rows: ChunkingLabRow[]; best?: ChunkingLabRow; recall: (r
         const isBest = sameRow(r, best);
         const color = isBest ? PASS : isCurrent(r) ? AMBER : 'var(--ink-2)';
         return (
-          <div key={rowLabel(r)} className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] items-center gap-3 text-[12.5px]">
+          <div key={rowLabel(r)} className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] items-center gap-3 text-[0.84375rem]">
             <span className="truncate text-[var(--ink-1)]" title={rowLabel(r)}>
               {rowLabel(r)}
             </span>
@@ -460,7 +460,7 @@ const Bars: React.FC<{ rows: ChunkingLabRow[]; best?: ChunkingLabRow; recall: (r
                 className="absolute inset-y-0 left-0 rounded-md transition-[width] duration-700"
                 style={{ width: `${Math.max(2, scale(v))}%`, background: tint(color, isBest ? 0.55 : 0.32) }}
               />
-              <span className="absolute inset-y-0 left-2 flex items-center gap-1.5 text-[11px]">
+              <span className="absolute inset-y-0 left-2 flex items-center gap-1.5 text-[0.75rem]">
                 {isBest && <Tag tone="best">best</Tag>}
                 {isCurrent(r) && <Tag tone="current">today</Tag>}
               </span>
@@ -469,7 +469,7 @@ const Bars: React.FC<{ rows: ChunkingLabRow[]; best?: ChunkingLabRow; recall: (r
           </div>
         );
       })}
-      <div className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] gap-3 text-[11px] text-[var(--ink-2)]">
+      <div className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] gap-3 text-[0.75rem] text-[var(--ink-2)]">
         <span />
         <span className="flex justify-between">
           <span>{Math.round(floor * 100)}%</span>
@@ -485,7 +485,7 @@ const Bars: React.FC<{ rows: ChunkingLabRow[]; best?: ChunkingLabRow; recall: (r
 const Example: React.FC = () => (
   <Panel title="What a result looks like" note="before your first run">
     <div className="flex flex-col gap-4">
-      <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">
+      <p className="text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
         Real numbers from our public-documents pack (9 IRS releases and guides searched together, 129 questions). Hybrid search at 1200
         characters finds more of the right passages than today's setup, and reranking finds all of them, at the cost of one grading call
         per question.
@@ -494,14 +494,14 @@ const Example: React.FC = () => (
         {EXAMPLE.map((r) => {
           const color = r.tag === 'best' ? PASS : r.tag === 'current' ? AMBER : 'var(--ink-2)';
           return (
-            <div key={r.label} className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] items-center gap-3 text-[12.5px]">
+            <div key={r.label} className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] items-center gap-3 text-[0.84375rem]">
               <span className="truncate text-[var(--ink-1)]">{r.label}</span>
               <div className="relative h-6 overflow-hidden rounded-md bg-[var(--panel)]">
                 <div
                   className="absolute inset-y-0 left-0 rounded-md"
                   style={{ width: `${((r.recall - 0.8) / 0.2) * 100}%`, background: tint(color, r.tag === 'best' ? 0.55 : 0.32) }}
                 />
-                <span className="absolute inset-y-0 left-2 flex items-center text-[11px]">
+                <span className="absolute inset-y-0 left-2 flex items-center text-[0.75rem]">
                   {r.tag === 'best' && <Tag tone="best">best</Tag>}
                   {r.tag === 'current' && <Tag tone="current">today</Tag>}
                 </span>
@@ -510,7 +510,7 @@ const Example: React.FC = () => (
             </div>
           );
         })}
-        <div className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] gap-3 text-[11px] text-[var(--ink-2)]">
+        <div className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] gap-3 text-[0.75rem] text-[var(--ink-2)]">
           <span />
           <span className="flex justify-between">
             <span>80%</span>
@@ -541,7 +541,7 @@ const Tag: React.FC<{ tone: 'best' | 'current'; children: React.ReactNode }> = (
   const color = tone === 'best' ? PASS : AMBER;
   return (
     <span
-      className="ml-1.5 inline-flex items-center rounded-full px-1.5 py-px text-[10.5px] font-medium"
+      className="ml-1.5 inline-flex items-center rounded-full px-1.5 py-px text-[0.71875rem] font-medium"
       style={{ background: tint(color, 0.16), color }}
     >
       {children}
@@ -556,7 +556,7 @@ const Chip: React.FC<{ on: boolean; onClick: () => void; disabled?: boolean; chi
     disabled={disabled}
     aria-pressed={on}
     className={cn(
-      'inline-flex h-8 items-center rounded-[9px] border px-3 text-[12.5px] tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+      'inline-flex h-8 items-center rounded-[9px] border px-3 text-[0.84375rem] tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-40',
       on
         ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]'
         : 'border-[var(--rule-2)] text-[var(--ink-1)] hover:border-[var(--rule-3)] hover:text-[var(--ink)]'
@@ -567,12 +567,12 @@ const Chip: React.FC<{ on: boolean; onClick: () => void; disabled?: boolean; chi
 );
 
 const INPUT =
-  'h-10 w-full rounded-[10px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 text-[13.5px] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--rule-3)]';
+  'h-10 w-full rounded-[10px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 text-[0.90625rem] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--rule-3)]';
 
 const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode }> = ({ label, hint, children }) => (
   <div className="flex flex-col gap-1.5">
     <span className="text-xs font-medium text-[var(--ink-1)]">{label}</span>
     {children}
-    {hint && <span className="text-[11.5px] leading-snug text-[var(--ink-2)]">{hint}</span>}
+    {hint && <span className="text-[0.78125rem] leading-snug text-[var(--ink-2)]">{hint}</span>}
   </div>
 );

@@ -107,10 +107,10 @@ const RadarDial: React.FC<{ running: boolean; atRisk: number | null; tests: numb
       </svg>
       {!running && atRisk != null && (
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[30px] font-semibold leading-none tabular-nums" style={{ color }}>
+          <span className="text-[1.875rem] font-semibold leading-none tabular-nums" style={{ color }}>
             {atRisk}
           </span>
-          <span className="mt-0.5 text-[11px] text-[var(--ink-2)]">of {tests ?? 0} at risk</span>
+          <span className="mt-0.5 text-[0.75rem] text-[var(--ink-2)]">of {tests ?? 0} at risk</span>
         </div>
       )}
     </div>
@@ -218,7 +218,7 @@ export const ImpactPage: React.FC<{ token: string | null }> = ({ token }) => {
         <div className="min-w-[260px] flex-1">
           {done && atRisk != null ? (
             <>
-              <h2 className="font-serif text-[28px] leading-tight text-[var(--ink)]">
+              <h2 className="font-serif text-[1.75rem] leading-tight text-[var(--ink)]">
                 {atRisk > 0 ? (
                   <>
                     <span style={{ color: 'var(--gen)' }}>{atRisk} {atRisk === 1 ? 'answer' : 'answers'} at risk:</span> users would
@@ -228,7 +228,7 @@ export const ImpactPage: React.FC<{ token: string | null }> = ({ token }) => {
                   <span style={{ color: 'var(--ok)' }}>No answers at risk: the bot already gives the new facts</span>
                 )}
               </h2>
-              <p className="mt-1.5 text-[13px] text-[var(--ink-2)]">
+              <p className="mt-1.5 text-[0.875rem] text-[var(--ink-2)]">
                 <span className="font-mono">{result?.old_document?.filename}</span>
                 <ArrowRight className="mx-1.5 inline h-3.5 w-3.5" />
                 <span className="font-mono">{result?.new_document?.filename}</span> · {result?.summary?.changed ?? changes.length}{' '}
@@ -237,18 +237,18 @@ export const ImpactPage: React.FC<{ token: string | null }> = ({ token }) => {
             </>
           ) : running ? (
             <>
-              <h2 className="font-serif text-[26px] leading-tight text-[var(--ink)]">Scanning the update…</h2>
-              <p className="mt-1.5 text-[13px] text-[var(--ink-2)]">
+              <h2 className="font-serif text-[1.625rem] leading-tight text-[var(--ink)]">Scanning the update…</h2>
+              <p className="mt-1.5 text-[0.875rem] text-[var(--ink-2)]">
                 Comparing the two versions, writing a test for each changed fact and asking the bot.{' '}
                 {result?.progress?.total ? `${result.progress.done ?? 0} of ${result.progress.total} tests done.` : ''}
               </p>
             </>
           ) : result?.status === 'failed' ? (
-            <h2 className="font-serif text-[24px] text-[var(--gen)]">The last impact run failed: {result.error}</h2>
+            <h2 className="font-serif text-[1.5rem] text-[var(--gen)]">The last impact run failed: {result.error}</h2>
           ) : (
             <>
-              <h2 className="font-serif text-[26px] leading-tight text-[var(--ink)]">What does a document update break?</h2>
-              <p className="mt-1.5 max-w-xl text-[13px] text-[var(--ink-2)]">
+              <h2 className="font-serif text-[1.625rem] leading-tight text-[var(--ink)]">What does a document update break?</h2>
+              <p className="mt-1.5 max-w-xl text-[0.875rem] text-[var(--ink-2)]">
                 When a policy changes, the bot can keep quoting the old version. Pick the old and the new file and RAGSeal shows
                 which answers still give the old fact, before your users find out.
               </p>
@@ -262,7 +262,7 @@ export const ImpactPage: React.FC<{ token: string | null }> = ({ token }) => {
             <select
               value={source}
               onChange={(e) => setSource(e.target.value)}
-              className="h-[34px] rounded-[9px] border border-[var(--rule-2)] bg-[var(--panel)] px-2 text-[13px] text-[var(--ink)]"
+              className="h-[34px] rounded-[9px] border border-[var(--rule-2)] bg-[var(--panel)] px-2 text-[0.875rem] text-[var(--ink)]"
             >
               {SOURCES.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -293,7 +293,7 @@ export const ImpactPage: React.FC<{ token: string | null }> = ({ token }) => {
               {changes.map((c, i) => (
                 <ChangeRow key={i} change={c} />
               ))}
-              {!changes.length && <li className="px-5 py-4 text-[13px] text-[var(--ink-2)]">No changed sentences found.</li>}
+              {!changes.length && <li className="px-5 py-4 text-[0.875rem] text-[var(--ink-2)]">No changed sentences found.</li>}
             </ol>
           </Panel>
           <Panel title="Would users get the old fact?" note={result.judge_model ? `graded by ${result.judge_model}` : undefined} bodyClassName="p-0">
@@ -301,7 +301,7 @@ export const ImpactPage: React.FC<{ token: string | null }> = ({ token }) => {
               {tests.map((t) => (
                 <TestRow key={t.test_id} test={t} onOpen={() => setOpen(t)} />
               ))}
-              {!tests.length && <li className="px-5 py-4 text-[13px] text-[var(--ink-2)]">No tests were generated.</li>}
+              {!tests.length && <li className="px-5 py-4 text-[0.875rem] text-[var(--ink-2)]">No tests were generated.</li>}
             </ol>
           </Panel>
         </div>
@@ -330,7 +330,7 @@ const DocSelect: React.FC<{ label: string; value: string; onChange: (v: string) 
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={!docs}
-      className="h-[34px] max-w-[260px] rounded-[9px] border border-[var(--rule-2)] bg-[var(--panel)] px-2 font-mono text-[12px] text-[var(--ink)]"
+      className="h-[34px] max-w-[260px] rounded-[9px] border border-[var(--rule-2)] bg-[var(--panel)] px-2 font-mono text-[0.8125rem] text-[var(--ink)]"
     >
       {(docs ?? []).map((d) => (
         <option key={d.document_id} value={d.document_id}>
@@ -344,8 +344,8 @@ const DocSelect: React.FC<{ label: string; value: string; onChange: (v: string) 
 const ChangeRow: React.FC<{ change: ImpactChange }> = ({ change }) => {
   const nums = change.numbers_changed ?? [];
   return (
-    <li className="space-y-1.5 px-5 py-3.5 text-[13px] leading-relaxed">
-      <div className="flex flex-wrap items-center gap-2 text-[12px] capitalize text-[var(--ink-2)]">
+    <li className="space-y-1.5 px-5 py-3.5 text-[0.875rem] leading-relaxed">
+      <div className="flex flex-wrap items-center gap-2 text-[0.8125rem] capitalize text-[var(--ink-2)]">
         <span>{change.kind}</span>
         {nums.map((n, i) => (
           <span key={i} className="rounded-full border border-[var(--rule)] px-2 py-0.5 font-mono normal-case tracking-normal">
@@ -363,13 +363,13 @@ const ChangeRow: React.FC<{ change: ImpactChange }> = ({ change }) => {
       </div>
       {change.old && (
         <p className="text-[var(--ink-2)]">
-          <span className="mr-1.5 font-mono text-[11px] text-[var(--muted)]">old</span>
+          <span className="mr-1.5 font-mono text-[0.75rem] text-[var(--muted)]">old</span>
           <Marked text={change.old} values={nums.map((n) => n.old)} tone="old" />
         </p>
       )}
       {change.new && (
         <p className="text-[var(--ink)]">
-          <span className="mr-1.5 font-mono text-[11px] text-[var(--muted)]">new</span>
+          <span className="mr-1.5 font-mono text-[0.75rem] text-[var(--muted)]">new</span>
           <Marked text={change.new} values={nums.map((n) => n.new)} tone="new" />
         </p>
       )}
@@ -382,7 +382,7 @@ const TestRow: React.FC<{ test: ImpactTest; onOpen: () => void }> = ({ test, onO
   return (
     <li>
       <button onClick={onOpen} className="flex w-full items-start gap-4 px-5 py-3.5 text-left transition-colors hover:bg-[var(--panel-2)]">
-        <div className="min-w-0 flex-1 space-y-1 text-[13px] leading-relaxed">
+        <div className="min-w-0 flex-1 space-y-1 text-[0.875rem] leading-relaxed">
           <div className="font-medium text-[var(--ink)]">{test.question}</div>
           <div className="text-[var(--ink-2)]">
             <span className="text-[var(--muted)]">Expected:</span> {test.expected_answer ?? test.gold}
@@ -396,7 +396,7 @@ const TestRow: React.FC<{ test: ImpactTest; onOpen: () => void }> = ({ test, onO
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
           <span
-            className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+            className="rounded-full px-2.5 py-0.5 text-[0.75rem] font-semibold"
             style={
               test.at_risk
                 ? { color: 'var(--gen)', background: tint('var(--gen)', 0.12) }
@@ -405,7 +405,7 @@ const TestRow: React.FC<{ test: ImpactTest; onOpen: () => void }> = ({ test, onO
           >
             {test.at_risk ? 'At risk' : 'Up to date'}
           </span>
-          <span className="stamp text-[12px] leading-none" style={{ color: v.color }}>
+          <span className="stamp text-[0.8125rem] leading-none" style={{ color: v.color }}>
             {v.label}
           </span>
         </div>

@@ -125,7 +125,7 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
               style={{ width: `${Math.min(95, Math.max(5, (batchElapsedSeconds / 60) * 100))}%` }}
             />
           </div>
-          <div className="text-[11px] text-[var(--ink-2)] font-mono flex items-center justify-between">
+          <div className="text-[0.75rem] text-[var(--ink-2)] font-mono flex items-center justify-between">
             <span>Running local generator (llama3.2:3b) + judge model...</span>
             <span className="text-[var(--muted)]">Request timeout: 180s</span>
           </div>
@@ -147,79 +147,79 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Pass Rate */}
         <Card variant="glass" className="p-4 border-[var(--rule)] bg-[color:color-mix(in_srgb,var(--paper)_90%,transparent)] flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)]">
+          <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--ink-2)]">
             Suite Pass Rate
           </span>
           <div className="flex items-baseline gap-2 my-2">
             <span className={`text-2xl font-bold font-mono ${batch.aggregates.pass_rate >= 0.70 ? 'text-[var(--ok)]' : 'text-[var(--gen)]'}`}>
               {(batch.aggregates.pass_rate * 100).toFixed(0)}%
             </span>
-            <span className="text-[11px] font-mono text-[var(--muted)]">
+            <span className="text-[0.75rem] font-mono text-[var(--muted)]">
               ({batch.results.filter(r => r.status === 'PASS').length}/{batch.total_evaluated})
             </span>
           </div>
-          <div className="text-[10px] font-mono text-[var(--ink-2)]">
+          <div className="text-[0.71875rem] font-mono text-[var(--ink-2)]">
             Target: &ge; 80% to Ship
           </div>
         </Card>
 
         {/* Avg Context Relevance */}
         <Card variant="glass" className="p-4 border-[var(--rule)] bg-[color:color-mix(in_srgb,var(--paper)_90%,transparent)] flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--accent)]">
+          <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--accent)]">
             Avg Context Relevance
           </span>
           <div className="flex items-baseline gap-2 my-2">
             <span className="text-2xl font-bold font-mono text-[var(--ink)]">
               {(batch.aggregates.avg_context_relevance * 100).toFixed(0)}%
             </span>
-            <span className="text-[11px] font-mono text-[var(--muted)]">
+            <span className="text-[0.75rem] font-mono text-[var(--muted)]">
               ({batch.aggregates.avg_context_relevance.toFixed(2)})
             </span>
           </div>
-          <div className="text-[10px] font-mono text-[var(--ink-2)]">
+          <div className="text-[0.71875rem] font-mono text-[var(--ink-2)]">
             Target: &ge; 70%
           </div>
         </Card>
 
         {/* Avg Faithfulness */}
         <Card variant="glass" className="p-4 border-[var(--rule)] bg-[color:color-mix(in_srgb,var(--paper)_90%,transparent)] flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--teal)]">
+          <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--teal)]">
             Avg Faithfulness
           </span>
           <div className="flex items-baseline gap-2 my-2">
             <span className="text-2xl font-bold font-mono text-[var(--ink)]">
               {(batch.aggregates.avg_faithfulness * 100).toFixed(0)}%
             </span>
-            <span className="text-[11px] font-mono text-[var(--muted)]">
+            <span className="text-[0.75rem] font-mono text-[var(--muted)]">
               ({batch.aggregates.avg_faithfulness.toFixed(2)})
             </span>
           </div>
-          <div className="text-[10px] font-mono text-[var(--ink-2)]">
+          <div className="text-[0.71875rem] font-mono text-[var(--ink-2)]">
             Target: &ge; 75%
           </div>
         </Card>
 
         {/* Avg Answer Accuracy */}
         <Card variant="glass" className="p-4 border-[var(--rule)] bg-[color:color-mix(in_srgb,var(--paper)_90%,transparent)] flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--accent)]">
+          <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--accent)]">
             Avg Accuracy
           </span>
           <div className="flex items-baseline gap-2 my-2">
             <span className="text-2xl font-bold font-mono text-[var(--ink)]">
               {(batch.aggregates.avg_answer_accuracy * 100).toFixed(0)}%
             </span>
-            <span className="text-[11px] font-mono text-[var(--muted)]">
+            <span className="text-[0.75rem] font-mono text-[var(--muted)]">
               ({batch.aggregates.avg_answer_accuracy.toFixed(2)})
             </span>
           </div>
-          <div className="text-[10px] font-mono text-[var(--ink-2)]">
+          <div className="text-[0.71875rem] font-mono text-[var(--ink-2)]">
             Target: &ge; 70%
           </div>
         </Card>
 
         {/* Judge Agreement Metric Card */}
         <Card variant="glass" className="p-4 border-[var(--rule)] bg-[color:color-mix(in_srgb,var(--paper)_90%,transparent)] flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--violet)] flex items-center gap-1">
+          <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--violet)] flex items-center gap-1">
             <Users className="w-3 h-3 text-[var(--violet)]" />
             Judge Agreement
           </span>
@@ -229,7 +229,7 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
                 <span className="text-2xl font-bold font-mono text-[var(--violet)]">
                   {(ja.agreement * 100).toFixed(0)}%
                 </span>
-                <span className="text-[11px] font-mono text-[var(--muted)]">
+                <span className="text-[0.75rem] font-mono text-[var(--muted)]">
                   (n={ja.n})
                 </span>
               </>
@@ -237,14 +237,14 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
               <span className="text-xs font-mono text-[var(--muted)]">Not measured yet</span>
             )}
           </div>
-          <div className="text-[10px] font-mono text-[var(--ink-2)]">
+          <div className="text-[0.71875rem] font-mono text-[var(--ink-2)]">
             {ja ? `FP: ${ja.false_pass} | FN: ${ja.false_fail}` : 'Human labels pending'}
           </div>
         </Card>
 
         {/* Release Gate Verdict */}
         <Card variant="glass" className="p-4 border-[var(--rule)] bg-[color:color-mix(in_srgb,var(--paper)_90%,transparent)] flex flex-col justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)]">
+          <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--ink-2)]">
             Release Gate
           </span>
           <div className="my-2">
@@ -256,7 +256,7 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
               GATE: {batch.release.decision}
             </Badge>
           </div>
-          <div className="text-[10px] font-mono text-[var(--ink-2)] truncate">
+          <div className="text-[0.71875rem] font-mono text-[var(--ink-2)] truncate">
             {batch.release.rule}
           </div>
         </Card>
@@ -273,7 +273,7 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
                 Root-Cause Failure Distribution
               </h4>
             </div>
-            <span className="text-[11px] font-mono text-[var(--ink-2)] bg-[var(--panel)] px-2 py-0.5 rounded border border-[var(--rule)]">
+            <span className="text-[0.75rem] font-mono text-[var(--ink-2)] bg-[var(--panel)] px-2 py-0.5 rounded border border-[var(--rule)]">
               Pack: {batch.pack_id?.toUpperCase() || 'RECRUITMENT'} (n = {batch.total_evaluated})
             </span>
           </div>
@@ -304,7 +304,7 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
                         <div className="p-2.5 rounded-lg bg-[var(--panel)] border border-[var(--rule)] shadow-xl text-xs font-mono">
                           <p className="font-bold text-[var(--ink)] mb-1">{data.name}</p>
                           <p className="text-[var(--ink-1)]">Count: <span className="font-bold text-[var(--teal)]">{data.count} cases</span></p>
-                          <p className="text-[var(--ink-2)] text-[10px] mt-0.5">Category: {data.category}</p>
+                          <p className="text-[var(--ink-2)] text-[0.71875rem] mt-0.5">Category: {data.category}</p>
                         </div>
                       );
                     }
@@ -320,7 +320,7 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
             </ResponsiveContainer>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between text-[11px] font-mono text-[var(--ink-2)] pt-1 border-t border-[var(--rule)]">
+          <div className="flex flex-wrap items-center justify-between text-[0.75rem] font-mono text-[var(--ink-2)] pt-1 border-t border-[var(--rule)]">
             <span>Diagnoses backed by Causal Gold Replay experiments</span>
             <span>Duration: {batch.duration_ms ? `${(batch.duration_ms / 1000).toFixed(1)}s` : '38.4s'}</span>
           </div>
@@ -342,12 +342,12 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
             </div>
 
             <div className="mt-3 space-y-2">
-              <span className="text-[11px] font-mono text-[var(--ink-2)] uppercase tracking-wider block">
+              <span className="text-[0.75rem] font-mono text-[var(--ink-2)] uppercase tracking-wider block">
                 Audit Evidence:
               </span>
               <ul className="space-y-1.5 text-xs text-[var(--ink-1)] font-mono">
                 {batch.release.evidence.map((ev, idx) => (
-                  <li key={idx} className="flex items-center gap-2 bg-[var(--panel)] p-2 rounded border border-[var(--rule)] text-[11px]">
+                  <li key={idx} className="flex items-center gap-2 bg-[var(--panel)] p-2 rounded border border-[var(--rule)] text-[0.75rem]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--gen)] flex-shrink-0"></span>
                     <span>{ev}</span>
                   </li>
@@ -357,7 +357,7 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
           </div>
 
           {/* Batch Run & Past Run History Actions */}
-          <div className="pt-3 border-t border-[var(--rule)] flex items-center justify-between gap-2 text-[11px] font-mono flex-wrap">
+          <div className="pt-3 border-t border-[var(--rule)] flex items-center justify-between gap-2 text-[0.75rem] font-mono flex-wrap">
             <Button
               variant="default"
               size="xs"
@@ -410,14 +410,14 @@ export const BatchSummarySection: React.FC<BatchSummarySectionProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[var(--teal)] font-bold">{run.batch_id}</span>
-                  <Badge variant="outline" size="sm" className="text-[10px]">
+                  <Badge variant="outline" size="sm" className="text-[0.71875rem]">
                     {run.pack_id.toUpperCase()}
                   </Badge>
                 </div>
                 <div className="text-[var(--ink-1)]">
                   Pass Rate: <span className="font-bold">{(run.pass_rate * 100).toFixed(0)}%</span> ({run.total_evaluated} cases)
                 </div>
-                <div className="text-[10px] text-[var(--muted)]">
+                <div className="text-[0.71875rem] text-[var(--muted)]">
                   {new Date(run.created_at).toLocaleTimeString()}
                 </div>
               </div>

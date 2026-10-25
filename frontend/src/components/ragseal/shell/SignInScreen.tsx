@@ -67,24 +67,24 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
     <div className="flex min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <section className="sticky top-0 hidden h-screen min-w-0 flex-[1.15] flex-col overflow-hidden border-r border-[var(--rule)] bg-[var(--panel)] px-12 py-10 lg:flex">
         <LivingBackdrop />
-        <div className="relative flex items-center gap-2.5 text-[15px] font-semibold tracking-[-0.01em]">
+        <div className="relative flex items-center gap-2.5 text-[1rem] font-semibold tracking-[-0.01em]">
           <SealMark size={26} />
           RAGSeal
         </div>
         <div className="relative flex min-h-0 flex-1 flex-col justify-center gap-7 py-6 xl:gap-9">
           <div className="max-w-[560px]">
-            <h1 className="signin-rise text-[44px] leading-[1.06] tracking-[-0.02em] text-[var(--ink)] xl:text-[50px]">
+            <h1 className="signin-rise text-[2.75rem] leading-[1.06] tracking-[-0.02em] text-[var(--ink)] xl:text-[3.125rem]">
               Find out which half of your RAG bot broke.
             </h1>
-            <p className="signin-rise mt-5 max-w-[460px] text-[15px] leading-relaxed text-[var(--ink-2)]" style={{ '--i': 1 } as React.CSSProperties}>
+            <p className="signin-rise mt-5 max-w-[460px] text-[1rem] leading-relaxed text-[var(--ink-2)]" style={{ '--i': 1 } as React.CSSProperties}>
               RAGSeal tests the retriever and the generator apart, then replays every wrong answer with the correct text to prove
               who was at fault.
             </p>
             <dl className="signin-rise mt-7 flex gap-7" style={{ '--i': 2 } as React.CSSProperties}>
               {PROOF.map((p, i) => (
                 <div key={p.label} className={i ? 'border-l border-[var(--rule-2)] pl-7' : ''}>
-                  <dt className="font-report text-[26px] leading-none text-[var(--ink)]">{p.value}</dt>
-                  <dd className="mt-1.5 text-[12px] text-[var(--ink-2)]">{p.label}</dd>
+                  <dt className="font-report text-[1.625rem] leading-none text-[var(--ink)]">{p.value}</dt>
+                  <dd className="mt-1.5 text-[0.8125rem] text-[var(--ink-2)]">{p.label}</dd>
                 </div>
               ))}
             </dl>
@@ -107,7 +107,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
             <div className="mb-6 lg:hidden">
               <div className="mb-5 flex items-center gap-2.5">
                 <SealMark size={24} />
-                <span className="text-[15px] font-semibold">RAGSeal</span>
+                <span className="text-[1rem] font-semibold">RAGSeal</span>
               </div>
               <div className="relative overflow-hidden rounded-2xl border border-[var(--rule)] bg-[var(--panel)] p-4">
                 <LivingBackdrop />
@@ -115,9 +115,9 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
                   <SignInTrace />
                 </FitStage>
               </div>
-              <p className="mt-4 font-report text-[22px] leading-snug">Find out which half of your RAG bot broke.</p>
+              <p className="mt-4 font-report text-[1.375rem] leading-snug">Find out which half of your RAG bot broke.</p>
             </div>
-            <h2 {...rise(0)} className="signin-rise text-[28px] tracking-[-0.015em]">
+            <h2 {...rise(0)} className="signin-rise text-[1.75rem] tracking-[-0.015em]">
               {remembered ? 'Welcome back' : mode === 'signin' ? 'Sign in' : 'Create an account'}
             </h2>
             <p {...rise(1)} className="signin-rise mt-1.5 text-sm text-[var(--ink-2)]">
@@ -125,7 +125,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
             </p>
 
             {backendDown && (
-              <p className="mt-5 rounded-lg border border-[var(--retr)] bg-[var(--retr-tint)] px-3 py-2 text-[13px] text-[var(--ink-1)]">
+              <p className="mt-5 rounded-lg border border-[var(--retr)] bg-[var(--retr-tint)] px-3 py-2 text-[0.875rem] text-[var(--ink-1)]">
                 The backend isn’t answering yet. Sign-in will work once it’s up.
               </p>
             )}
@@ -138,16 +138,16 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
                   disabled={busy !== null}
                   className="group flex h-14 w-full items-center gap-3 rounded-[12px] bg-[var(--ink)] px-4 text-left text-[var(--paper)] transition-colors hover:bg-[var(--ink-1)] disabled:opacity-60"
                 >
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--paper)] text-[13px] font-semibold uppercase text-[var(--ink)]">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--paper)] text-[0.875rem] font-semibold uppercase text-[var(--ink)]">
                     {remembered.user.email.slice(0, 1)}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[11px] opacity-70">Continue as</span>
+                    <span className="block text-[0.75rem] opacity-70">Continue as</span>
                     <span className="block truncate text-sm font-semibold">{remembered.user.email}</span>
                   </span>
                   <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
                 </button>
-                <p className="mt-2 text-right text-[12px] text-[var(--ink-2)]">
+                <p className="mt-2 text-right text-[0.8125rem] text-[var(--ink-2)]">
                   Not you?{' '}
                   <button type="button" onClick={onForget} className="font-medium text-[var(--accent)] underline-offset-4 hover:underline">
                     Sign out
@@ -185,7 +185,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
 
             <form {...rise(6)} onSubmit={submit} className="signin-rise space-y-3" noValidate>
               <label className="block">
-                <span className="mb-1.5 block text-[13px] text-[var(--ink-1)]">Email</span>
+                <span className="mb-1.5 block text-[0.875rem] text-[var(--ink-1)]">Email</span>
                 <input
                   type="email"
                   autoComplete="email"
@@ -196,7 +196,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
                 />
               </label>
               <label className="block">
-                <span className="mb-1.5 block text-[13px] text-[var(--ink-1)]">Password</span>
+                <span className="mb-1.5 block text-[0.875rem] text-[var(--ink-1)]">Password</span>
                 <input
                   type="password"
                   autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
@@ -206,7 +206,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
                 />
               </label>
               {error && (
-                <p role="alert" className="text-[13px] text-[var(--gen)]">
+                <p role="alert" className="text-[0.875rem] text-[var(--gen)]">
                   {error}
                 </p>
               )}
@@ -220,7 +220,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
               </button>
             </form>
 
-            <p {...rise(7)} className="signin-rise mt-6 text-center text-[13px] text-[var(--ink-2)]">
+            <p {...rise(7)} className="signin-rise mt-6 text-center text-[0.875rem] text-[var(--ink-2)]">
               {mode === 'signin' ? 'New here?' : 'Already have an account?'}{' '}
               <button
                 type="button"

@@ -188,14 +188,14 @@ export const AppShell: React.FC<AppShellProps> = ({
       {/* Sidebar: slides in as drawer on mobile (<sm), compact 60px on tablet (sm-lg), full 232px on desktop (lg+) */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-[var(--rule)] bg-[var(--paper)] transition-transform duration-200 ease-out sm:static sm:z-auto sm:w-[60px] lg:w-[232px]',
+          'fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-[var(--rule)] bg-[var(--paper)] transition-transform duration-200 ease-out sm:static sm:z-auto sm:w-[3.75rem] lg:w-[14.5rem]',
           mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full sm:translate-x-0'
         )}
       >
         <div className="flex h-14 items-center justify-between px-4 sm:px-[19px] lg:px-5 border-b border-[var(--rule)] sm:border-b-0">
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="h-[22px] w-[22px] shrink-0 text-[var(--ink)]" strokeWidth={1.6} />
-            <span className="text-[15px] font-semibold tracking-[-0.01em] sm:hidden lg:inline">RAGSeal</span>
+            <span className="text-[1rem] font-semibold tracking-[-0.01em] sm:hidden lg:inline">RAGSeal</span>
           </div>
           <button
             onClick={() => setMobileMenuOpen(false)}
@@ -208,13 +208,13 @@ export const AppShell: React.FC<AppShellProps> = ({
 
         <nav className="flex-1 overflow-y-auto px-2.5 pb-4 pt-2 lg:px-3">
           {NAV.map((g, gi) => (
-            <div key={g.group} className={cn('relative', g.step ? 'mb-4' : 'mb-3', g.group === 'Learn' && 'mt-2 border-t border-[var(--rule)] pt-3')}>
+            <div key={g.group} className={cn('relative', g.step ? 'mb-4 [@media(max-height:800px)]:mb-2.5' : 'mb-3 [@media(max-height:800px)]:mb-2', g.group === 'Learn' && 'mt-2 border-t border-[var(--rule)] pt-3')}>
               {g.step && (
                 <div className="mb-1.5 flex sm:hidden lg:flex items-center gap-2 px-2.5">
-                  <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-[var(--rule)] bg-[var(--panel)] text-[10px] font-semibold tabular-nums text-[var(--ink-1)]">
+                  <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-[var(--rule)] bg-[var(--panel)] text-[0.71875rem] font-semibold tabular-nums text-[var(--ink-1)]">
                     {g.step}
                   </span>
-                  <span className="text-[12px] font-medium text-[var(--ink-2)]">{g.group}</span>
+                  <span className="text-[0.8125rem] font-medium text-[var(--ink-2)]">{g.group}</span>
                 </div>
               )}
               {/* Connector line linking the three steps */}
@@ -237,7 +237,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                         data-tour={`nav-${item.id}`}
                         title={`${item.label}: ${item.hint}`}
                         className={cn(
-                          'group relative flex h-9 items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[13px] transition-[background-color,color] duration-200',
+                          'group relative flex h-9 [@media(max-height:800px)]:h-8 items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[0.875rem] transition-[background-color,color] duration-200',
                           active
                             ? 'bg-[var(--panel-3)] font-medium text-[var(--ink)]'
                             : 'text-[var(--ink-2)] hover:bg-[color:color-mix(in_srgb,var(--ink)_4%,transparent)] hover:text-[var(--ink)]'
@@ -274,10 +274,10 @@ export const AppShell: React.FC<AppShellProps> = ({
               setMobileMenuOpen(false);
               window.dispatchEvent(new Event('ragseal:tour'));
             }}
-            className="flex h-9 w-full items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)]"
+            className="flex h-9 w-full items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[0.875rem] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)]"
             title="Show the guided tour"
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--rule)] text-[12px] font-semibold text-[var(--ink)]">?</span>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--rule)] text-[0.8125rem] font-semibold text-[var(--ink)]">?</span>
             <span className="inline sm:hidden lg:inline">Guided tour</span>
           </button>
           <button
@@ -285,10 +285,10 @@ export const AppShell: React.FC<AppShellProps> = ({
               setMobileMenuOpen(false);
               onOpenAuth();
             }}
-            className="flex h-9 w-full items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)]"
+            className="flex h-9 w-full items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[0.875rem] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)]"
             title={user?.email ?? 'Sign in'}
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--panel-2)] text-[11px] font-medium text-[var(--ink)]">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--panel-2)] text-[0.75rem] font-medium text-[var(--ink)]">
               {user ? user.email[0].toUpperCase() : <User className="h-3.5 w-3.5" />}
             </span>
             <span className="inline sm:hidden lg:inline truncate">{user ? user.email.split('@')[0] : 'Sign in'}</span>
@@ -310,7 +310,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
           {/* The title block absorbs the squeeze (its blurb truncates); the controls keep their width. */}
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[14px] sm:text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)]">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
+            <h1 className="truncate text-[0.9375rem] sm:text-[1rem] font-semibold tracking-[-0.01em] text-[var(--ink)]">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
             <p className="hidden sm:block truncate text-xs text-[var(--ink-2)]">{ROUTE_BLURB[route]}</p>
           </div>
           <div id={TOP_BAR_SLOT} className="ml-auto flex max-w-[65%] sm:max-w-none shrink-0 items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar">
@@ -320,7 +320,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             <button
               onClick={onSignIn}
               title="You're on the shared demo account. Sign in to keep your own documents and runs."
-              className="flex h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[9px] border border-[var(--rule-2)] px-2.5 sm:px-3 text-xs sm:text-[13px] text-[var(--ink-1)] transition-colors hover:text-[var(--ink)]"
+              className="flex h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[9px] border border-[var(--rule-2)] px-2.5 sm:px-3 text-xs sm:text-[0.875rem] text-[var(--ink-1)] transition-colors hover:text-[var(--ink)]"
             >
               <User className="h-3.5 w-3.5" />
               <span className="hidden xl:inline">Sign in / Create account</span>

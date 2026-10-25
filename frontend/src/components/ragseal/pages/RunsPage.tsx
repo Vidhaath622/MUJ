@@ -110,7 +110,7 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
   const lastFinished = runs?.find((r) => (r.status ?? 'done') === 'done' && r.timing?.cases_per_min);
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
+    <div className="mx-auto flex max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-5 px-6 py-6">
       <TopBarControls>
         <PackSwitcher value={packId} onChange={onPackChange} />
         <PrimaryButton onClick={start} busy={starting} disabled={!token}>
@@ -143,7 +143,7 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
           </EmptyState>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[620px] text-[13px]">
+            <table className="w-full min-w-[620px] text-[0.875rem]">
               <thead>
                 <tr className="border-b border-[var(--rule)] text-left text-xs text-[var(--ink-2)]">
                   <th className="px-5 py-2.5 font-normal">Run</th>
@@ -218,7 +218,7 @@ const LiveRun: React.FC<{ progress: RunProgress; packId?: string; combinedCpm?: 
     <Panel raised title={packId ? `Running ${PACK_LABEL[packId] ?? packId} pack` : 'Running pack'} note={<span className="font-mono">{progress.batch_id}</span>}>
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div className="flex items-baseline gap-2">
-          <span className="text-[44px] font-semibold leading-none tracking-[-0.04em] tabular-nums">{done}</span>
+          <span className="text-[2.75rem] font-semibold leading-none tracking-[-0.04em] tabular-nums">{done}</span>
           <span className="text-lg text-[var(--ink-2)] tabular-nums">/ {total || '—'} questions</span>
           {!!progress.failed && <span className="ml-2 text-sm text-[var(--gen)]">{progress.failed} not scored</span>}
         </div>
@@ -257,11 +257,11 @@ const BudgetBar: React.FC<{ cpm: number | null; combined?: boolean }> = ({ cpm, 
   return (
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex items-center gap-2 text-[13px] text-[var(--ink-1)]">
+        <div className="flex items-center gap-2 text-[0.875rem] text-[var(--ink-1)]">
           <Timer className="h-4 w-4 text-[var(--muted)]" />
           {BUDGET_QUESTIONS} questions at {combined ? 'the combined pace of all running packs' : 'this pace'}
         </div>
-        <div className="text-[13px]">
+        <div className="text-[0.875rem]">
           {projected == null ? (
             <span className="text-[var(--ink-2)]">No pace measured yet</span>
           ) : (
@@ -281,7 +281,7 @@ const BudgetBar: React.FC<{ cpm: number | null; combined?: boolean }> = ({ cpm, 
         )}
         <div className="absolute -top-1.5 bottom-[-6px] w-px bg-[var(--ink-1)]" style={{ left: `${(BUDGET_MS / scale) * 100}%` }} />
       </div>
-      <div className="relative mt-1.5 h-4 text-[11px] text-[var(--ink-2)]">
+      <div className="relative mt-1.5 h-4 text-[0.75rem] text-[var(--ink-2)]">
         <span className="absolute -translate-x-1/2" style={{ left: `${(BUDGET_MS / scale) * 100}%` }}>
           15:00
         </span>
@@ -293,6 +293,6 @@ const BudgetBar: React.FC<{ cpm: number | null; combined?: boolean }> = ({ cpm, 
 const Mini: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div>
     <div className="text-xs text-[var(--ink-2)]">{label}</div>
-    <div className="mt-0.5 text-[17px] font-medium tabular-nums text-[var(--ink)]">{value}</div>
+    <div className="mt-0.5 text-[1.125rem] font-medium tabular-nums text-[var(--ink)]">{value}</div>
   </div>
 );

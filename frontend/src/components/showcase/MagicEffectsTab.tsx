@@ -20,7 +20,7 @@ export const MagicEffectsTab: React.FC = () => {
     <div className="space-y-8">
       {/* Live Marquee Ticker */}
       <Card className="bg-[var(--panel)] border-[var(--rule)] overflow-hidden p-2">
-        <div className="px-3 py-1 text-[11px] font-mono text-[var(--ink-2)] uppercase tracking-wider flex items-center justify-between border-b border-[var(--rule)] mb-1">
+        <div className="px-3 py-1 text-[0.75rem] font-mono text-[var(--ink-2)] uppercase tracking-wider flex items-center justify-between border-b border-[var(--rule)] mb-1">
           <span className="flex items-center gap-1.5 text-[var(--accent)]">
             <Activity className="w-3.5 h-3.5" />
             Live Event Stream (Magic UI Marquee)
@@ -65,7 +65,7 @@ export const MagicEffectsTab: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2 font-mono">
           <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)]">
-            <span className="text-[11px] text-[var(--muted)] uppercase block">Total Queries Evaluated</span>
+            <span className="text-[0.75rem] text-[var(--muted)] uppercase block">Total Queries Evaluated</span>
             <AnimatedCounter
               value={evalCount}
               className="text-3xl text-[var(--ink)] font-bold"
@@ -74,7 +74,7 @@ export const MagicEffectsTab: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)]">
-            <span className="text-[11px] text-[var(--muted)] uppercase block">Mean Groundedness</span>
+            <span className="text-[0.75rem] text-[var(--muted)] uppercase block">Mean Groundedness</span>
             <AnimatedCounter
               value={testScore}
               suffix="%"
@@ -84,7 +84,7 @@ export const MagicEffectsTab: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)]">
-            <span className="text-[11px] text-[var(--muted)] uppercase block">Mean Latency</span>
+            <span className="text-[0.75rem] text-[var(--muted)] uppercase block">Mean Latency</span>
             <AnimatedCounter
               value={18.4}
               precision={1}

@@ -186,8 +186,8 @@ export const RagFigure: React.FC<{ caption?: boolean }> = ({ caption = true }) =
         )}
       </svg>
       {caption && (
-        <figcaption className="mt-3 text-[13px] leading-relaxed text-[var(--ink-1)]">
-          <span className="font-report text-[14px] italic text-[var(--ink)]">Fig. 1 — How a RAG chatbot answers, and where RAGSeal checks it.</span>{' '}
+        <figcaption className="mt-3 text-[0.875rem] leading-relaxed text-[var(--ink-1)]">
+          <span className="font-report text-[0.9375rem] italic text-[var(--ink)]">Fig. 1 — How a RAG chatbot answers, and where RAGSeal checks it.</span>{' '}
           Documents are indexed once. For each question the retriever pulls a few chunks and the bot writes an answer from them. RAGSeal
           checks the retriever (1), the bot (2) and the final answer (3) separately, then replays a wrong answer with only the correct text
           to prove which part caused it.

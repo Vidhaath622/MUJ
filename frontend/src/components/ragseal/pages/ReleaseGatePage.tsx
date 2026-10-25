@@ -237,12 +237,12 @@ export const ReleaseGatePage: React.FC<ReleaseGatePageProps> = ({ token, userEma
   const savedNeedsKey = !!savedBot?.headers?.some((h) => h.name?.trim());
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
+    <div className="mx-auto flex max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-5 px-6 py-6">
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       <div className="grid gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
         <Panel className="lg:self-start" title="Gate a release" bodyClassName="flex flex-col gap-5 p-5">
-          <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">
+          <p className="text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
             Block a bot release that got worse. RAGSeal reruns the test pack and compares it with the last good run.
           </p>
 
@@ -259,7 +259,7 @@ export const ReleaseGatePage: React.FC<ReleaseGatePageProps> = ({ token, userEma
                 aria-selected={mode === m}
                 onClick={() => setMode(m)}
                 className={cn(
-                  'h-8 rounded-[8px] text-[12.5px] transition-colors',
+                  'h-8 rounded-[8px] text-[0.84375rem] transition-colors',
                   mode === m ? 'bg-[var(--ink)] text-[var(--paper)]' : 'text-[var(--ink-1)] hover:text-[var(--ink)]'
                 )}
               >
@@ -371,7 +371,7 @@ export const ReleaseGatePage: React.FC<ReleaseGatePageProps> = ({ token, userEma
 
 const Intro: React.FC = () => (
   <Panel title="How the gate decides">
-    <div className="flex flex-col gap-3 text-[13px] leading-relaxed text-[var(--ink-1)]">
+    <div className="flex flex-col gap-3 text-[0.875rem] leading-relaxed text-[var(--ink-1)]">
       <p>A release passes only if both hold:</p>
       <ol className="ml-4 list-decimal space-y-1 text-[var(--ink-1)]">
         <li>its pass rate is at or above your bar, and</li>
@@ -390,7 +390,7 @@ const Running: React.FC<{ gate: GateResult }> = ({ gate }) => {
   return (
     <Panel title="Running the pack" note={gate.batch_id}>
       <div className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between text-[13px]">
+        <div className="flex items-baseline justify-between text-[0.875rem]">
           <span className="text-[var(--ink)]">
             {done} of {total || '…'} questions
           </span>
@@ -429,17 +429,17 @@ const Result: React.FC<{ gate: GateResult; onOpenRun: (batchId: string, packId?:
     >
       <div className="flex flex-wrap items-center gap-4">
         <span
-          className="inline-flex items-center gap-2.5 rounded-2xl px-4 py-2.5 text-[26px] font-semibold tracking-tight"
+          className="inline-flex items-center gap-2.5 rounded-2xl px-4 py-2.5 text-[1.625rem] font-semibold tracking-tight"
           style={{ background: tint(color, 0.14), color, border: `1px solid ${tint(color, 0.4)}` }}
         >
           {passed ? <ShieldCheck className="h-7 w-7" /> : <ShieldX className="h-7 w-7" />}
           {passed ? 'PASS' : 'FAIL'}
         </span>
-        <p className="min-w-0 flex-1 text-[16px] leading-snug text-[var(--ink)]">{headline}</p>
+        <p className="min-w-0 flex-1 text-[1rem] leading-snug text-[var(--ink)]">{headline}</p>
       </div>
 
       {!!gate.reasons?.length && (
-        <ul className="flex flex-col gap-1 text-[13px] text-[var(--ink-1)]">
+        <ul className="flex flex-col gap-1 text-[0.875rem] text-[var(--ink-1)]">
           {gate.reasons.map((r) => (
             <li key={r} className="flex gap-2">
               <span style={{ color: RED }}>•</span>
@@ -512,12 +512,12 @@ const Stat: React.FC<{ label: string; value: string; ok: boolean; note?: string;
   children,
 }) => (
   <div className="rounded-xl border border-[var(--rule)] px-3.5 py-3">
-    <div className="text-[11.5px] text-[var(--ink-2)]">{label}</div>
+    <div className="text-[0.78125rem] text-[var(--ink-2)]">{label}</div>
     <div className="mt-0.5 flex items-baseline gap-2">
-      <span className="text-[22px] font-medium tabular-nums" style={{ color: ok ? 'var(--ink)' : RED }}>
+      <span className="text-[1.375rem] font-medium tabular-nums" style={{ color: ok ? 'var(--ink)' : RED }}>
         {value}
       </span>
-      {note && <span className="text-[11.5px] text-[var(--ink-2)]">{note}</span>}
+      {note && <span className="text-[0.78125rem] text-[var(--ink-2)]">{note}</span>}
     </div>
     {children}
   </div>
@@ -527,14 +527,14 @@ const CaseRow: React.FC<{ c: GateCase; onOpen?: () => void }> = ({ c, onOpen }) 
   const style = verdictStyle(c.category);
   return (
     <li className="flex items-start gap-3 px-3.5 py-2.5">
-      <span className="mt-0.5 shrink-0 font-mono text-[11px] text-[var(--ink-2)]">{c.test_id}</span>
+      <span className="mt-0.5 shrink-0 font-mono text-[0.75rem] text-[var(--ink-2)]">{c.test_id}</span>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] text-[var(--ink)]">{c.question}</p>
+        <p className="text-[0.875rem] text-[var(--ink)]">{c.question}</p>
         {c.summary && <p className="mt-0.5 text-xs leading-snug text-[var(--ink-2)]">{c.summary}</p>}
       </div>
       {c.category && (
         <span
-          className="shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-medium"
+          className="shrink-0 rounded-full px-2 py-0.5 text-[0.71875rem] font-medium"
           style={{ background: tint(style.color, 0.16), color: style.color }}
         >
           {style.short}
@@ -552,7 +552,7 @@ const CaseRow: React.FC<{ c: GateCase; onOpen?: () => void }> = ({ c, onOpen }) 
 const CiPanel: React.FC<{ packId: string; minPass: number; maxNew: number }> = ({ packId, minPass, maxNew }) => (
   <Panel title="Use it in CI" note="GitHub Actions, or any CI that runs Python">
     <div className="flex flex-col gap-4">
-      <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">
+      <p className="text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
         Every push reruns your bot through the pack; the job fails (exit 1) when the gate says FAIL, so a worse bot never ships. You need an API
         token: make one in{' '}
         {/* Not an #anchor: the hash is the app's route. */}
@@ -590,7 +590,7 @@ const CodeBlock: React.FC<{ label: string; code: string; tall?: boolean }> = ({ 
       </div>
       <pre
         className={cn(
-          'overflow-auto rounded-xl border border-[var(--rule)] bg-[var(--paper)] px-3.5 py-3 font-mono text-[11.5px] leading-relaxed text-[var(--ink-1)]',
+          'overflow-auto rounded-xl border border-[var(--rule)] bg-[var(--paper)] px-3.5 py-3 font-mono text-[0.78125rem] leading-relaxed text-[var(--ink-1)]',
           tall && 'max-h-[260px]'
         )}
       >
@@ -652,13 +652,13 @@ const TokensPanel: React.FC<{ token: string | null; isDemo: boolean }> = ({ toke
         note={tokens ? `${tokens.length} of 10` : undefined}
       >
         <div className="flex flex-col gap-4">
-          <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">
+          <p className="text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
             A token lets CI call RAGSeal as you. Keep it in your CI's secrets; it works until you revoke it.
           </p>
           <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
           {isDemo ? (
-            <p className="rounded-xl border border-[var(--rule)] px-3.5 py-3 text-[13px] text-[var(--ink-1)]">
+            <p className="rounded-xl border border-[var(--rule)] px-3.5 py-3 text-[0.875rem] text-[var(--ink-1)]">
               The demo account is shared, so it can't make tokens. Sign in with your own account (Google or email) to create one.
             </p>
           ) : (
@@ -678,9 +678,9 @@ const TokensPanel: React.FC<{ token: string | null; isDemo: boolean }> = ({ toke
 
           {fresh && (
             <div className="flex flex-col gap-2 rounded-xl px-3.5 py-3" style={{ background: tint(PASS, 0.1), border: `1px solid ${tint(PASS, 0.35)}` }}>
-              <span className="text-[13px] font-medium text-[var(--ink)]">Copy it now: this is the only time the full token is shown.</span>
+              <span className="text-[0.875rem] font-medium text-[var(--ink)]">Copy it now: this is the only time the full token is shown.</span>
               <div className="flex items-center gap-2">
-                <code className="min-w-0 flex-1 truncate rounded-lg bg-[var(--paper)] px-2.5 py-1.5 font-mono text-[12px] text-[var(--ink)]">{fresh.token}</code>
+                <code className="min-w-0 flex-1 truncate rounded-lg bg-[var(--paper)] px-2.5 py-1.5 font-mono text-[0.8125rem] text-[var(--ink)]">{fresh.token}</code>
                 <GhostButton
                   onClick={() =>
                     navigator.clipboard?.writeText(fresh.token).then(() => {
@@ -699,11 +699,11 @@ const TokensPanel: React.FC<{ token: string | null; isDemo: boolean }> = ({ toke
           {tokens && tokens.length > 0 ? (
             <ul className="flex flex-col divide-y divide-[var(--rule)] rounded-xl border border-[var(--rule)]">
               {tokens.map((t) => (
-                <li key={t.id} className="flex items-center gap-3 px-3.5 py-2.5 text-[13px]">
+                <li key={t.id} className="flex items-center gap-3 px-3.5 py-2.5 text-[0.875rem]">
                   <span className="min-w-0 flex-1">
                     <span className="text-[var(--ink)]">{t.name}</span>
-                    <span className="ml-2 font-mono text-[11.5px] text-[var(--ink-2)]">{t.prefix}…</span>
-                    <span className="block text-[11.5px] text-[var(--ink-2)]">
+                    <span className="ml-2 font-mono text-[0.78125rem] text-[var(--ink-2)]">{t.prefix}…</span>
+                    <span className="block text-[0.78125rem] text-[var(--ink-2)]">
                       Created {fmtTime(t.created_at)} · {t.last_used_at ? `last used ${fmtTime(t.last_used_at)}` : 'never used'}
                     </span>
                   </span>
@@ -735,7 +735,7 @@ const Choice: React.FC<{ on: boolean; onClick: () => void; disabled?: boolean; c
     disabled={disabled}
     aria-pressed={on}
     className={cn(
-      'flex h-9 items-center gap-2.5 rounded-[10px] border px-3 text-left text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-45',
+      'flex h-9 items-center gap-2.5 rounded-[10px] border px-3 text-left text-[0.875rem] transition-colors disabled:cursor-not-allowed disabled:opacity-45',
       on ? 'border-[var(--ink)] text-[var(--ink)]' : 'border-[var(--rule-2)] text-[var(--ink-1)] hover:border-[var(--rule-3)]'
     )}
   >
@@ -750,12 +750,12 @@ const Choice: React.FC<{ on: boolean; onClick: () => void; disabled?: boolean; c
 );
 
 const INPUT =
-  'h-10 w-full rounded-[10px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 text-[13.5px] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--rule-3)] disabled:opacity-50';
+  'h-10 w-full rounded-[10px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 text-[0.90625rem] text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--rule-3)] disabled:opacity-50';
 
 const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode }> = ({ label, hint, children }) => (
   <div className="flex flex-col gap-1.5">
     <span className="text-xs font-medium text-[var(--ink-1)]">{label}</span>
     {children}
-    {hint && <span className="text-[11.5px] leading-snug text-[var(--ink-2)]">{hint}</span>}
+    {hint && <span className="text-[0.78125rem] leading-snug text-[var(--ink-2)]">{hint}</span>}
   </div>
 );

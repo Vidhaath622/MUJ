@@ -88,7 +88,7 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
                   Deliverable 2
                 </Badge>
               </div>
-              <p className="text-[11px] text-[var(--ink-2)] font-mono">
+              <p className="text-[0.75rem] text-[var(--ink-2)] font-mono">
                 Extracts grounded question-answer test pairs directly from corpus chunks.
               </p>
             </div>
@@ -149,7 +149,7 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
             </div>
           )}
 
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)] block mb-1">
+          <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--ink-2)] block mb-1">
             Generated Benchmark Test Cases ({questionList.length}):
           </span>
 
@@ -160,13 +160,13 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] font-mono font-bold text-[var(--teal)] bg-[var(--teal-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)]">
+                  <span className="text-[0.75rem] font-mono font-bold text-[var(--teal)] bg-[var(--teal-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)]">
                     {q.test_id}
                   </span>
-                  <Badge variant="outline" size="sm" className="text-[10px] font-mono text-[var(--ink-1)] border-[var(--rule)]">
+                  <Badge variant="outline" size="sm" className="text-[0.71875rem] font-mono text-[var(--ink-1)] border-[var(--rule)]">
                     {q.archetype}
                   </Badge>
-                  <span className="text-[11px] font-mono text-[var(--muted)]">
+                  <span className="text-[0.75rem] font-mono text-[var(--muted)]">
                     chunk: {q.source_chunk_id}
                   </span>
                 </div>
@@ -178,7 +178,7 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
                       onSelectQuestion(q);
                       onClose();
                     }}
-                    className="text-[11px] font-mono border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] text-[var(--accent)] hover:bg-[var(--accent-tint)] gap-1 py-1 h-7"
+                    className="text-[0.75rem] font-mono border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] text-[var(--accent)] hover:bg-[var(--accent-tint)] gap-1 py-1 h-7"
                   >
                     <span>Test in Trace</span>
                     <ArrowRight className="w-3 h-3" />
@@ -190,15 +190,15 @@ export const SyntheticGeneratorModal: React.FC<SyntheticGeneratorModalProps> = (
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-[var(--paper)] border border-[var(--rule)] text-xs space-y-1">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--ok)] font-bold block">
+                  <span className="text-[0.71875rem] font-mono uppercase tracking-wider text-[var(--ok)] font-bold block">
                     Ground Truth Expected Answer:
                   </span>
-                  <p className="text-[var(--ink)] font-mono text-[11px]">
+                  <p className="text-[var(--ink)] font-mono text-[0.75rem]">
                     {q.ground_truth_answer}
                   </p>
                 </div>
 
-                <div className="text-[11px] font-mono text-[var(--ink-2)] truncate">
+                <div className="text-[0.75rem] font-mono text-[var(--ink-2)] truncate">
                   Context snippet: <span className="text-[var(--ink-2)] italic">"{q.context_snippet}"</span>
                 </div>
               </div>

@@ -49,7 +49,7 @@ export const Progress: React.FC<ProgressProps> = ({
         />
       </div>
       {showLabel && (
-        <div className="flex justify-between text-[11px] font-mono text-[var(--ink-2)]">
+        <div className="flex justify-between text-[0.75rem] font-mono text-[var(--ink-2)]">
           <span>Score</span>
           <span className="font-bold text-[var(--ink)]">{clamped.toFixed(0)}%</span>
         </div>
@@ -122,7 +122,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           {clamped.toFixed(0)}%
         </span>
         {label && (
-          <span className="text-[9px] font-mono text-[var(--ink-2)] uppercase mt-0.5">
+          <span className="text-[0.6875rem] font-mono text-[var(--ink-2)] uppercase mt-0.5">
             {label}
           </span>
         )}

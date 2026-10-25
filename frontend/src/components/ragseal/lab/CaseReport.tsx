@@ -78,12 +78,12 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
               </>
             )}
           </div>
-          <h1 className="mt-2 text-[20px] sm:text-[22px] font-semibold leading-tight tracking-[-0.025em] text-[var(--ink)] 2xl:text-[26px]">{result.query}</h1>
+          <h1 className="mt-2 text-[1.25rem] sm:text-[1.375rem] font-semibold leading-tight tracking-[-0.025em] text-[var(--ink)] 2xl:text-[1.625rem]">{result.query}</h1>
         </div>
         {result.ground_truth && (
           <div className="w-full sm:max-w-[38%] shrink-0 sm:text-right rounded-xl sm:rounded-none bg-[var(--panel-2)] sm:bg-transparent p-3 sm:p-0">
-            <div className="text-[11px] text-[var(--ink-2)]">Known answer</div>
-            <div className="mt-0.5 text-[14px] sm:text-[15px] font-medium sm:font-normal text-[var(--ink)]">{result.ground_truth}</div>
+            <div className="text-[0.75rem] text-[var(--ink-2)]">Known answer</div>
+            <div className="mt-0.5 text-[0.9375rem] sm:text-[1rem] font-medium sm:font-normal text-[var(--ink)]">{result.ground_truth}</div>
           </div>
         )}
       </header>
@@ -102,7 +102,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
           <div className="text-xs font-medium" style={{ color: tint(v.color, 0.75) }}>
             Root cause
           </div>
-          <div className="stamp stamp-land mt-3 text-[22px] leading-none 2xl:text-[26px]" style={{ color: v.color }}>
+          <div className="stamp stamp-land mt-3 text-[1.375rem] leading-none 2xl:text-[1.625rem]" style={{ color: v.color }}>
             {v.label}
           </div>
           {ft && ft !== 'CLEAN_PASS' && (
@@ -204,7 +204,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
         </Pane>
 
         <Pane title="What the bot answered" note={result.generator_model ?? result.bot?.host} mono delay={180}>
-          <p className="whitespace-pre-wrap text-[17px] leading-normal tracking-[-0.01em] text-[var(--ink)]">
+          <p className="whitespace-pre-wrap text-[1.125rem] leading-normal tracking-[-0.01em] text-[var(--ink)]">
             {result.generated_answer ? (
               <Figures text={result.generated_answer} color={answerWrong ? RED : undefined} />
             ) : (
@@ -228,7 +228,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
                     <div className="mx-auto w-full max-w-[860px]">
                       <ReplayProof replay={result.replay} before={accuracy} />
                       {result.root_cause?.recommended_action && (
-                        <p className="mt-3 text-[13px] text-[var(--ink-2)]">Fix: {result.root_cause.recommended_action}</p>
+                        <p className="mt-3 text-[0.875rem] text-[var(--ink-2)]">Fix: {result.root_cause.recommended_action}</p>
                       )}
                     </div>
                   ),
@@ -272,16 +272,16 @@ const Stage: React.FC<{
       <div className="flex items-start justify-between gap-2 text-xs">
         <span className="min-w-0 leading-tight">
           <span className="block font-medium text-[var(--ink)]">{name}</span>
-          {tech && <span className="block text-[10.5px] text-[var(--muted)]">{tech}</span>}
+          {tech && <span className="block text-[0.71875rem] text-[var(--muted)]">{tech}</span>}
         </span>
         <span className="shrink-0" style={{ color }}>
           {label ?? (fault ? 'to blame' : state === 'ok' ? 'yes' : 'unclear')}
         </span>
       </div>
-      <div className="mt-2 truncate text-[21px] font-semibold tabular-nums tracking-[-0.02em] 2xl:text-[26px]" style={{ color }}>
+      <div className="mt-2 truncate text-[1.3125rem] font-semibold tabular-nums tracking-[-0.02em] 2xl:text-[1.625rem]" style={{ color }}>
         {value}
       </div>
-      <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-[var(--ink-2)]">{sub}</div>
+      <div className="mt-0.5 line-clamp-2 text-[0.75rem] leading-snug text-[var(--ink-2)]">{sub}</div>
     </div>
   );
 };
@@ -306,7 +306,7 @@ const Pane: React.FC<{ title: string; note?: string; mono?: boolean; delay: numb
   children,
 }) => (
   <div className="lab-panel-flat lab-fade-up flex min-h-0 flex-col overflow-hidden rounded-2xl" style={{ animationDelay: `${delay}ms` }}>
-    <div className="flex items-baseline justify-between border-b border-[var(--rule)] px-[18px] py-3.5 text-[13px]">
+    <div className="flex items-baseline justify-between border-b border-[var(--rule)] px-[18px] py-3.5 text-[0.875rem]">
       <h3 className="font-medium text-[var(--ink)]">{title}</h3>
       {note && <span className={cn('text-[var(--ink-2)]', mono && 'font-mono text-xs')}>{note}</span>}
     </div>
@@ -348,14 +348,14 @@ const ChunkCard: React.FC<{
         <span className="truncate text-[var(--ink)]">{filename ?? chunk.document_id ?? 'document'}</span>
         {tag && (
           <span
-            className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px]"
+            className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[0.75rem]"
             style={color ? { background: tint(color, 0.13), color } : { color: 'var(--ink-2)' }}
           >
             {tag}
           </span>
         )}
       </div>
-      <p className="mt-2 line-clamp-4 text-[13px] leading-relaxed text-[var(--ink-1)]">
+      <p className="mt-2 line-clamp-4 text-[0.875rem] leading-relaxed text-[var(--ink-1)]">
         <Figures text={stripHeading(chunk.text)} color={color ?? undefined} />
       </p>
     </article>
@@ -392,14 +392,14 @@ const ReplayProof: React.FC<{ replay: NonNullable<LabResult['replay']>; before: 
   return (
     <div className="lab-panel rounded-[14px] p-4">
       <div className="flex items-center gap-2.5 text-xs">
-        <span className="rounded-md bg-[var(--rule)] px-2 py-0.5 font-mono text-[11px] text-[var(--ink-1)]">REPLAY</span>
+        <span className="rounded-md bg-[var(--rule)] px-2 py-0.5 font-mono text-[0.75rem] text-[var(--ink-1)]">REPLAY</span>
         <span className="text-[var(--ink-1)]">Same model, only the correct source</span>
         <span className="ml-auto font-medium tabular-nums" style={{ color: fixed ? PASS : RED }}>
           {pct(before)} → {pct(replay.answer_accuracy)}
         </span>
       </div>
       {replay.answer && (
-        <p className="mt-3 text-[15px] leading-normal text-[var(--ink)]">
+        <p className="mt-3 text-[1rem] leading-normal text-[var(--ink)]">
           <Figures text={replay.answer} color={fixed ? PASS : undefined} />
         </p>
       )}

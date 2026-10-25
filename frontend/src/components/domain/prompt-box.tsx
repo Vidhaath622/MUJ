@@ -104,7 +104,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
       {/* Starter Question Quick Picks */}
       {starterQuestions && starterQuestions.length > 0 && (
         <div className="space-y-1.5">
-          <span className="text-[11px] font-mono text-[var(--ink-2)]">
+          <span className="text-[0.75rem] font-mono text-[var(--ink-2)]">
             Click any benchmark question to test retriever vs generator failure:
           </span>
           <div className="flex flex-wrap gap-1.5">
@@ -145,7 +145,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
       {showGroundTruth && (
         <div className="space-y-1">
-          <span className="text-[11px] font-mono text-[var(--ok)] uppercase font-semibold">
+          <span className="text-[0.75rem] font-mono text-[var(--ok)] uppercase font-semibold">
             Optional Ground Truth Reference Answer:
           </span>
           <textarea
@@ -159,7 +159,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
       )}
 
       <div className="flex items-center justify-between pt-1">
-        <span className="text-[11px] font-mono text-[var(--muted)] hidden sm:inline">
+        <span className="text-[0.75rem] font-mono text-[var(--muted)] hidden sm:inline">
           Pro-tip: Press <kbd className="bg-[var(--panel)] px-1.5 py-0.5 rounded text-[var(--ink-1)]">⌘</kbd> + <kbd className="bg-[var(--panel)] px-1.5 py-0.5 rounded text-[var(--ink-1)]">Enter</kbd> to run diagnostics
         </span>
 

@@ -94,10 +94,10 @@ const Figure: React.FC<{ fig: string; title: string; caption: string; children: 
   children,
 }) => (
   <figure className="rounded-2xl border border-[var(--rule)] bg-[var(--panel)] p-6">
-    <div className="text-[11px] font-mono uppercase tracking-[0.14em] text-[var(--ink-2)]">{fig}</div>
-    <h2 className="mt-1 text-[22px] leading-tight text-[var(--ink)]" style={{ fontFamily: "Newsreader, Georgia, serif" }}>{title}</h2>
+    <div className="text-[0.75rem] font-mono uppercase tracking-[0.14em] text-[var(--ink-2)]">{fig}</div>
+    <h2 className="mt-1 text-[1.375rem] leading-tight text-[var(--ink)]" style={{ fontFamily: "Newsreader, Georgia, serif" }}>{title}</h2>
     <div className="mx-auto mt-5 max-w-[1000px]">{children}</div>
-    <figcaption className="mt-4 text-[13px] leading-relaxed text-[var(--ink-2)]">{caption}</figcaption>
+    <figcaption className="mt-4 text-[0.875rem] leading-relaxed text-[var(--ink-2)]">{caption}</figcaption>
   </figure>
 );
 
