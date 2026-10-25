@@ -8,7 +8,6 @@ across re-uploads and machines.
 from __future__ import annotations
 
 import hashlib
-import io
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,6 +26,7 @@ class Chunk:
     index: int
     text: str
     page: int | None
+    page_end: int | None = None  # last page of a chunk that spans several PDF pages
 
 
 @dataclass
@@ -35,6 +35,7 @@ class ParsedDocument:
     filename: str
     content_hash: str
     chunks: list[Chunk]
+    quality: dict | None = None  # PDF text-quality report (see engine/pdf_clean.py)
 
 
 def content_hash(data: bytes) -> str:
@@ -43,18 +44,6 @@ def content_hash(data: bytes) -> str:
 
 def document_id_for(data: bytes) -> str:
     return "doc_" + content_hash(data)[:10]
-
-
-def _pdf_pages(data: bytes) -> list[tuple[int | None, str]]:
-    from pypdf import PdfReader
-
-    reader = PdfReader(io.BytesIO(data))
-    pages = []
-    for number, page in enumerate(reader.pages, start=1):
-        text = page.extract_text() or ""
-        if text.strip():
-            pages.append((number, text))
-    return pages
 
 
 def _text_pages(data: bytes) -> list[tuple[int | None, str]]:
@@ -142,11 +131,13 @@ def parse_document(filename: str, data: bytes, chunk_chars: int = 700) -> Parsed
     suffix = Path(filename).suffix.lower()
     if suffix not in SUPPORTED:
         raise UnsupportedFile(f"unsupported file type '{suffix}', use PDF, TXT or MD")
-    pages = _pdf_pages(data) if suffix == ".pdf" else _text_pages(data)
-    if not any(text.strip() for _, text in pages):
-        raise UnsupportedFile("no extractable text found (scanned PDFs are not supported)")
     doc_hash = content_hash(data)
     document_id = "doc_" + doc_hash[:10]
+    if suffix == ".pdf":
+        return _parse_pdf(filename, data, doc_hash)
+    pages = _text_pages(data)
+    if not any(text.strip() for _, text in pages):
+        raise UnsupportedFile("no extractable text found")
     chunks = [
         Chunk(
             chunk_id=f"chk_{doc_hash[:6]}_{i:03d}",
@@ -158,3 +149,24 @@ def parse_document(filename: str, data: bytes, chunk_chars: int = 700) -> Parsed
         for i, (page, text) in enumerate(chunk_pages(pages, chunk_chars))
     ]
     return ParsedDocument(document_id=document_id, filename=filename, content_hash=doc_hash, chunks=chunks)
+
+
+def _parse_pdf(filename: str, data: bytes, doc_hash: str) -> ParsedDocument:
+    """PDFs (slides, notes): clean the text, merge short pages, and report on text quality."""
+    from .pdf_clean import PdfReport, chunk_slides, clean, extract_pages, finish_report
+
+    report = PdfReport()
+    pages = extract_pages(data, report)
+    if not pages:
+        raise UnsupportedFile(
+            f"no readable text in any of the {report.pages} pages (an image-only PDF; install tesseract on the server to OCR it)"
+        )
+    pieces = chunk_slides(clean(pages, report), report)
+    document_id = "doc_" + doc_hash[:10]
+    chunks = [
+        Chunk(chunk_id=f"chk_{doc_hash[:6]}_{i:03d}", document_id=document_id, index=i, text=text, page=first,
+              page_end=last if last != first else None)
+        for i, (first, last, text) in enumerate(pieces)
+    ]
+    return ParsedDocument(document_id=document_id, filename=filename, content_hash=doc_hash, chunks=chunks,
+                          quality=finish_report(report, pieces))

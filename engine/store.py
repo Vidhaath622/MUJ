@@ -69,6 +69,8 @@ class VectorStore:
         columns = {row[1] for row in self._db.execute("PRAGMA table_info(documents)")}
         if "embed_key" not in columns:
             self._db.execute("ALTER TABLE documents ADD COLUMN embed_key TEXT")
+        if "page_end" not in {row[1] for row in self._db.execute("PRAGMA table_info(chunks)")}:
+            self._db.execute("ALTER TABLE chunks ADD COLUMN page_end INTEGER")
         self._db.commit()
 
     def add_document(
@@ -85,9 +87,9 @@ class VectorStore:
                 (owner_id, doc.document_id, doc.filename, pack_id, len(doc.chunks), now, embed_key),
             )
             self._db.executemany(
-                "INSERT INTO chunks VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO chunks (owner_id, chunk_id, document_id, idx, text, page, embedding, page_end) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 [
-                    (owner_id, c.chunk_id, c.document_id, c.index, c.text, c.page, np.asarray(e, dtype=np.float32).tobytes())
+                    (owner_id, c.chunk_id, c.document_id, c.index, c.text, c.page, np.asarray(e, dtype=np.float32).tobytes(), c.page_end)
                     for c, e in zip(doc.chunks, embeddings)
                 ],
             )
@@ -148,10 +150,10 @@ class VectorStore:
         marks = ",".join("?" * len(document_ids))
         with self._lock:
             rows = self._db.execute(
-                f"SELECT chunk_id, document_id, idx, text, page FROM chunks WHERE owner_id = ? AND document_id IN ({marks}) ORDER BY document_id, idx",
+                f"SELECT chunk_id, document_id, idx, text, page, page_end FROM chunks WHERE owner_id = ? AND document_id IN ({marks}) ORDER BY document_id, idx",
                 (owner_id, *document_ids),
             ).fetchall()
-        return [Chunk(r[0], r[1], r[2], r[3], r[4]) for r in rows]
+        return [Chunk(*r) for r in rows]
 
     def get_chunks(self, owner_id: str, chunk_ids: list[str]) -> list[Chunk]:
         if not chunk_ids:
@@ -159,10 +161,10 @@ class VectorStore:
         marks = ",".join("?" * len(chunk_ids))
         with self._lock:
             rows = self._db.execute(
-                f"SELECT chunk_id, document_id, idx, text, page FROM chunks WHERE owner_id = ? AND chunk_id IN ({marks})",
+                f"SELECT chunk_id, document_id, idx, text, page, page_end FROM chunks WHERE owner_id = ? AND chunk_id IN ({marks})",
                 (owner_id, *chunk_ids),
             ).fetchall()
-        by_id = {r[0]: Chunk(r[0], r[1], r[2], r[3], r[4]) for r in rows}
+        by_id = {r[0]: Chunk(*r) for r in rows}
         return [by_id[c] for c in chunk_ids if c in by_id]
 
     def search(self, owner_id: str, document_ids: list[str], query_embedding: list[float], k: int) -> list[ScoredChunk]:
@@ -171,15 +173,15 @@ class VectorStore:
         marks = ",".join("?" * len(document_ids))
         with self._lock:
             rows = self._db.execute(
-                f"SELECT chunk_id, document_id, idx, text, page, embedding FROM chunks WHERE owner_id = ? AND document_id IN ({marks}) ORDER BY document_id, idx",
+                f"SELECT chunk_id, document_id, idx, text, page, page_end, embedding FROM chunks WHERE owner_id = ? AND document_id IN ({marks}) ORDER BY document_id, idx",
                 (owner_id, *document_ids),
             ).fetchall()
         if not rows:
             return []
-        matrix = np.stack([np.frombuffer(r[5], dtype=np.float32) for r in rows])
+        matrix = np.stack([np.frombuffer(r[6], dtype=np.float32) for r in rows])
         query = np.asarray(query_embedding, dtype=np.float32)
         norms = np.linalg.norm(matrix, axis=1) * (np.linalg.norm(query) or 1.0)
         sims = matrix @ query / np.where(norms == 0, 1.0, norms)
         # Stable sort so ties break by document and position, never randomly.
         order = np.argsort(-sims, kind="stable")[:k]
-        return [ScoredChunk(Chunk(rows[i][0], rows[i][1], rows[i][2], rows[i][3], rows[i][4]), float(sims[i])) for i in order]
+        return [ScoredChunk(Chunk(*rows[i][:6]), float(sims[i])) for i in order]
