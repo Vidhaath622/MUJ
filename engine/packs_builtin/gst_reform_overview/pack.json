@@ -1,0 +1,521 @@
+{
+  "pack_id": "gst_reform_overview",
+  "name": "GST reform overview (synthetic questions)",
+  "description": "An earlier, independent summary of the September 2025 GST rationalisation (ACs, cement, medicines, hotels...), with exemptions as a distractor.",
+  "demo_data": true,
+  "data_note": "Documents written by a teammate (Anuvesha) as an overview of the reform; all questions are synthetic (written from exact quotes and validated). Its figures differ from the gst_india pack (for example toothpaste before the reform), so the two packs are kept separate and must not be mixed.",
+  "sources": [
+    "gst_rates_pre_sept2025.md | Central Board of Indirect Taxes and Customs (CBIC) Goods Schedule | Dated: 01-Jan-2024",
+    "gst_rates_post_sept2025.md | Press Information Bureau (PIB) Delhi, Ministry of Finance (Release ID: 2163785 & 155151) | Dated: 04-Sep-2025",
+    "distractor_gst_exemptions.md | CBIC GST Exemption Notification Guidance Notes | Dated: 01-May-2024"
+  ],
+  "documents": [
+    {
+      "file": "gst_rates_post_sept_2025.md"
+    },
+    {
+      "file": "gst_rates_pre_sept_2025.md",
+      "superseded_by": "gst_rates_post_sept_2025.md"
+    },
+    {
+      "file": "gst_exemptions_distractor.md"
+    }
+  ],
+  "risk_rules": [
+    "Never quote a pre-September-2025 GST rate as current."
+  ],
+  "test_cases": [
+    {
+      "test_id": "gst_01",
+      "question": "What is the GST rate on air conditioners after the September 2025 rationalisation?",
+      "ground_truth_answer": "18% (reduced from 28%).",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Consumer durables including ACs and large LED/LCD TVs reduced from 28% to 18%."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Taxed at the peak rate of 28%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_02",
+      "question": "What is the current GST rate on cement?",
+      "ground_truth_answer": "18% (reduced from 28%).",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "GST on cement reduced from 28% to 18% to boost housing and infrastructure."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Taxed at the highest rate slab of 28%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_03",
+      "question": "What GST rate applies to standard medicines after the reform?",
+      "ground_truth_answer": "5% (reduced from 12%).",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "33 life-saving drugs and diagnostic kits reduced to 0% (Nil), with other standard medicines reduced from 12% to 5%."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Standard essential drugs, medical equipment, and diagnostic kits were taxed at 12%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_04",
+      "question": "What is the GST rate on spectacles and contact lenses now?",
+      "ground_truth_answer": "5% (reduced from 12%).",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "GST on spectacles, lenses, and contact lenses reduced from 12% to 5%."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Spectacles, contact lenses, and corrective frames carried a 12% GST rate."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_05",
+      "question": "What GST applies to a hotel room costing up to ₹7,500 per day after September 2025?",
+      "ground_truth_answer": "5% (reduced from 12%).",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Hotel stays up to ₹7,500 per day reduced from 12% to 5%."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Hotel room stays priced up to ₹7,500 per day were taxed at 12%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_06",
+      "question": "What is the GST rate on gym and salon services after the rationalisation?",
+      "ground_truth_answer": "5% (reduced from 18%).",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Services provided by gyms, salons, barbers, and yoga centers reduced from 18% to 5%."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Fitness centers, beauty salons, and barbershops were subject to 18% GST."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_07",
+      "question": "What is the current GST rate on small cars and two-wheelers up to 350cc?",
+      "ground_truth_answer": "18% (reduced from 28%).",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Small cars and two-wheelers (≤350cc) reduced from 28% to 18%."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Two-wheelers and small engine motor vehicles were taxed at 28%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_08",
+      "question": "What GST rate applies to bicycles and toothpaste after the reform?",
+      "ground_truth_answer": "5%.",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Household articles like soaps, toothbrushes, toothpaste, and bicycles reduced to 5%."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Daily household articles like bicycles and toothpaste were taxed at 12%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_09",
+      "question": "What GST rate applies to packaged pasta, namkeens and biscuits now?",
+      "ground_truth_answer": "5%.",
+      "type": "stale",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Packaged food items including pasta, namkeens, sauces, and biscuits reduced to 5%."
+        }
+      ],
+      "stale": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Packaged namkeens, pasta, sauces, and biscuits were taxed at 12% or 18%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_10",
+      "question": "From which date did the September 2025 GST rate rationalisation take effect?",
+      "ground_truth_answer": "22nd September 2025.",
+      "type": "factoid",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Effective 22nd September 2025, the GST Council enacted a landmark rate rationalisation overhaul, consolidating the tax structure primarily into two main slabs of 5% and 18%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_11",
+      "question": "What GST rate applies to the 33 life-saving drugs after the reform?",
+      "ground_truth_answer": "0% (Nil).",
+      "type": "factoid",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "33 life-saving drugs and diagnostic kits reduced to 0% (Nil), with other standard medicines reduced from 12% to 5%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_12",
+      "question": "What were the four primary GST slabs before the September 2025 reform?",
+      "ground_truth_answer": "5%, 12%, 18% and 28%.",
+      "type": "factoid",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "goods and services were broadly categorized into four primary tax slabs: 5%, 12%, 18%, and 28%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_13",
+      "question": "Is GST charged on services of recognised doctors and hospitals?",
+      "ground_truth_answer": "No, they remain fully exempt from GST.",
+      "type": "factoid",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_exemptions_distractor.md",
+          "quote": "Services provided by recognized doctors, hospitals, and medical clinics remain fully exempt from GST."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_14",
+      "question": "What GST applies to fresh vegetables and unbranded milk?",
+      "ground_truth_answer": "0% GST.",
+      "type": "factoid",
+      "origin": "synthetic",
+      "gold": [
+        {
+          "file": "gst_exemptions_distractor.md",
+          "quote": "Fresh fruits, fresh vegetables, unbranded milk, and curd carry 0% GST."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_15",
+      "question": "By how many percentage points did the GST on cement fall in September 2025?",
+      "ground_truth_answer": "10 percentage points (from 28% to 18%).",
+      "type": "factoid",
+      "origin": "synthetic",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "GST on cement reduced from 28% to 18% to boost housing and infrastructure."
+        },
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Taxed at the highest rate slab of 28%."
+        }
+      ]
+    },
+    {
+      "test_id": "gst_16",
+      "question": "What is the GST rate on gold jewellery after the reform?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "synthetic"
+    },
+    {
+      "test_id": "gst_17",
+      "question": "What compensation cess applies to tobacco products after September 2025?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "synthetic"
+    },
+    {
+      "test_id": "gst_s01",
+      "question": "What is the effective date of the GST Rate Schedule post September 2025 rationalisation?",
+      "ground_truth_answer": "22nd September 2025",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Effective 22nd September 2025, the GST Council enacted a landmark rate rationalisation overhaul"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s02",
+      "question": "What are the two main GST slabs introduced in the schedule effective 2025?",
+      "ground_truth_answer": "5% and 18%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "consolidating the tax structure primarily into two main slabs of 5% and 18%"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s03",
+      "question": "What is the GST rate for Air Conditioners and TVs (>32 inches) post September 2025?",
+      "ground_truth_answer": "18%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Air Conditioners and TVs (>32 inches): Consumer durables including ACs and large LED/LCD TVs reduced from 28% to 18%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s04",
+      "question": "What GST rate is applied to cement post September 2025?",
+      "ground_truth_answer": "18%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Cement and Construction Materials: GST on cement reduced from 28% to 18% to boost housing and infrastructure."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s05",
+      "question": "What GST rate do spectacles and corrective lenses have post September 2025?",
+      "ground_truth_answer": "5%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Spectacles and Corrective Lenses: GST on spectacles, lenses, and contact lenses reduced from 12% to 5%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s06",
+      "question": "What is the GST rate for hotel room accommodation up to ₹7,500 per day post September 2025?",
+      "ground_truth_answer": "5%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Hotel Room Accommodation: Hotel stays up to ₹7,500 per day reduced from 12% to 5%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s07",
+      "question": "What GST rate applies to bicycles and toothpaste post September 2025?",
+      "ground_truth_answer": "5%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_post_sept_2025.md",
+          "quote": "Bicycles and Toothpaste: Household articles like soaps, toothbrushes, toothpaste, and bicycles reduced to 5%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s08",
+      "question": "What was the lowest GST tax slab under the standard rate structure in India prior to September 2025?",
+      "ground_truth_answer": "5%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "goods and services were broadly categorized into four primary tax slabs: 5%, 12%, 18%, and 28%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s09",
+      "question": "What was the second GST tax slab under the standard rate structure in India prior to September 2025?",
+      "ground_truth_answer": "12%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "goods and services were broadly categorized into four primary tax slabs: 5%, 12%, 18%, and 28%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s10",
+      "question": "What was the third GST tax slab under the standard rate structure in India prior to September 2025?",
+      "ground_truth_answer": "18%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "goods and services were broadly categorized into four primary tax slabs: 5%, 12%, 18%, and 28%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s11",
+      "question": "In the GST Rate Schedule prior to September 2025, what GST rate applies to Air Conditioners and TVs larger than 32 inches?",
+      "ground_truth_answer": "28%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Air Conditioners and TVs (>32 inches): Taxed at the peak rate of 28%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s12",
+      "question": "In the GST Rate Schedule prior to September 2025, what GST rate is applied to medicines and medical devices?",
+      "ground_truth_answer": "12%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Medicines and Medical Devices: Standard essential drugs, medical equipment, and diagnostic kits were taxed at 12%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s13",
+      "question": "In the GST Rate Schedule prior to September 2025, what GST rate is charged for hotel room accommodation priced up to ₹7,500 per day?",
+      "ground_truth_answer": "12%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Hotel Room Accommodation: Hotel room stays priced up to ₹7,500 per day were taxed at 12%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s14",
+      "question": "In the GST Rate Schedule prior to September 2025, what GST rate applies to bicycles and toothpaste?",
+      "ground_truth_answer": "12%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_rates_pre_sept_2025.md",
+          "quote": "Bicycles and Toothpaste: Daily household articles like bicycles and toothpaste were taxed at 12%."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s15",
+      "question": "In the GST Exempted Items and Special Rates Guidelines, which services provided by recognized doctors, hospitals, and medical clinics are exempt from GST?",
+      "ground_truth_answer": "Healthcare Services",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_exemptions_distractor.md",
+          "quote": "Healthcare Services: Services provided by recognized doctors, hospitals, and medical clinics remain fully exempt from GST."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "gst_s16",
+      "question": "In the GST Exempted Items and Special Rates Guidelines, what is the GST rate for fresh fruits, fresh vegetables, unbranded milk, and curd?",
+      "ground_truth_answer": "0% GST",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "gst_exemptions_distractor.md",
+          "quote": "Fresh Unprocessed Food: Fresh fruits, fresh vegetables, unbranded milk, and curd carry 0% GST."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    }
+  ]
+}
