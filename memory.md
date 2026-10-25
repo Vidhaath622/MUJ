@@ -54,11 +54,17 @@
 
 | Member | Focus Area | Tools / AI Setup | Dedicated Workspace / Directory | Git Branch |
 | :--- | :--- | :--- | :--- | :--- |
-| **Member 1 (Vidhaath)** | API Client, Data Wiring & Integration | **Antigravity** | `/frontend/src/lib/api.ts` & integration | `vidhaath/ui-frontend` |
+| **Member 1 (Vidhaath)** | Database & Frontend (Neon & API) | **Antigravity** | Neon Postgres setup, `/frontend/src/lib/api.ts`, PR merges | `vidhaath/ui-frontend` |
 | **Member 2 (Sarthak) - Track A** | Backend API, Routing & Storage | **Claude Agent 1** | `/backend` | `sarthak/backend-api` |
 | **Member 2 (Sarthak) - Track B** | Core Engine, ML Logic & Algorithms | **Claude Agent 2** | `/engine` | `sarthak/core-engine` |
 | **Member 2 (Sarthak) - Track C** | Frontend UI Polish, Styling & Layout | **Claude Agent 3** | `/frontend/src/components` & styles | `sarthak/frontend-polish` |
 | **Member 3 & 4** | PPT Pitch Deck, Datasets, QA & Pitch | Slides, Docs, Postman | `/docs` | `team/presentation-docs` |
+
+### Vidhaath & Sarthak Operational Protocol:
+- **Neon Provisioning & Secret Delivery**: Vidhaath sets up the Neon Postgres database and transmits the `DATABASE_URL` to Sarthak **strictly via private 1:1 direct message**—never in group chat channels and never committed to Git or GitHub.
+- **Backend Hand-off**: Sarthak wires the connection string into `backend/.env` and implements the Postgres persistence logic in `/backend` (and `/engine`).
+- **API Client Ownership**: Vidhaath owns [`frontend/src/lib/api.ts`](file:///Users/root1/hackathon/frontend/src/lib/api.ts) for connecting the UI to all backend endpoints.
+- **PR Review & Merge Gate**: Vidhaath reviews and merges PRs on GitHub once Sarthak confirms readiness ("says go").
 
 ### Why This Setup Maximizes Hackathon Speed:
 - **Zero File Overlap**: Antigravity never touches `/backend` or `/engine`; Claude never touches `/frontend`. Git merges are 100% clean.
@@ -122,6 +128,8 @@
 | `2026-10-24 17:55` | API Client Integration & Tree Verification | Added `frontend/src/lib/api.ts` covering `/auth/login`, `/packs`, `/rag/ask`, `/evaluate/query`, `/evaluate/batch`. Pushed to `vidhaath/ui-frontend` (`cfb282e`) and fast-forwarded `main`. Tested three-way merge tree with `sarthak/backend-api` and `sarthak/core-engine` - confirmed 100% clean merge with zero conflicts. |
 | `2026-10-24 18:00` | Models Verified (Lead) | Live catalogs checked: Groq `llama-3.3-70b-versatile` and NIM `meta/llama-3.x-*` / `nv-embedqa-e5-v5` are retired (410). Now: generator Ollama `llama3.2:3b`, embeddings Ollama `nomic-embed-text`, judge Groq `openai/gpt-oss-120b` (fallback NIM `mistral-large-2-instruct`, then Ollama). `engine/nvidia_client.py` mock removed: no fake scores. See `docs/product_brief.md` Models. |
 | `2026-10-24 18:05` | Full Repo Merge & Real Backend Live | Merged `sarthak/docs-brief`, `sarthak/core-engine`, and `sarthak/backend-api` cleanly into `main`. Spawned FastAPI backend on port 8000. Connected Tab 1 (Lab) and Tab 2 (How It Works) to `http://localhost:8000`. Auto-login and health polling verified. Pushed commit `7e25811` to `origin/main` and `origin/vidhaath/ui-frontend`. |
+| `2026-10-25 11:00` | Team Role & DB Protocol Locked | Vidhaath designated owner of Neon Postgres provisioning, secret dispatch via private DM to Sarthak, `frontend/src/lib/api.ts` API client ownership, and GitHub PR merge gating. |
+| `2026-10-25 11:06` | Merged PR #16 & #17 | Merged PR #16 (`frontend/vercel.json` Cloudflare tunnel refresh) and PR #17 (Backend Neon Postgres support + one-shot SQLite migration script `migrate_sqlite_to_postgres.py`). Pulled into local `main`. |
 
 ---
 
