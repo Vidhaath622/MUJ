@@ -4,6 +4,7 @@ Python library behind the backend: the RAG system under test, the three metrics,
 
 | Module | What it does |
 |---|---|
+| `pdf_clean.py` | PDF clean-up for slides and notes: removes repeating headers/footers and line-wrap repeats, de-duplicates lines, merges short pages into 600-1,000 character chunks with a page range, OCRs image-only pages when `tesseract` is installed (otherwise lists them as skipped), and returns a quality report with the upload. Text and Markdown files are chunked as before. |
 | `ingest.py` | PDF/TXT/MD to chunks. IDs come from a content hash, so the same file always gets the same `document_id` and `chunk_id`s. |
 | `store.py` | SQLite store, scoped per owner. Exact cosine search in numpy, with ties broken deterministically. |
 | `rag.py` | Retrieves top-k chunks and answers with `llama3.2:3b`. The prompt numbers each passage and asks the model to cite `[n]`; citations are mapped back to chunk_ids. |

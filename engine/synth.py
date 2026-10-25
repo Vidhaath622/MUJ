@@ -85,6 +85,14 @@ def evidence_in_chunk(evidence: str, chunk_text: str, threshold: float = 0.85) -
     return difflib.SequenceMatcher(None, window, ev, autojunk=False).ratio() >= threshold
 
 
+THIN_CHARS, THIN_WORDS = 200, 30
+
+
+def has_substance(chunk: Chunk) -> bool:
+    """Enough text for a question with a known answer (a title slide or a lone diagram label is not)."""
+    return len(chunk.text) >= THIN_CHARS and len(chunk.text.split()) >= THIN_WORDS
+
+
 def sample_chunks(chunks: list[Chunk], count: int, min_chars: int = 150) -> list[Chunk]:
     """Evenly spaced, deterministic sample of chunks with enough text to ask about."""
     usable = [c for c in chunks if len(c.text) >= min_chars] or chunks
@@ -216,7 +224,9 @@ class SyntheticGenerator:
         cases: list[dict] = []
         seen_questions: set[str] = set()
         # Over-sample: some candidates fail the evidence check.
-        for chunk in sample_chunks(chunks, min(len(chunks), wanted * 2)):
+        # Factual questions only come from chunks with substance; never fall back to thin ones.
+        substantial = [c for c in chunks if has_substance(c)]
+        for chunk in sample_chunks(substantial, min(len(substantial), wanted * 2)) if substantial else []:
             if len(cases) >= wanted:
                 break
             case = self.factoid(chunk)

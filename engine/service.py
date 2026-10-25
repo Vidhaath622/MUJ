@@ -22,7 +22,7 @@ from .llm import ChatModel, EmbedModel, Judge, JudgeError, ModelUnavailable, bui
 from .packs import PackError, discover, read_document_bytes, resolve_test_cases
 from .rag import RagSystem
 from .store import VectorStore
-from .synth import SyntheticGenerator, version_key
+from .synth import THIN_CHARS, THIN_WORDS, SyntheticGenerator, has_substance, version_key
 
 
 class NotFound(LookupError):
@@ -158,7 +158,9 @@ class Engine:
             "chunk_count": len(doc.chunks),
             "pack_id": pack_id,
             "uploaded_at": stored.uploaded_at,
-            "chunks": [{"chunk_id": c.chunk_id, "text": c.text, "page": c.page} for c in doc.chunks],
+            "chunks": [{"chunk_id": c.chunk_id, "text": c.text, "page": c.page, "page_end": c.page_end} for c in doc.chunks],
+            # PDFs: pages, pages with text, skipped pages, chunks and warnings (None for text files).
+            "quality": doc.quality,
         }
 
     def list_documents(self, owner_id: str) -> list[dict]:
@@ -170,7 +172,8 @@ class Engine:
             raise NotFound(f"document {document_id} not found")
         out = doc.__dict__.copy()
         out["chunks"] = [
-            {"chunk_id": c.chunk_id, "text": c.text, "page": c.page} for c in self.store.chunks_for(owner_id, [document_id])
+            {"chunk_id": c.chunk_id, "text": c.text, "page": c.page, "page_end": c.page_end}
+            for c in self.store.chunks_for(owner_id, [document_id])
         ]
         return out
 
@@ -367,6 +370,7 @@ class Engine:
                     old_chunks.extend(self.store.chunks_for(owner_id, [other.document_id]))
                     search_ids.append(other.document_id)
         self._ensure_embeddings(owner_id, search_ids)
+        thin = sum(not has_substance(c) for c in chunks)
         with self._interactive():
             cases = self.synth.generate(owner_id, document_id, chunks, count, search_ids, old_chunks, include_traps)
         return {
@@ -374,9 +378,11 @@ class Engine:
             "document_ids": search_ids,
             "requested_count": count,
             "generated_count": len(cases),
+            "skipped_thin_chunks": thin,
             "note": (
                 f"{count - len(cases)} of {count} requested questions were dropped: a candidate is kept only if its quoted"
                 " evidence matches the document text, and a trap only if the judge confirms it."
+                + (f" {thin} of {len(chunks)} chunks were too short to ask about (under {THIN_CHARS} characters or {THIN_WORDS} words)." if thin else "")
                 if len(cases) < count else None
             ),
             "generated_by": self.judge.model,
