@@ -1093,7 +1093,7 @@ const Xray: React.FC<{ r: LabResult; filenames: Record<string, string>; highligh
               {(replay.answer ?? '').replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, '')}
             </p>
             <p className="mt-1.5 text-[0.78125rem] text-[var(--ink-2)]">
-              {fixed ? 'So the retriever caused it: the bot was fine once it had the right text.' : 'So the bot is at fault: even the right text didn’t help.'}
+              {replayBlameText(replay.blames, fixed)}
             </p>
           </div>
         </section>
@@ -1191,3 +1191,14 @@ const AnswerWithCitations: React.FC<{
     </>
   );
 };
+
+/** Who the replay blames comes from the verdict (replay.blames), so the proof never contradicts it. */
+function replayBlameText(blames: string | undefined, fixed: boolean): string {
+  if (blames === 'retriever') return 'So the retriever caused it: the bot was fine once it had the right text.';
+  if (blames === 'both') return 'Both halves contributed: the retriever handed over misleading text and the bot did not stick to the right passage.';
+  if (blames === 'generator')
+    return fixed
+      ? 'The retriever found the right text. With only that passage the bot answered correctly, so the other retrieved chunks distracted it: the bot is at fault.'
+      : 'So the bot is at fault: even the right text didn’t help.';
+  return fixed ? 'So the retriever caused it: the bot was fine once it had the right text.' : 'So the bot is at fault: even the right text didn’t help.';
+}
