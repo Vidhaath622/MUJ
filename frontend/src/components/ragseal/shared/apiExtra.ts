@@ -92,6 +92,9 @@ export interface RunListItem {
   /** The demo account's run, shown to users who haven't run this pack yet. Read-only. */
   sample?: boolean;
   read_only?: boolean;
+  /** Bot setup that ran it: "v2" is the version-compare profile; null/"v1" the default. */
+  profile?: string | null;
+  answer_source?: string | null;
 }
 
 export interface RunProgress {
@@ -699,4 +702,81 @@ export async function startChunkingLab(req: ChunkingLabRequest, token: string): 
 export async function getChunkingLab(labId: string, token: string): Promise<ChunkingLabResult> {
   const { body } = await call<ChunkingLabResult>(`/lab/chunking/${encodeURIComponent(labId)}`, token);
   return body;
+}
+
+// ---------- Release gate + API tokens (R2) ----------
+
+export interface GateCase {
+  test_id: string;
+  question?: string;
+  category?: string;
+  summary?: string;
+}
+
+export interface GateRequest {
+  pack_id: string;
+  bot?: BotConfig;
+  min_pass_rate?: number;
+  max_new_failures?: number;
+  baseline_batch_id?: string;
+  batch_id?: string;
+}
+
+/** 202 + progress while the pack runs; the verdict once done. With batch_id the verdict comes straight back. */
+export interface GateResult {
+  gate_id?: string;
+  status: 'running' | 'done' | 'failed';
+  progress?: { done?: number; total?: number; eta_ms?: number | null };
+  pass?: boolean;
+  reasons?: string[];
+  pass_rate?: number;
+  min_pass_rate?: number;
+  new_failures?: GateCase[];
+  max_new_failures?: number;
+  fixed?: GateCase[];
+  total?: number;
+  errors?: number;
+  batch_id?: string;
+  pack_id?: string;
+  baseline_batch_id?: string | null;
+  answer_source?: string;
+  report_url?: string;
+  error?: string;
+}
+
+export async function startGate(req: GateRequest, token: string): Promise<GateResult> {
+  const { body } = await call<GateResult>('/gate', token, { method: 'POST', body: JSON.stringify(req) });
+  return body;
+}
+
+export async function getGate(gateId: string, token: string): Promise<GateResult> {
+  const { body } = await call<GateResult>(`/gate/${encodeURIComponent(gateId)}`, token);
+  return body;
+}
+
+export interface ApiToken {
+  id: string;
+  name: string;
+  prefix: string;
+  created_at: string;
+  last_used_at?: string | null;
+}
+
+/** The full token is in this response only; the server keeps a hash. */
+export async function createApiToken(name: string, token: string): Promise<ApiToken & { token: string }> {
+  const { body } = await call<ApiToken & { token: string }>('/tokens', token, { method: 'POST', body: JSON.stringify({ name }) });
+  return body;
+}
+
+export async function listApiTokens(token: string): Promise<ApiToken[]> {
+  const { body } = await call<ApiToken[]>('/tokens', token);
+  return body;
+}
+
+export async function revokeApiToken(id: string, token: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/tokens/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok && res.status !== 404) throw new ApiError(res.status, `Could not revoke the token (${res.status})`);
 }

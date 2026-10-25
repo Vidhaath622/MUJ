@@ -17,6 +17,7 @@ import { ComparePage } from './components/ragseal/pages/ComparePage';
 import { BotsPage } from './components/ragseal/pages/BotsPage';
 import { ConnectBotPage } from './components/ragseal/pages/ConnectBotPage';
 import { ChunkingLabPage } from './components/ragseal/pages/ChunkingLabPage';
+import { ReleaseGatePage } from './components/ragseal/pages/ReleaseGatePage';
 import { TestSetsPage } from './components/ragseal/pages/TestSetsPage';
 import { SealPage } from './components/ragseal/pages/SealPage';
 
@@ -328,6 +329,8 @@ export const App: React.FC = () => {
         {route === 'compare' && <ComparePage token={authToken} />}
 
         {route === 'chunking' && <ChunkingLabPage token={authToken} />}
+
+        {route === 'gate' && <ReleaseGatePage token={authToken} userEmail={currentUser?.email} onOpenRun={openRun} />}
 
         {route === 'seal' && <SealPage token={authToken} />}
 

@@ -58,3 +58,4 @@ def test_runs_saved_before_the_summary_column_are_backfilled(app, db):
     reopened = Database(db.path, url=db.url)
     [item] = reopened.list_runs(user.id)
     assert item["overall_score"] == 0.6 and reopened.baseline_runs(user.id) == []  # v2 profile: not a baseline
+    assert item["profile"] == "v2"  # lists can pick out version-compare runs without fetching each one
