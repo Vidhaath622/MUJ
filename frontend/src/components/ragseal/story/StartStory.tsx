@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Check, MessagesSquare, PlayCircle, ScanSearch } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight, Bot, Check, ChevronDown, MessagesSquare, PlayCircle, ScanSearch } from 'lucide-react';
 import { PackId } from '../../../types/ragseal';
 import { loadPackBackend } from '../../../lib/api';
 import { RunSummary } from '../shared/apiExtra';
@@ -53,6 +53,13 @@ const CAPTIONS: { eyebrow: string; title: string }[] = [
   { eyebrow: 'Every answer', title: 'That was one question. RAGSeal does this for every answer.' },
 ];
 
+// Where "Next" and the chapter dots land: late enough in each chapter that its motion has played,
+// early enough that the caption is still fully on (captions fade out from i + 0.88).
+const TARGETS = [0, 1.86, 2.87, 3.86, 4.87, 5.87, 6.86, 7.6];
+
+/** The chapter whose caption is showing at position `c`. */
+const chapterAt = (c: number) => Math.max(0, Math.min(CHAPTERS - 1, Math.floor(c + 0.04)));
+
 const PERSONA: Partial<Record<PackId, string>> = { banking: 'Harbor Ridge Bank' };
 
 const tint = (v: string, pct: number) => `color-mix(in srgb, var(${v}) ${pct}%, transparent)`;
@@ -97,10 +104,38 @@ const stripCitations = (s: string) => s.replace(/\s*\[\d+(?:[-,]\s*\d+)*\]/g, ''
 
 export const StartStory: React.FC<StartStoryProps> = ({ token, latest, onOpenPack, onNavigate }) => {
   const reduced = usePrefersReducedMotion();
-  const { sectionRef, viewport, chapter } = useScrollStory(CHAPTERS);
+  const { sectionRef, viewport, chapter, goTo, skipPast, pinned } = useScrollStory(CHAPTERS);
   const [docs, setDocs] = useState<{ filename: string; chunk_count?: number }[] | null>(null);
 
   const hero = useMemo(() => pickHero(latest?.banking), [latest]);
+
+  const at = useRef(chapter);
+  at.current = chapter;
+  const step = useCallback(
+    (dir: 1 | -1) => {
+      const i = chapterAt(at.current) + dir;
+      if (i >= CHAPTERS) skipPast();
+      else goTo(TARGETS[Math.max(0, i)]);
+    },
+    [goTo, skipPast]
+  );
+
+  // ↓ / PageDown / Space step forward a chapter while the story is pinned; ↑ / PageUp / Shift+Space step back.
+  useEffect(() => {
+    if (!hero || reduced) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || !pinned()) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(t.tagName))) return;
+      const fwd = e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey);
+      const back = e.key === 'ArrowUp' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey);
+      if (!fwd && !back) return;
+      e.preventDefault();
+      step(fwd ? 1 : -1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [hero, reduced, pinned, step]);
 
   useEffect(() => {
     if (!token) return;
@@ -136,7 +171,7 @@ export const StartStory: React.FC<StartStoryProps> = ({ token, latest, onOpenPac
     <section ref={sectionRef} style={{ height: height + height * CHAPTERS * 0.65, position: 'relative' }}>
       <div className="sticky top-0 overflow-hidden" style={{ height, background: 'var(--paper)' }}>
         {hero ? (
-          <Stage c={chapter} hero={hero} docs={docs} height={height} />
+          <Stage c={chapter} hero={hero} docs={docs} height={height} onNext={() => step(1)} onSkip={skipPast} />
         ) : (
           <div className="flex h-full items-center justify-center px-6">
             <EmptyHero latest={latest} />
@@ -155,7 +190,7 @@ export const StartStory: React.FC<StartStoryProps> = ({ token, latest, onOpenPac
             display: hero ? undefined : 'none',
           }}
         />
-        {hero && <Rail c={chapter} />}
+        {hero && <Rail c={chapter} onJump={(i) => goTo(TARGETS[i])} onNext={() => step(1)} />}
       </div>
     </section>
   );
@@ -174,7 +209,9 @@ const Stage: React.FC<{
   docs: { filename: string; chunk_count?: number }[] | null;
   height: number;
   still?: boolean;
-}> = ({ c, hero, docs, height, still }) => {
+  onNext?: () => void;
+  onSkip?: () => void;
+}> = ({ c, hero, docs, height, still, onNext, onSkip }) => {
   const chunks = hero.retrieved_chunks ?? [];
   const cited = new Set(hero.citations ?? []);
   const answer = stripCitations(hero.generated_answer ?? '');
@@ -194,8 +231,12 @@ const Stage: React.FC<{
   const docCount = docs?.length ?? new Set(chunks.map((ch) => ch.filename ?? ch.document_id)).size;
   const passageCount = docs?.reduce((n, d) => n + (d.chunk_count ?? 0), 0) ?? 0;
 
-  // Phases.
-  const qIn = easeOut(seg(c, 0.05, 0.6));
+  // Phases. Chapter 0 is fully set before any scroll: the question is on screen and the stages
+  // ahead wait, faint, with a line on what each will do. Each "waiting" note leaves as its stage starts.
+  const waitRetriever = 1 - seg(c, 0.75, 1.0);
+  const waitGenerator = 1 - seg(c, 2.85, 3.05);
+  const waitChecks = 1 - seg(c, 3.85, 4.05);
+  const cue = still ? 0 : 1 - seg(c, 0.12, 0.45);
   const docsIn = seg(c, 1.0, 1.45);
   const split = easeInOut(seg(c, 1.45, 1.9));
   const sweep = seg(c, 1.95, 2.65);
@@ -215,7 +256,7 @@ const Stage: React.FC<{
 
   return (
     <div
-      className="relative mx-auto flex h-full max-w-[1240px] flex-col px-4 sm:px-8 pb-6 sm:pb-8 pt-5 sm:pt-7"
+      className="relative mx-auto flex h-full max-w-[1240px] 2xl:max-w-[1520px] flex-col justify-center px-4 sm:px-8 lg:pr-14 pb-4 sm:pb-6 pt-5 sm:pt-7"
       style={{ opacity: 1 - outro, transform: `translateX(${jitter}px) scale(${1 - 0.03 * outro})` }}
     >
       {/* Progress bar */}
@@ -250,21 +291,35 @@ const Stage: React.FC<{
 
       {/* Scene */}
       <div
-        className="grid min-h-0 flex-1 gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,0.85fr)] overflow-y-auto lg:overflow-visible"
+        className="grid min-h-0 flex-1 max-h-[580px] 2xl:max-h-[660px] gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,0.85fr)] overflow-y-auto lg:overflow-visible"
         style={{ opacity: 1 - 0.55 * easeOut(stampIn) }}
       >
         {/* Chat */}
-        <div className="flex min-h-0 flex-col gap-3 rounded-2xl p-5" style={{ background: 'var(--panel)', border: '1px solid var(--rule)', opacity: qIn }}>
-          <div className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--ink-2)' }}>
-            <span className="h-2 w-2 rounded-full" style={{ background: 'var(--ok)' }} />
-            {PERSONA.banking} · chatbot
+        <div className="lab-fade-up flex min-h-0 flex-col gap-3 rounded-2xl p-5" style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}>
+          <div className="flex items-center gap-2.5 text-[12px]" style={{ color: 'var(--ink-2)' }}>
+            <span className="relative flex h-7 w-7 items-center justify-center rounded-full" style={{ background: tint('--ink', 8), color: 'var(--ink)' }}>
+              <Bot className="h-4 w-4" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" style={{ background: 'var(--ok)', border: '2px solid var(--panel)' }} />
+            </span>
+            <span>
+              <span style={{ color: 'var(--ink)' }}>{PERSONA.banking}</span> · chatbot
+            </span>
           </div>
-          <div
-            className="ml-auto max-w-[92%] rounded-2xl rounded-br-md px-4 py-3 text-[15px] leading-snug"
-            style={{ background: 'var(--ink)', color: 'var(--paper)', transform: `translateY(${(1 - qIn) * 12}px)` }}
-          >
+          <div className="ml-auto max-w-[92%] rounded-2xl rounded-br-md px-4 py-3 text-[15px] leading-snug" style={{ background: 'var(--ink)', color: 'var(--paper)' }}>
             {hero.query}
           </div>
+          {c < 3.05 && (
+            <div className="flex items-center gap-2 text-[12.5px]" style={{ color: 'var(--ink-2)', opacity: waitGenerator }}>
+              <span className="inline-flex items-center gap-1 rounded-2xl rounded-bl-md px-3 py-2.5" style={{ background: 'var(--paper)', border: '1px solid var(--rule)' }}>
+                {[0, 1, 2].map((i) => (
+                  <span key={i} className={still ? '' : 'typing-dot'} style={{ animationDelay: `${i * 0.15}s` }}>
+                    <span className="block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--ink-2)' }} />
+                  </span>
+                ))}
+              </span>
+              The bot will answer from what the retriever hands it.
+            </div>
+          )}
 
           {c >= 3.05 && (
             <div
@@ -314,7 +369,28 @@ const Stage: React.FC<{
         </div>
 
         {/* Documents → passages → retrieved */}
-        <div className="relative min-h-0 overflow-hidden rounded-2xl" style={{ background: 'var(--panel)', border: '1px solid var(--rule)', opacity: c < 1 ? 0.35 * qIn : 1 }}>
+        <div className="relative min-h-[220px] lg:min-h-0 overflow-hidden rounded-2xl" style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}>
+          {/* Waiting: what the retriever is about to do, over a faint field of passages */}
+          {c < 1 && (
+            <div className="absolute inset-0 flex flex-col p-5" style={{ opacity: waitRetriever }}>
+              <div className="font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)' }}>
+                Retriever · waiting
+              </div>
+              <div className="mt-4 grid flex-1 content-start gap-[6px] opacity-60" style={{ gridTemplateColumns: 'repeat(6, minmax(0,1fr))' }}>
+                {Array.from({ length: 24 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="h-7 rounded-md"
+                    style={{ border: '1px dashed var(--rule)', background: chunks.length && i % 7 === 3 ? tint('--accent', 6) : 'transparent' }}
+                  />
+                ))}
+              </div>
+              <p className="mt-3 max-w-[440px] text-[13.5px] leading-snug" style={{ color: 'var(--ink-2)' }}>
+                Next, it searches {passageCount ? `${passageCount} passages from ` : ''}
+                {docCount ? `${docCount} bank documents` : 'the bank’s documents'} and hands the bot the best {chunks.length || 4}. One of them is out of date.
+              </p>
+            </div>
+          )}
           {/* Document tiles falling in, then splitting */}
           <div className="absolute inset-0 grid content-start gap-3 p-5" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))', opacity: c < 1 ? 0 : 1 - seg(split, 0, 0.45) }}>
             {(docs ?? []).slice(0, 6).map((d, i) => {
@@ -407,9 +483,9 @@ const Stage: React.FC<{
         </div>
 
         {/* Checks */}
-        <div className="flex min-h-0 flex-col gap-3 rounded-2xl p-5" style={{ background: 'var(--panel)', border: '1px solid var(--rule)', opacity: c < 4 ? 0.35 * qIn : 1 }}>
+        <div className="flex min-h-0 flex-col gap-3 rounded-2xl p-5" style={{ background: 'var(--panel)', border: '1px solid var(--rule)', opacity: c < 1 ? 0.75 : c < 4 ? 0.5 : 1 }}>
           <div className="font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)' }}>
-            RAGSeal’s checks
+            RAGSeal’s checks{c < 4 ? ' · waiting' : ''}
           </div>
           {checks.map((k, i) => {
             const t = easeOut(seg(dials, i * 0.2, i * 0.2 + 0.6));
@@ -417,20 +493,30 @@ const Stage: React.FC<{
             const value = i === 2 && replayFill > 0 ? (k.score ?? 0) + ((hero.replay?.answer_accuracy ?? 0) - (k.score ?? 0)) * replayFill : k.score ?? 0;
             const good = value >= k.thr;
             return (
-              <div key={k.label} className="flex items-center gap-3" style={{ opacity: c < 4 ? 0 : 0.25 + 0.75 * t }}>
+              <div key={k.label} className="flex items-center gap-3" style={{ opacity: c < 4 ? 0.45 : 0.25 + 0.75 * t }}>
                 <Dial value={value * t} color={good ? 'var(--ok)' : 'var(--gen)'} />
                 <div className="min-w-0">
                   <div className="text-[14px] font-medium" style={{ color: 'var(--ink)' }}>
                     {k.label}
                   </div>
                   <div className="text-[11.5px]" style={{ color: 'var(--ink-2)' }}>
-                    {k.tech} · <span style={{ color: good ? 'var(--ok)' : 'var(--gen)' }}>{Math.round(value * t * 100)}%</span>
+                    {k.tech} ·{' '}
+                    {c < 4 ? (
+                      'not scored yet'
+                    ) : (
+                      <span style={{ color: good ? 'var(--ok)' : 'var(--gen)' }}>{Math.round(value * t * 100)}%</span>
+                    )}
                     {replayFill > 0.95 && <span> · after replay</span>}
                   </div>
                 </div>
               </div>
             );
           })}
+          {c < 4.05 && (
+            <p className="mt-auto text-[13px] leading-snug" style={{ color: 'var(--ink-2)', opacity: waitChecks }}>
+              Once the bot answers, RAGSeal scores the retriever, the generator and the final answer separately.
+            </p>
+          )}
           {faithfulButWrong && (
             <div
               className="mt-auto rounded-xl px-3.5 py-3 text-[14px] leading-snug"
@@ -491,14 +577,43 @@ const Stage: React.FC<{
         </div>
       )}
 
-      {!still && c < 0.6 && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[12px]" style={{ color: 'var(--ink-2)', opacity: 1 - seg(c, 0.2, 0.6) }}>
-          Scroll to follow the question ↓
+      {/* Scroll cue + skip, directly under the stage (kept in the layout so nothing jumps when it fades) */}
+      {!still && (
+        <div className="relative mt-4 flex h-11 shrink-0 items-center justify-center" style={{ opacity: 1 - seg(c, 6.9, 7.1) }}>
+          <div
+            className="flex items-center gap-3 rounded-full py-1.5 pl-3 pr-1.5 text-[13.5px]"
+            style={{ opacity: cue, pointerEvents: cue > 0.2 ? 'auto' : 'none', background: 'var(--panel)', border: '1px solid var(--rule)', color: 'var(--ink)' }}
+          >
+            <ScrollMouse />
+            <span>Scroll to follow the question</span>
+            <button
+              onClick={onNext}
+              className="inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-opacity hover:opacity-85"
+              style={{ background: 'var(--ink)', color: 'var(--paper)' }}
+            >
+              Next <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <button
+            onClick={onSkip}
+            className="absolute right-0 hidden items-center gap-1 text-[12.5px] transition-opacity hover:opacity-70 sm:inline-flex"
+            style={{ color: 'var(--ink-2)' }}
+          >
+            Skip to results <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
     </div>
   );
 };
+
+/** A mouse outline whose wheel rolls down, on a loop: the universal "scroll" hint. */
+const ScrollMouse: React.FC = () => (
+  <svg width="16" height="24" viewBox="0 0 16 24" aria-hidden="true" className="story-bob shrink-0">
+    <rect x="1" y="1" width="14" height="22" rx="7" fill="none" stroke="var(--ink-2)" strokeWidth="1.5" />
+    <rect className="story-wheel" x="7" y="5" width="2" height="5" rx="1" fill="var(--ink)" />
+  </svg>
+);
 
 const Caret: React.FC = () => <span className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[2px] animate-pulse" style={{ background: 'var(--ink)' }} />;
 
@@ -524,18 +639,51 @@ const Dial: React.FC<{ value: number; color: string }> = ({ value, color }) => {
   );
 };
 
-/** Chapter rail on the right edge. */
-const Rail: React.FC<{ c: number }> = ({ c }) => (
-  <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 xl:flex" style={{ opacity: 1 - seg(c, 7, 7.3) }}>
-    {CAPTIONS.map((_, i) => (
-      <span
-        key={i}
-        className="h-1.5 w-1.5 rounded-full"
-        style={{ background: Math.floor(c) === i ? 'var(--ink)' : 'var(--rule)', transform: `scale(${Math.floor(c) === i ? 1.4 : 1})` }}
-      />
-    ))}
-  </div>
-);
+/** Chapter rail on the right edge: one dot per chapter (hover for its name, click to jump), then "next". */
+const Rail: React.FC<{ c: number; onJump: (i: number) => void; onNext: () => void }> = ({ c, onJump, onNext }) => {
+  const now = chapterAt(c);
+  const hidden = seg(c, 7, 7.3);
+  return (
+    <nav
+      aria-label="Story chapters"
+      className="absolute right-2 top-1/2 hidden -translate-y-1/2 flex-col items-center gap-1 lg:flex"
+      style={{ opacity: 1 - hidden, pointerEvents: hidden > 0.5 ? 'none' : 'auto' }}
+    >
+      {CAPTIONS.map((cap, i) => (
+        <button
+          key={i}
+          onClick={() => onJump(i)}
+          aria-label={`Chapter ${i + 1}: ${cap.eyebrow}`}
+          aria-current={now === i ? 'step' : undefined}
+          className="group relative flex h-6 w-6 items-center justify-center"
+        >
+          <span
+            className="block h-2.5 w-2.5 rounded-full transition-transform group-hover:scale-125"
+            style={{
+              background: now === i ? 'var(--ink)' : i < now ? 'var(--ink-2)' : 'transparent',
+              border: `1.5px solid ${now === i ? 'var(--ink)' : 'var(--ink-2)'}`,
+              transform: now === i ? 'scale(1.25)' : undefined,
+            }}
+          />
+          <span
+            className="pointer-events-none absolute right-7 whitespace-nowrap rounded-md px-2 py-1 font-mono text-[10.5px] uppercase tracking-[0.1em] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+            style={{ background: 'var(--panel)', border: '1px solid var(--rule)', color: 'var(--ink)' }}
+          >
+            {String(i + 1).padStart(2, '0')} · {cap.eyebrow}
+          </span>
+        </button>
+      ))}
+      <button
+        onClick={onNext}
+        aria-label="Next chapter"
+        className="mt-1 flex h-7 w-7 items-center justify-center rounded-full transition-opacity hover:opacity-70"
+        style={{ border: '1px solid var(--rule)', color: 'var(--ink-2)' }}
+      >
+        <ChevronDown className="h-4 w-4" />
+      </button>
+    </nav>
+  );
+};
 
 const Outro: React.FC<{
   latest: Latest | null;

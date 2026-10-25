@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Nearest ancestor that scrolls vertically (the app shell's <main>), else the document. */
 function scrollParent(el: HTMLElement | null): HTMLElement | null {
@@ -106,7 +106,47 @@ export function useScrollStory(chapters: number) {
     };
   }, [chapters]);
 
-  return { sectionRef, viewport, chapter };
+  /** Where the section starts inside its scroller, and how far the scroller can travel through it. */
+  const geometry = useCallback(() => {
+    const section = sectionRef.current;
+    if (!section) return null;
+    const scroller = scrollParent(section);
+    const vh = scroller ? scroller.clientHeight : window.innerHeight;
+    const top = scroller
+      ? section.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop
+      : section.getBoundingClientRect().top + window.scrollY;
+    return { scroller, top, travel: section.offsetHeight - vh, height: section.offsetHeight };
+  }, []);
+
+  const scrollTo = useCallback((scroller: HTMLElement | null, top: number) => {
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    (scroller ?? window).scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
+  }, []);
+
+  /** Scrolls so the story lands on chapter position `target` (0 → chapters); the easing plays it through. */
+  const goTo = useCallback(
+    (target: number) => {
+      const g = geometry();
+      if (g) scrollTo(g.scroller, g.top + (Math.max(0, Math.min(chapters, target)) / chapters) * g.travel);
+    },
+    [chapters, geometry, scrollTo]
+  );
+
+  /** Scrolls just past the story, to whatever follows it on the page. */
+  const skipPast = useCallback(() => {
+    const g = geometry();
+    if (g) scrollTo(g.scroller, g.top + g.height);
+  }, [geometry, scrollTo]);
+
+  /** True while the stage is pinned, i.e. the story owns the viewport. */
+  const pinned = useCallback(() => {
+    const g = geometry();
+    if (!g) return false;
+    const at = g.scroller ? g.scroller.scrollTop : window.scrollY;
+    return at >= g.top - 2 && at <= g.top + g.travel + 2;
+  }, [geometry]);
+
+  return { sectionRef, viewport, chapter, goTo, skipPast, pinned };
 }
 
 export function usePrefersReducedMotion(): boolean {
