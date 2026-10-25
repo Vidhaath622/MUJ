@@ -291,3 +291,20 @@ def test_chunking_lab_runs_in_the_background(client, alice, fake_engine):
     assert fake_engine.last_lab[1] == (300, 1200)  # duplicates dropped
     assert client.get("/api/lab/chunking/latest", headers=alice).json()["lab_id"] == lab_id
     assert client.post("/api/lab/chunking", headers=alice, json={"pack_id": "banking", "modes": ["sparse"]}).status_code == 422
+
+
+def test_live_question_on_a_pack_with_the_v2_profile(client, alice, fake_engine):
+    fake_engine.with_old_version = True
+    plain = client.post("/api/evaluate/query", headers=alice, json={"query": "What is the monthly fee?", "pack_id": "banking"})
+    assert plain.status_code == 200 and "profile" not in plain.json()
+    assert len(fake_engine.last_query["document_ids"]) == 2 and fake_engine.last_query["top_k"] is None
+    v2 = client.post("/api/evaluate/query", headers=alice, json={"query": "What is the monthly fee?", "pack_id": "banking", "profile": "v2"})
+    assert v2.json()["profile"] == "v2" and fake_engine.last_query["top_k"] == 2
+    assert len(fake_engine.last_query["document_ids"]) == 1  # the superseded fee schedule is left out
+    assert client.post("/api/evaluate/query", headers=alice, json={"query": "q", "pack_id": "banking", "profile": "v3"}).status_code == 422
+
+
+def test_pack_overview(client, alice):
+    body = client.get("/api/packs/banking", headers=alice).json()
+    assert body["documents"][0]["role"] == "current" and set(body["examples"]) == {"stale", "distractor", "unanswerable"}
+    assert client.get("/api/packs/nope", headers=alice).status_code == 404

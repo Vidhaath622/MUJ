@@ -97,6 +97,9 @@ class EvaluateQueryRequest(DocumentScope):
     pack_id: str | None = None
     test_id: str | None = None
     bot: BotConfigIn | None = None  # evaluate your own RAG endpoint instead of the built-in one
+    # A RAG version for the built-in bot (as on the Compare page): v1 = top-4 over every document,
+    # v2 = top-2 with superseded document versions left out of the search. Default v1.
+    profile: Literal["v1", "v2"] | None = None
 
 
 class TestCaseIn(BaseModel):

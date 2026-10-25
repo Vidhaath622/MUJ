@@ -9,7 +9,9 @@
 from __future__ import annotations
 
 import dataclasses
+from collections import Counter
 import json
+import re
 import threading
 import time
 import uuid
@@ -242,12 +244,13 @@ class Engine:
         bot: dict | None = None,
         gold_snippet: str | None = None,
         self_hosts: tuple[str, ...] = (),
+        top_k: int | None = None,
     ) -> dict:
         self._check_documents(owner_id, document_ids)
         external = self.external_bot(bot, owner_id=owner_id, self_hosts=self_hosts) if bot else None
         with self._interactive():
             return self._evaluate_query(owner_id, query, document_ids, ground_truth, manual_answer, gold_chunk_ids,
-                                        case_type, stale_chunk_ids, test_id, distractor_document_ids, external, gold_snippet)
+                                        case_type, stale_chunk_ids, test_id, distractor_document_ids, external, gold_snippet, top_k)
 
     def _interactive(self):
         """Judge calls made inside this block go ahead of running batches."""
@@ -256,7 +259,7 @@ class Engine:
         return self.live_judge.interactive() if hasattr(self.live_judge, "interactive") else nullcontext()
 
     def _evaluate_query(self, owner_id, query, document_ids, ground_truth, manual_answer, gold_chunk_ids,
-                        case_type, stale_chunk_ids, test_id, distractor_document_ids, bot=None, gold_snippet=None) -> dict:
+                        case_type, stale_chunk_ids, test_id, distractor_document_ids, bot=None, gold_snippet=None, top_k=None) -> dict:
         case = TestCase(
             question=query,
             ground_truth=ground_truth or None,
@@ -269,7 +272,7 @@ class Engine:
             gold_snippet=gold_snippet,
         )
         try:
-            return self.live_evaluator.evaluate(owner_id, case, document_ids, bot=bot)
+            return self.live_evaluator.evaluate(owner_id, case, document_ids, top_k, bot=bot)
         except BotError as exc:
             raise ModelUnavailable(f"your bot: {exc}") from exc
 
@@ -448,6 +451,56 @@ class Engine:
             filename, data = read_document_bytes(spec, entry)
             filenames[document_id_for(data)] = filename
         return {**spec.summary(), "filenames": filenames}
+
+    def pack_overview(self, pack_id: str) -> dict:
+        """What a pack contains, without ingesting: its documents (current, superseded or distractor,
+        with chunk counts) and one example of each trap: a stale fact, a distractor, an unanswerable."""
+        spec = self._pack(pack_id)
+        documents = []
+        for entry in spec.documents:
+            filename, data = read_document_bytes(spec, entry)
+            doc = parse_document(filename, data, self.settings.chunk_chars, self.settings.chunk_overlap)
+            text = data.decode("utf-8", errors="replace")
+            title = next((line.lstrip("# ").strip() for line in text.splitlines() if line.strip()), filename)
+            role = "superseded" if entry.get("superseded_by") else ("distractor" if entry.get("role") == "distractor" or "distractor" in filename.lower() else "current")
+            documents.append({"file": filename, "document_id": doc.document_id, "title": title[:120], "role": role,
+                              "superseded_by": entry.get("superseded_by"), "chunks": len(doc.chunks), "chars": len(text)})
+        distractor_files = {d["file"] for d in documents if d["role"] == "distractor"}
+        cases = spec.test_cases
+
+        def pick(match) -> dict | None:
+            found = [c for c in cases if match(c)]
+            # A person's question first, then one whose answer is an amount or a rate (where an old figure misleads).
+            found.sort(key=lambda c: (c.get("origin", "hand") != "hand", not re.search(r"[$%₹]|cents", c.get("ground_truth_answer", ""))))
+            return found[0] if found else None
+
+        def example(case: dict | None, why: str) -> dict | None:
+            if case is None:
+                return None
+            return {"test_id": case["test_id"], "question": case["question"], "type": case.get("type", "factoid"),
+                    "ground_truth_answer": case.get("ground_truth_answer", ""), "origin": case.get("origin", "hand"), "why": why}
+
+        stale = pick(lambda c: c.get("type") == "stale" and c.get("stale"))
+        older_of = {d["superseded_by"]: d["file"] for d in documents if d["superseded_by"]}
+        # No labelled stale case: a question answered by a document that has an older version in the pack.
+        newer_only = None if stale else pick(lambda c: any(g.get("file") in older_of for g in c.get("gold", [])))
+        distractor = pick(lambda c: c.get("type") == "distractor") or pick(
+            lambda c: c.get("type", "factoid") == "factoid" and any(g.get("file") in distractor_files for g in c.get("gold", [])))
+        unanswerable = pick(lambda c: c.get("type") == "unanswerable")
+        return {
+            **spec.summary(),
+            "documents": documents,
+            "case_types": dict(sorted(Counter(c.get("type", "factoid") for c in cases).items())),
+            "origins": dict(sorted(Counter(c.get("origin", "hand") for c in cases).items())),
+            "examples": {
+                "stale": example(stale, f"An older version ({stale['stale'][0]['file']}) states a different figure; a good bot answers from "
+                                        f"{stale['gold'][0]['file']}.") if stale else example(newer_only, (
+                    f"The answer is in {newer_only['gold'][0]['file']}; an older version ({older_of[newer_only['gold'][0]['file']]}) "
+                    "is in the same search and may give last year's figure.") if newer_only else ""),
+                "distractor": example(distractor, "A document on a nearby topic can pull retrieval or the answer off course."),
+                "unanswerable": example(unanswerable, "No document answers this; a good bot says it does not know instead of guessing."),
+            },
+        }
 
     def load_pack(self, owner_id: str, pack_id: str) -> dict:
         spec = self._pack(pack_id)

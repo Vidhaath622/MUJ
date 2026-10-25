@@ -31,6 +31,13 @@ def evaluate_query(
                 raise HTTPException(status.HTTP_404_NOT_FOUND, f"test case {body.test_id} not found in pack {body.pack_id}")
     if not document_ids:
         document_ids = require_document_ids(body)
+    top_k = None
+    if body.profile:
+        params = next(p["params"] for p in engine.profiles() if p["id"] == body.profile)
+        top_k = params.get("top_k")
+        if params.get("newest_versions_only") and body.pack_id:
+            superseded = set(pack.get("superseded_document_ids", []))
+            document_ids = [d for d in document_ids if d not in superseded]
     # Fields the client sent win; the pack fills in what it left out.
     result = engine.evaluate_query(
         user.id,
@@ -44,7 +51,10 @@ def evaluate_query(
         test_id=body.test_id,
         distractor_document_ids=pack["distractor_document_ids"] if body.pack_id and "distractor_document_ids" in pack else None,
         **({"bot": body.bot.model_dump(), "gold_snippet": case.get("context_snippet"), "self_hosts": request_hosts(request)} if body.bot else {}),
+        **({"top_k": top_k} if top_k else {}),
     )
+    if body.profile:
+        result = {**result, "profile": body.profile}
     db.save_evaluation(user.id, result)
     return result
 
