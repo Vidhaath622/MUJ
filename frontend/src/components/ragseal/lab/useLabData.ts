@@ -103,6 +103,10 @@ export interface LabPack {
   document_ids: string[];
   documents: { document_id: string; filename: string; chunk_count?: number }[];
   test_cases: LabTestCase[];
+  /** Older versions kept beside the current one (the stale trap) and look-alike documents. */
+  superseded_document_ids?: string[];
+  distractor_document_ids?: string[];
+  demo_data?: boolean;
 }
 
 export interface LabRun {
