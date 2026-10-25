@@ -258,6 +258,104 @@
       "ground_truth_answer": "Not stated in the documents.",
       "type": "unanswerable",
       "origin": "hand"
+    },
+    {
+      "test_id": "tel_s01",
+      "question": "In the Indian Telecom Standard Prepaid Tariff Schedule (Post-July 2024), what is the price of the 28-Day Base 1.5GB/day Plan?",
+      "ground_truth_answer": "₹299",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "telecom_tariffs_post_july_2024.md",
+          "quote": "Price increased to ₹299, providing unlimited voice calling and 1.5GB daily high-speed data."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tel_s02",
+      "question": "In the Indian Telecom Standard Prepaid Tariff Schedule (Post-July 2024), what is the price of the 84-Day Popular 1.5GB/day Plan?",
+      "ground_truth_answer": "₹799",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "telecom_tariffs_post_july_2024.md",
+          "quote": "Price increased to ₹799, providing 84 days validity with 1.5GB daily data allotment."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tel_s03",
+      "question": "In the Indian Telecom Standard Prepaid Tariff Schedule (Post-July 2024), what daily data amount qualifies a plan for unlimited 5G data access?",
+      "ground_truth_answer": "2GB/day or higher",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "telecom_tariffs_post_july_2024.md",
+          "quote": "Unlimited 5G data access is now restricted exclusively to plans offering 2GB/day or higher."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tel_s04",
+      "question": "In the Indian Telecom Standard Prepaid Tariff Schedule (Post-July 2024), what is the price of the 1GB Data Top-up Booster?",
+      "ground_truth_answer": "₹19",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "telecom_tariffs_post_july_2024.md",
+          "quote": "1GB high-speed data add-on pack price increased to ₹19."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tel_s05",
+      "question": "What is the price of the 28-Day Base 1.5GB/day Plan in the Indian Telecom Standard Prepaid Tariff Schedule (Pre-July 2024)?",
+      "ground_truth_answer": "₹239",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "telecom_tariffs_pre_july_2024.md",
+          "quote": "28-Day Base 1.5GB/day Plan: Priced at ₹239, providing unlimited voice calling and 1.5GB daily high-speed data."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tel_s06",
+      "question": "How many days validity does the 84-Day Popular 1.5GB/day Plan have in the Indian Telecom Standard Prepaid Tariff Schedule (Pre-July 2024)?",
+      "ground_truth_answer": "84 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "telecom_tariffs_pre_july_2024.md",
+          "quote": "84-Day Popular 1.5GB/day Plan: Priced at ₹666, providing 84 days validity with 1.5GB daily data allotment."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tel_s07",
+      "question": "How much does the 1GB Data Top-up Booster cost in the Indian Telecom Standard Prepaid Tariff Schedule (Pre-July 2024)?",
+      "ground_truth_answer": "₹15",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "telecom_tariffs_pre_july_2024.md",
+          "quote": "Data Top-up Booster (1GB): 1GB high-speed data add-on pack was priced at ₹15."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
     }
   ]
 }

@@ -350,6 +350,104 @@
       "ground_truth_answer": "Not stated in the documents.",
       "type": "unanswerable",
       "origin": "hand"
+    },
+    {
+      "test_id": "tax_s01",
+      "question": "What is the tax rate for income from ₹800,001 to ₹1,200,000 in the new tax regime for financial year 2025–26?",
+      "ground_truth_answer": "10%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income from ₹800,001 to ₹1,200,000: 10%"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s02",
+      "question": "What is the income threshold for a full tax rebate under Section 87A in the new tax regime for financial year 2025–26?",
+      "ground_truth_answer": "₹1,200,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Taxpayers with taxable income up to ₹1,200,000 pay zero tax due to a full tax rebate."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s03",
+      "question": "What is the Health and Education Cess rate on total income tax in the new tax regime for financial year 2025–26?",
+      "ground_truth_answer": "4%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Health and Education Cess remains at 4% on the total income tax amount."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s04",
+      "question": "For financial year 2024–25, what tax rate applies to income from ₹600,001 to ₹900,000?",
+      "ground_truth_answer": "10%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "- Income from ₹600,001 to ₹900,000: 10%"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s05",
+      "question": "For assessment year 2025–26, what is the standard deduction amount available to salaried individuals under the new tax regime?",
+      "ground_truth_answer": "₹75,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Standard Deduction: A standard deduction of ₹75,000 is available for salaried individuals and pensioners under the new tax regime."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s06",
+      "question": "What is the tax rate for income from ₹500,001 to ₹1,000,000 for individual taxpayers below 60 years in financial year 2024–25?",
+      "ground_truth_answer": "20%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "old_tax_regime_distractor.md",
+          "quote": "Income from ₹500,001 to ₹1,000,000: 20%"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s07",
+      "question": "What is the deduction limit for health insurance premiums paid for self and family under Section 80D in financial year 2024–25?",
+      "ground_truth_answer": "₹25,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "old_tax_regime_distractor.md",
+          "quote": "Section 80D: Deduction up to ₹25,000 for health insurance premiums paid for self and family (₹50,000 for senior citizens)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
     }
   ]
 }

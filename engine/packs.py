@@ -145,6 +145,8 @@ def resolve_test_cases(spec: PackSpec, docs_by_file: dict[str, ParsedDocument]) 
                 "context_snippet": raw["gold"][0]["quote"] if raw.get("gold") else "",
                 "type": case_type,
                 "note": raw.get("note", ""),
+                # "hand" (written by a person) or "synthetic" (model-written, auto-validated); never mixed up.
+                "origin": raw.get("origin", "hand"),
             }
         )
     return cases

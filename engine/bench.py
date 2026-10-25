@@ -29,6 +29,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--env", type=Path, required=True, help="the backend .env with the API keys")
     parser.add_argument("--cases", type=int, default=200)
+    parser.add_argument("--packs", default=",".join(PACK_ORDER), help='comma-separated pack ids, or "all"')
     parser.add_argument("--workers", type=int, default=None, help="batch concurrency (default: the engine's choice)")
     args = parser.parse_args()
 
@@ -51,8 +52,9 @@ def main() -> None:
 
     started = time.perf_counter()
     document_ids, cases = [], []
-    available = {p["pack_id"] for p in engine.list_packs()}
-    for pack_id in (p for p in PACK_ORDER if p in available):
+    available = [p["pack_id"] for p in engine.list_packs()]
+    wanted = available if args.packs == "all" else [p for p in args.packs.split(",") if p in available]
+    for pack_id in wanted:
         if len(cases) >= args.cases:
             break
         pack = engine.load_pack("bench", pack_id)
@@ -71,6 +73,8 @@ def main() -> None:
     timing = batch["timing"]
     print(json.dumps({
         "questions": len(cases),
+        "packs": wanted,
+        "origins": {o: sum(1 for c in cases if c.get("origin", "hand") == o) for o in {c.get("origin", "hand") for c in cases}},
         "wall_min": round(timing["wall_ms"] / 60000, 2),
         "failed": batch.get("failed_cases"),
         "judge_models_used": batch["judge_models_used"],

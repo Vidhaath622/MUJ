@@ -323,6 +323,132 @@
       "ground_truth_answer": "Not stated in the documents.",
       "type": "unanswerable",
       "origin": "hand"
+    },
+    {
+      "test_id": "trv_s01",
+      "question": "What is the cost of the City Palace Composite Ticket for Indian adults in the Current Edition?",
+      "ground_truth_answer": "₹700",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "City Palace Composite Ticket: Composite entrance ticket costs ₹700 for Indian adults, which includes same-day admission to Jaigarh Fort."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "trv_s02",
+      "question": "On which date is entry to Hawa Mahal free in the Current Edition?",
+      "ground_truth_answer": "18th May",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Entry remains free on 18th May (International Museum Day)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "trv_s03",
+      "question": "What is the price of the Mandovi River Evening Cruise per passenger in the Current Edition?",
+      "ground_truth_answer": "₹500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Mandovi River Evening Cruise: Public 1-hour sunset cruise organized by GTDC costs ₹500 per passenger."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "trv_s04",
+      "question": "In the 2022 Travel Guide Jaipur & Goa, what is the entry fee for Hawa Mahal for domestic visitors?",
+      "ground_truth_answer": "₹50",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Hawa Mahal Entry Fee: Standard admission is ₹50 for domestic visitors and ₹200 for international tourists."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "trv_s05",
+      "question": "In the 2022 Travel Guide Jaipur & Goa, how much does the City Palace Composite Ticket cost for Indian adults?",
+      "ground_truth_answer": "₹400",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "City Palace Composite Ticket: A combined entrance ticket costs ₹400 for Indian adults, which includes 1-week entry access to Jaigarh Fort."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "trv_s06",
+      "question": "In the 2022 Travel Guide Jaipur & Goa, what is the price of the Mandovi River Evening Cruise per passenger?",
+      "ground_truth_answer": "₹300",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Mandovi River Evening Cruise: Public 1-hour sunset cruise organized by GTDC costs ₹300 per passenger."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "trv_s07",
+      "question": "In the 2022 Travel Guide Jaipur & Goa, what is the entry ticket price for Pilar Monastery Museum per visitor?",
+      "ground_truth_answer": "₹20",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Pilar Monastery Museum Entry: The entry ticket for the historical artifact collection is ₹20 per visitor."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "trv_s08",
+      "question": "In the General Tourist Guidelines, what is the cost for a professional DSLR camera permit at state-protected heritage sites?",
+      "ground_truth_answer": "₹100 per device",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_distractor.md",
+          "quote": "Camera Fees: Professional DSLR camera permits at state-protected heritage sites cost ₹100 per device unless waived."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "trv_s09",
+      "question": "In the General Tourist Guidelines, after what time is swimming at Goa beaches prohibited?",
+      "ground_truth_answer": "6:00 PM",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "travel_distractor.md",
+          "quote": "Swimming at Goa beaches after 6:00 PM is strictly prohibited due to strong ocean currents."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
     }
   ]
 }

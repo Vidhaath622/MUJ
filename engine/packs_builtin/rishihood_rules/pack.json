@@ -208,6 +208,90 @@
       "ground_truth_answer": "Not stated in the documents.",
       "type": "unanswerable",
       "origin": "hand"
+    },
+    {
+      "test_id": "rsh_s01",
+      "question": "In the 2025–26 session, what is the minimum attendance requirement for students?",
+      "ground_truth_answer": "80% attendance",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Minimum Attendance Requirement: Students must maintain a minimum of 80% attendance in each course to be eligible to sit for the end-term examinations."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s02",
+      "question": "In the 2025–26 session, how many days of casual leave are students permitted per semester?",
+      "ground_truth_answer": "8 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Causal Leave Allowance: Students are permitted a maximum of 8 days of casual leave per semester for official university extra-curricular activities."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s03",
+      "question": "In the 2025–26 session, what is the re‑examination fee for grade improvement per paper?",
+      "ground_truth_answer": "₹1,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Grade Improvement Exam Fee: Re-examination fee for grade improvement is ₹1,500 per paper."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s04",
+      "question": "In the 2023 attendance policy, what is the minimum attendance requirement for students?",
+      "ground_truth_answer": "75%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Minimum Attendance Requirement: Students must maintain a minimum of 75% attendance in each course to be eligible to sit for the end-term examinations."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s05",
+      "question": "In the 2023 attendance policy, how many days of casual leave are students permitted per semester?",
+      "ground_truth_answer": "5 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Causal Leave Allowance: Students are permitted a maximum of 5 days of casual leave per semester for official university extra-curricular activities."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s06",
+      "question": "In the 2023 attendance policy, what is the re‑examination fee for grade improvement per paper?",
+      "ground_truth_answer": "₹1,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Grade Improvement Exam Fee: Re-examination fee for grade improvement is ₹1,000 per paper."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
     }
   ]
 }
