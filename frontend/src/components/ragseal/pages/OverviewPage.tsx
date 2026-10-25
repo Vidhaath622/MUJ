@@ -7,6 +7,7 @@ import { LoadState, PACKS } from '../shared/ui';
 import { RagFigure } from '../shared/RagFigure';
 import { DiagnosisTree } from '../shared/Diagrams';
 import { StartStory } from '../story/StartStory';
+import { isExternalRun } from '../lab/useLabData';
 
 interface OverviewPageProps {
   token: string | null;
@@ -40,6 +41,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ token, health, onOpe
             for (const run of candidates) {
               const detail = (await getRun(run.batch_id, token)) as RunSummary & { profile?: string };
               if (detail.profile && detail.profile !== 'v1') continue;
+              if (isExternalRun(detail as { results?: unknown[] })) continue;
               if ('aggregates' in detail || 'results' in detail) out[p.id] = detail as RunSummary;
               return;
             }

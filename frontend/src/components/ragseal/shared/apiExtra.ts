@@ -89,6 +89,9 @@ export interface RunListItem {
   pass_rate?: number | null;
   overall_score?: number | null;
   timing?: RunTiming;
+  /** The demo account's run, shown to users who haven't run this pack yet. Read-only. */
+  sample?: boolean;
+  read_only?: boolean;
 }
 
 export interface RunProgress {
@@ -123,6 +126,8 @@ export interface RunSummary {
   duration_ms?: number;
   timing?: RunTiming;
   results?: unknown[];
+  sample?: boolean;
+  read_only?: boolean;
 }
 
 export async function listRuns(token: string): Promise<RunListItem[]> {
@@ -141,11 +146,17 @@ export async function getRun(batchId: string, token: string): Promise<RunSummary
  */
 export async function startRun(
   packId: string,
-  token: string
+  token: string,
+  opts: { bot?: BotConfig; testIds?: string[] } = {}
 ): Promise<{ batch_id: string; status: string; total?: number; summary?: RunSummary }> {
   const { status, body } = await call<RunSummary & { status?: string; total?: number }>('/evaluate/batch', token, {
     method: 'POST',
-    body: JSON.stringify({ pack_id: packId, async: true }),
+    body: JSON.stringify({
+      pack_id: packId,
+      async: true,
+      ...(opts.bot ? { bot: opts.bot } : {}),
+      ...(opts.testIds?.length ? { test_cases: opts.testIds.map((test_id) => ({ test_id })) } : {}),
+    }),
   });
   if (status === 202 || body.status === 'running') return { batch_id: body.batch_id, status: 'running', total: body.total };
   return { batch_id: body.batch_id, status: 'done', summary: body };
@@ -553,4 +564,68 @@ export async function startImpact(
 
 export async function getImpact(impactId: string, token: string): Promise<ImpactResult> {
   return (await call<ImpactResult>(`/impact/${encodeURIComponent(impactId)}`, token)).body;
+}
+
+// ---------- Your own bot (R2) ----------
+
+/** How RAGSeal calls the user's RAG endpoint. Header values go to the bot only; the server never stores them. */
+export interface BotConfig {
+  url: string;
+  headers: Record<string, string>;
+  question_field?: string;
+  contexts_field?: string;
+  answer_path?: string;
+  contexts_path?: string;
+  accepts_contexts?: boolean;
+  timeout_s?: number;
+  max_concurrency?: number;
+  name?: string;
+}
+
+export interface BotTestResult {
+  ok: boolean;
+  latency_ms?: number;
+  status_code?: number;
+  question?: string;
+  answer?: string;
+  n_contexts?: number;
+  contexts?: string[];
+  contexts_override?: { claimed: boolean; works: boolean | null; answer?: string };
+  replay?: 'available' | 'unavailable';
+  errors: string[];
+  bot?: { name?: string; host?: string; url?: string; header_names?: string[] };
+}
+
+export async function testBot(bot: BotConfig, token: string, question?: string): Promise<BotTestResult> {
+  const { body } = await call<BotTestResult>('/bots/test', token, {
+    method: 'POST',
+    body: JSON.stringify({ bot, ...(question ? { question } : {}) }),
+  });
+  return body;
+}
+
+/** RAGSeal's own bot behind the same contract, so the connector can be tried without a bot of your own. */
+export function builtinBotUrl(packId: string): string {
+  const base = API_BASE_URL.startsWith('http') ? API_BASE_URL : `${window.location.origin}${API_BASE_URL}`;
+  return `${base}/bots/builtin?pack_id=${encodeURIComponent(packId)}`;
+}
+
+// ---------- Upload quality (R2) ----------
+
+/** What the reader managed to pull out of an uploaded file; slide decks and scans lose the most. */
+export interface UploadQuality {
+  pages?: number | null;
+  pages_with_text?: number | null;
+  skipped_pages?: number[];
+  ocr_pages?: number[];
+  /** "not needed", or which OCR ran (or why it could not). */
+  ocr?: string;
+  chunks?: number;
+  avg_chunk_chars?: number;
+  removed_boilerplate?: { line: string; pages: number }[];
+  wrap_repeats_removed?: number;
+  duplicate_lines_removed?: number;
+  /** Clean-up the reader did (footers removed, wraps fixed): worth knowing, not a problem. */
+  notes?: string[];
+  warnings?: string[];
 }

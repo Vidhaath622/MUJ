@@ -69,6 +69,10 @@ export interface LabResult {
     failure_type_text?: string;
     stage?: string;
   };
+  /** "external" when the user's own bot answered (R2 connector); replay then needs the bot to accept passages. */
+  answer_source?: 'external' | 'builtin';
+  replay_status?: 'ran' | 'not_needed' | 'unavailable' | 'failed';
+  bot?: { name?: string | null; host?: string; url?: string; header_names?: string[] };
   replay?: {
     answer?: string;
     answer_accuracy?: number | null;
@@ -103,6 +107,8 @@ export interface LabPack {
 
 export interface LabRun {
   batch_id: string;
+  sample?: boolean;
+  read_only?: boolean;
   created_at?: string;
   pack_id?: string | null;
   total_evaluated?: number;
@@ -173,6 +179,11 @@ function errorText(err: unknown): string {
   return 'Something went wrong talking to the backend.';
 }
 
+/** True when the user's own bot (the R2 connector) answered this run's questions. */
+export function isExternalRun(run: { results?: unknown[] } | null | undefined): boolean {
+  return !!run?.results?.some((r) => (r as LabResult).answer_source === 'external');
+}
+
 export function useLabData(packId: PackId, token: string | null, batchId?: string | null) {
   const [pack, setPack] = useState<LabPack | null>(null);
   const [run, setRun] = useState<LabRun | null>(null);
@@ -209,6 +220,8 @@ export function useLabData(packId: PackId, token: string | null, batchId?: strin
           for (const c of candidates) {
             const detail = (await fetchRunDetail(c.batch_id, token)) as unknown as LabRun & { profile?: string };
             if (detail?.profile && detail.profile !== 'v1') continue;
+            // A run against the user's own bot is about that bot, not this pack's sample bot.
+            if (isExternalRun(detail)) continue;
             if (!cancelled && Array.isArray(detail?.results)) setRun(detail);
             break;
           }
@@ -263,7 +276,8 @@ export function useLabData(packId: PackId, token: string | null, batchId?: strin
 
   // A run opened by id may belong to no pack (an uploaded test set) or another pack:
   // then its own results are the case list, not the selected pack's questions.
-  const foreignRun = !!run && (run.pack_id ?? null) !== packId;
+  // A run of the user's own bot (often a quick subset) is likewise listed by its own results.
+  const foreignRun = !!run && ((run.pack_id ?? null) !== packId || isExternalRun(run));
   const cases: LabCase[] = foreignRun
     ? run!.results.map((r, i) => ({
         test_id: r.test_id ?? `case_${i + 1}`,

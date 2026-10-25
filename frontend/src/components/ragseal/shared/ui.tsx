@@ -197,3 +197,16 @@ export function fmtTime(iso: string | undefined): string {
   if (isNaN(d.getTime())) return iso;
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
+/** Marks the demo account's run, which new users see until they run the pack themselves. */
+export const SampleBadge: React.FC<{ className?: string }> = ({ className }) => (
+  <span
+    title="A sample run from the demo account. Run this pack to get your own."
+    className={cn(
+      'inline-flex items-center rounded-full border border-[var(--rule-2)] px-1.5 py-px text-[10.5px] font-medium text-[var(--ink-2)]',
+      className
+    )}
+  >
+    Sample
+  </span>
+);

@@ -16,6 +16,7 @@ import {
   PackSwitcher,
   Panel,
   PrimaryButton,
+  SampleBadge,
 } from '../shared/ui';
 
 /** PS requirement: 200 questions evaluated in 15 minutes or less. */
@@ -159,7 +160,10 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
                       openable ? 'cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]' : 'opacity-80'
                     )}
                   >
-                    <td className="px-5 py-3 font-mono text-xs text-[var(--ink-1)]">{r.batch_id}</td>
+                    <td className="px-5 py-3 font-mono text-xs text-[var(--ink-1)]">
+                      {r.batch_id}
+                      {r.sample && <SampleBadge className="ml-2 font-sans" />}
+                    </td>
                     <td className="px-3 py-3 text-[var(--ink)]">{PACK_LABEL[r.pack_id ?? ''] ?? r.pack_id ?? '—'}</td>
                     <td className="px-3 py-3">
                       <StatusPill status={status} />

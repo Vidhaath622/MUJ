@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   ListChecks,
   PlayCircle,
+  Plug,
   Radar,
   ScanSearch,
   ShieldCheck,
@@ -21,7 +22,7 @@ import { cn } from '../../../lib/utils';
 import { AuthUser } from '../../../types/ragseal';
 import { HealthResponse } from '../../../lib/api';
 
-export type Route = 'bots' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'impact' | 'label' | 'trust' | 'compare' | 'seal' | 'learn';
+export type Route = 'bots' | 'connect' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'impact' | 'label' | 'trust' | 'compare' | 'seal' | 'learn';
 
 interface NavItem {
   id: Route;
@@ -38,6 +39,7 @@ const NAV: { group: string; step?: number; items: NavItem[] }[] = [
     step: 1,
     items: [
       { id: 'bots', label: 'Try a chatbot', hint: 'Ask a bot; every reply gets checked', icon: MessagesSquare },
+      { id: 'connect', label: 'Connect your bot', hint: 'Test your own chatbot by its URL', icon: Plug },
       { id: 'testsets', label: 'Documents & questions', hint: 'Upload a document, generate test questions', icon: FlaskConical },
       { id: 'runs', label: 'Run a full test', hint: 'Check every question in a pack at once', icon: PlayCircle },
     ],
@@ -65,6 +67,7 @@ const NAV: { group: string; step?: number; items: NavItem[] }[] = [
 
 export const ROUTE_TITLE: Record<Route, string> = {
   bots: 'Try a chatbot',
+  connect: 'Connect your bot',
   overview: 'Start here',
   diagnose: 'Diagnose answers',
   runs: 'Run a full test',
@@ -80,6 +83,7 @@ export const ROUTE_TITLE: Record<Route, string> = {
 /** One plain sentence under each page title: what the page is for and what to do. */
 export const ROUTE_BLURB: Record<Route, string> = {
   overview: 'RAGSeal tests a chatbot that answers from documents and tells you which part broke when it\u2019s wrong.',
+  connect: 'Point RAGSeal at your own chatbot\u2019s URL, test the connection, then run our test questions through it.',
   bots: 'Ask a sample chatbot anything. Each reply is checked: did it find the right text, stick to it, and get it right?',
   diagnose: 'Pick a question on the left to see the text the bot found, its answer, and who is to blame.',
   testsets: 'Upload a document, read it, then generate test questions with known answers and check them.',
@@ -131,6 +135,8 @@ interface AppShellProps {
   live: boolean;
   user: AuthUser | null;
   onOpenAuth: () => void;
+  /** Set while on the demo account: leave it for the sign-in screen (email or Google). */
+  onSignIn?: () => void;
   /** Slim per-page bar: title on the left, page controls on the right. */
   topBarControls?: React.ReactNode;
   topBarTitle?: React.ReactNode;
@@ -146,6 +152,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   live,
   user,
   onOpenAuth,
+  onSignIn,
   topBarControls,
   topBarTitle,
   fitScreen,
@@ -252,6 +259,17 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div id={TOP_BAR_SLOT} className="ml-auto flex shrink-0 items-center gap-3">
           {topBarControls}
         </div>
+        {onSignIn && (
+          <button
+            onClick={onSignIn}
+            title="You're on the shared demo account. Sign in to keep your own documents and runs."
+            className="flex h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[9px] border border-[var(--rule-2)] px-3 text-[13px] text-[var(--ink-1)] transition-colors hover:text-[var(--ink)]"
+          >
+            <User className="h-3.5 w-3.5" />
+            <span className="hidden xl:inline">Sign in / Create account</span>
+            <span className="xl:hidden">Sign in</span>
+          </button>
+        )}
       </header>
       <main className={cn('min-h-0 flex-1', fitScreen ? 'overflow-hidden' : 'overflow-y-auto')}>{children}</main>
     </div>

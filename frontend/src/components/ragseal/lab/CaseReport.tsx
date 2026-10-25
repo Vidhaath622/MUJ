@@ -71,6 +71,12 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
                 <span>{(result.duration_ms / 1000).toFixed(1)} s</span>
               </>
             )}
+            {result.answer_source === 'external' && (
+              <>
+                <Dot />
+                <span>Answered by your bot{result.bot?.name || result.bot?.host ? ` (${result.bot?.name || result.bot?.host})` : ''}</span>
+              </>
+            )}
           </div>
           <h1 className="mt-2 text-[22px] font-semibold leading-tight tracking-[-0.025em] text-[var(--ink)] 2xl:text-[26px]">{result.query}</h1>
         </div>
@@ -115,6 +121,13 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
             <p className="mt-1.5 max-w-[52ch] text-xs leading-relaxed text-[var(--ink-2)]">{result.root_cause.failure_type_text}</p>
           )}
           {result.error && <p className="mt-2 text-xs text-[var(--gen)]">{result.error}</p>}
+          {(result.replay_status === 'unavailable' || result.replay_status === 'failed') && (
+            <p className="mt-2 max-w-[52ch] text-xs leading-relaxed" style={{ color: AMBER }}>
+              {result.replay_status === 'unavailable'
+                ? 'Replay unavailable: this bot can’t be given the correct text, so the cause is a best guess, not proven. Turn on “accepts contexts” to enable replay.'
+                : 'Replay failed: the bot errored when given the correct text, so the cause is not proven.'}
+            </p>
+          )}
         </div>
 
         <div className="flex min-w-0 flex-[1.4_1_420px] items-stretch">
@@ -190,7 +203,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
           {!chunks.length && <p className="text-sm text-[var(--ink-2)]">No chunks were retrieved.</p>}
         </Pane>
 
-        <Pane title="What the bot answered" note={result.generator_model} mono delay={180}>
+        <Pane title="What the bot answered" note={result.generator_model ?? result.bot?.host} mono delay={180}>
           <p className="whitespace-pre-wrap text-[17px] leading-normal tracking-[-0.01em] text-[var(--ink)]">
             {result.generated_answer ? (
               <Figures text={result.generated_answer} color={answerWrong ? RED : undefined} />

@@ -64,6 +64,8 @@ export interface DocumentResponse {
   filename: string;
   chunk_count: number;
   chunks?: { chunk_id: string; text: string; ordinal?: number }[];
+  /** Upload only: how much of the file the reader got out (pages, OCR, warnings). */
+  quality?: import('../components/ragseal/shared/apiExtra').UploadQuality;
 }
 
 export interface SyntheticResponse {
