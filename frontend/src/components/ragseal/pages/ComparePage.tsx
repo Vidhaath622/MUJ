@@ -183,42 +183,44 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
             {flips.length === 0 ? (
               <EmptyState className="m-5" title="No question changed outcome" />
             ) : (
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr className="border-b border-[var(--rule)] text-left text-xs text-[var(--ink-2)]">
-                    <th className="px-5 py-2.5 font-normal">Question</th>
-                    <th className="px-3 py-2.5 font-normal">Set</th>
-                    <th className="px-3 py-2.5 font-normal">Base</th>
-                    <th className="px-3 py-2.5 font-normal">Candidate</th>
-                    <th className="px-5 py-2.5 text-right font-normal">Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...regressions, ...fixes].map((f) => {
-                    const bad = f.direction === 'pass_to_fail';
-                    const color = bad ? RED : PASS;
-                    return (
-                      <tr key={`${f.test_id}-${f.direction}`} className="border-b border-[var(--panel)] last:border-0">
-                        <td className="max-w-[460px] px-5 py-3">
-                          <div className="truncate text-[var(--ink)]">{f.question ?? f.test_id}</div>
-                          <div className="font-mono text-[11px] text-[var(--muted)]">{f.test_id}</div>
-                        </td>
-                        <td className="px-3 py-3 text-[var(--ink-2)]">{PACK_LABEL[f.pack_id ?? ''] ?? f.pack_id ?? '—'}</td>
-                        <td className="px-3 py-3 text-[var(--ink-1)]">{f.base_verdict ? failureLabel(f.base_verdict) : '—'}</td>
-                        <td className="px-3 py-3 text-[var(--ink-1)]">{f.candidate_verdict ? failureLabel(f.candidate_verdict) : '—'}</td>
-                        <td className="px-5 py-3 text-right">
-                          <span
-                            className="rounded-full px-2.5 py-1 text-xs font-medium"
-                            style={{ background: tint(color, 0.12), color }}
-                          >
-                            {bad ? 'Pass → fail' : 'Fail → pass'}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[540px] text-[13px]">
+                  <thead>
+                    <tr className="border-b border-[var(--rule)] text-left text-xs text-[var(--ink-2)]">
+                      <th className="px-5 py-2.5 font-normal">Question</th>
+                      <th className="px-3 py-2.5 font-normal">Set</th>
+                      <th className="px-3 py-2.5 font-normal">Base</th>
+                      <th className="px-3 py-2.5 font-normal">Candidate</th>
+                      <th className="px-5 py-2.5 text-right font-normal">Change</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...regressions, ...fixes].map((f) => {
+                      const bad = f.direction === 'pass_to_fail';
+                      const color = bad ? RED : PASS;
+                      return (
+                        <tr key={`${f.test_id}-${f.direction}`} className="border-b border-[var(--panel)] last:border-0">
+                          <td className="max-w-[460px] px-5 py-3">
+                            <div className="truncate text-[var(--ink)]">{f.question ?? f.test_id}</div>
+                            <div className="font-mono text-[11px] text-[var(--muted)]">{f.test_id}</div>
+                          </td>
+                          <td className="px-3 py-3 text-[var(--ink-2)]">{PACK_LABEL[f.pack_id ?? ''] ?? f.pack_id ?? '—'}</td>
+                          <td className="px-3 py-3 text-[var(--ink-1)]">{f.base_verdict ? failureLabel(f.base_verdict) : '—'}</td>
+                          <td className="px-3 py-3 text-[var(--ink-1)]">{f.candidate_verdict ? failureLabel(f.candidate_verdict) : '—'}</td>
+                          <td className="px-5 py-3 text-right">
+                            <span
+                              className="rounded-full px-2.5 py-1 text-xs font-medium"
+                              style={{ background: tint(color, 0.12), color }}
+                            >
+                              {bad ? 'Pass → fail' : 'Fail → pass'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </Panel>
         </>

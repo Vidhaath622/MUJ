@@ -233,7 +233,7 @@ export const App: React.FC = () => {
         )}
 
         {route === 'diagnose' && (
-          <div className="h-full px-6 py-5">
+          <div className="h-full px-3 sm:px-6 py-3 sm:py-5">
             <TopBarControls>
               {openBatch && (
                 <button onClick={() => go('diagnose')} className="text-xs text-[var(--ink-2)] hover:text-[var(--ink)]">

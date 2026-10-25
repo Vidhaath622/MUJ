@@ -138,15 +138,15 @@ export const SealPage: React.FC<{ token: string | null }> = ({ token }) => {
         <>
           {/* The certificate */}
           <article
-            className="relative overflow-hidden rounded-[22px] px-10 py-9"
-            style={{ background: 'var(--panel)', border: '1px solid var(--rule)', boxShadow: `inset 0 0 0 10px var(--panel), inset 0 0 0 11px var(--rule)` }}
+            className="relative overflow-hidden rounded-[22px] px-4 sm:px-6 md:px-10 py-6 sm:py-9"
+            style={{ background: 'var(--panel)', border: '1px solid var(--rule)', boxShadow: `inset 0 0 0 6px var(--panel), inset 0 0 0 7px var(--rule)` }}
           >
-            <div className="flex flex-wrap items-start justify-between gap-8">
+            <div className="flex flex-wrap items-start justify-between gap-6 sm:gap-8">
               <div className="min-w-0 flex-1">
                 <div className="font-mono text-[11px] uppercase tracking-[0.16em]" style={{ color: 'var(--ink-2)' }}>
                   Certificate of evaluation · {run.batch_id}
                 </div>
-                <h2 className="mt-3 text-[40px] leading-[1.05]" style={{ color: 'var(--ink)' }}>
+                <h2 className="mt-3 text-[28px] sm:text-[34px] md:text-[40px] leading-[1.05]" style={{ color: 'var(--ink)' }}>
                   {bot.name}
                 </h2>
                 <div className="mt-1 text-[15px]" style={{ color: 'var(--ink-2)' }}>

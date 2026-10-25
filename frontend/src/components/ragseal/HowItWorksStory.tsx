@@ -177,7 +177,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
                 System Proof
               </span>
             </div>
-            <h1 className="text-2xl font-bold text-[var(--ink)] tracking-tight mt-1.5">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--ink)] tracking-tight mt-1.5">
               How RAGSeal Proves Why a RAG Answer Failed
             </h1>
             <p className="text-xs text-[var(--ink-2)] font-mono mt-1">
@@ -187,7 +187,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
 
           <GhostButton
             onClick={handleCopyPitchDiagram}
-            className="text-xs font-mono text-[var(--violet)] hover:text-[var(--ink)] border border-[var(--violet-tint-2)] bg-[var(--violet-tint-2)] hover:bg-[var(--violet-tint-2)]"
+            className="text-xs font-mono text-[var(--violet)] hover:text-[var(--ink)] border border-[var(--violet-tint-2)] bg-[var(--violet-tint-2)] hover:bg-[var(--violet-tint-2)] shrink-0"
           >
             {copiedDiagram ? <Check className="w-3.5 h-3.5 text-[var(--ok)]" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copiedDiagram ? 'Diagram Copied!' : 'Copy Pitch Deck Diagram'}</span>
@@ -195,7 +195,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
         </div>
 
         {/* Step Scrubber Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-5">
           {steps.map((s) => {
             const isSelected = activeStep === s.step;
             const Icon = s.icon;

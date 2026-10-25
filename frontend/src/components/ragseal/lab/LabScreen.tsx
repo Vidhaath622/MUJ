@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Loader2, Play } from 'lucide-react';
+import { ArrowLeft, Loader2, Play } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { failureLabel } from '../shared/taxonomy';
 import { PackId } from '../../../types/ragseal';
@@ -32,6 +32,7 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) 
   const lab = useLabData(packId, token, batchId);
   const [selected, setSelected] = useState<string | null>(null);
   const [userPicked, setUserPicked] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'questions' | 'report'>('questions');
   const pick = (id: string) => {
     setUserPicked(true);
     setSelected(id);
@@ -71,87 +72,137 @@ export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) 
   }
 
   return (
-    <div className="relative grid h-full min-h-0 grid-cols-[290px_1fr] gap-5 2xl:grid-cols-[310px_1fr]">
-      {/* Verdict-tinted light from above the report */}
-      {glow && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 left-[30%] right-0 h-[420px] transition-[background] duration-700"
-          style={{ background: 'transparent' }}
-        />
-      )}
-
-      <aside className="relative flex min-h-0 flex-col gap-3.5">
-        <PackSummary
-          packName={lab.foreignRun ? (lab.run?.pack_id ? PACK_NAME[lab.run.pack_id as PackId] ?? lab.run.pack_id : 'Uploaded test set') : PACK_NAME[packId] ?? packId}
-          run={lab.run}
-          onRun={lab.foreignRun ? undefined : lab.runPack}
-          running={lab.runningPack}
-          startedAt={lab.runStartedAt}
-          total={lab.cases.length}
-        />
-
-        <div className="lab-panel-flat flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
-          <div className="flex items-baseline justify-between px-4 pb-2.5 pt-3.5 text-xs">
-            <h3 className="font-medium text-[var(--ink-1)]">Test questions</h3>
-            <span className="text-[var(--ink-2)]">failures first</span>
-          </div>
-          <ul className="min-h-0 flex-1 overflow-y-auto pb-1">
-            {lab.loading && <li className="px-4 py-3 text-sm text-[var(--ink-2)]">Loading pack…</li>}
-            {sorted.map((c) => (
-              <CaseRow key={c.test_id} c={c} active={c.test_id === selected} onClick={() => pick(c.test_id)} />
-            ))}
-          </ul>
-          <AskBox
-            busy={lab.asking}
-            disabled={!lab.pack}
-            onAsk={async (q) => {
-              pick(AD_HOC);
-              await lab.ask(q);
-            }}
-          />
-        </div>
-      </aside>
-
-      <main className="relative flex min-h-0 flex-col gap-3">
-        {lab.error && (
-          <div className="flex items-start justify-between gap-3 rounded-xl border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] bg-[color:color-mix(in_srgb,var(--gen)_10%,transparent)] px-4 py-2.5 text-sm text-[var(--gen-deep)]">
-            <span>{lab.error}</span>
-            <button onClick={lab.clearError} className="text-[var(--gen)] hover:text-[var(--ink)]">
-              Dismiss
-            </button>
-          </div>
-        )}
-        {/* Scrolls when the report is taller than the screen (short laptop screens), so the
-            evidence and answer are never cut off below the verdict. */}
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {selected === AD_HOC ? (
-            lab.asking ? (
-              <Centered>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finding text, answering and checking…
-              </Centered>
-            ) : lab.adHoc ? (
-              <CaseReport result={lab.adHoc} staleChunkIds={[]} filenames={filenames} />
-            ) : (
-              <Centered>Ask a question to evaluate it live.</Centered>
-            )
-          ) : current?.result ? (
-            <CaseReport
-              result={current.result}
-              testId={current.test_id}
-              caseType={current.type}
-              staleChunkIds={current.stale_chunk_ids}
-              filenames={filenames}
-            />
-          ) : current ? (
-            <Centered>
-              This question hasn't been evaluated yet. Run the pack to score all {lab.cases.length} questions.
-            </Centered>
-          ) : (
-            !lab.loading && <Centered>Pick a pack to begin.</Centered>
+    <div className="relative flex h-full min-h-0 flex-col">
+      {/* Mobile/Tablet tab switch */}
+      <div className="mb-3 flex shrink-0 items-center gap-1 rounded-xl bg-[var(--panel-2)] p-1 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileTab('questions')}
+          className={cn(
+            'flex-1 rounded-lg py-1.5 text-center text-xs font-medium transition-colors',
+            mobileTab === 'questions'
+              ? 'bg-[var(--paper)] text-[var(--ink)] shadow-sm'
+              : 'text-[var(--ink-2)] hover:text-[var(--ink)]'
           )}
-        </div>
-      </main>
+        >
+          Questions ({sorted.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('report')}
+          className={cn(
+            'flex-1 rounded-lg py-1.5 text-center text-xs font-medium transition-colors',
+            mobileTab === 'report'
+              ? 'bg-[var(--paper)] text-[var(--ink)] shadow-sm'
+              : 'text-[var(--ink-2)] hover:text-[var(--ink)]'
+          )}
+        >
+          Diagnosis Report {selected && selected !== AD_HOC ? `(${selected})` : ''}
+        </button>
+      </div>
+
+      <div className="relative grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[290px_1fr] 2xl:grid-cols-[310px_1fr] lg:gap-5">
+        {/* Verdict-tinted light from above the report */}
+        {glow && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 left-[30%] right-0 h-[420px] transition-[background] duration-700"
+            style={{ background: 'transparent' }}
+          />
+        )}
+
+        <aside className={cn('relative min-h-0 flex-col gap-3.5', mobileTab === 'questions' ? 'flex' : 'hidden lg:flex')}>
+          <PackSummary
+            packName={lab.foreignRun ? (lab.run?.pack_id ? PACK_NAME[lab.run.pack_id as PackId] ?? lab.run.pack_id : 'Uploaded test set') : PACK_NAME[packId] ?? packId}
+            run={lab.run}
+            onRun={lab.foreignRun ? undefined : lab.runPack}
+            running={lab.runningPack}
+            startedAt={lab.runStartedAt}
+            total={lab.cases.length}
+          />
+
+          <div className="lab-panel-flat flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
+            <div className="flex items-baseline justify-between px-4 pb-2.5 pt-3.5 text-xs">
+              <h3 className="font-medium text-[var(--ink-1)]">Test questions</h3>
+              <span className="text-[var(--ink-2)]">failures first</span>
+            </div>
+            <ul className="min-h-0 flex-1 overflow-y-auto pb-1">
+              {lab.loading && <li className="px-4 py-3 text-sm text-[var(--ink-2)]">Loading pack…</li>}
+              {sorted.map((c) => (
+                <CaseRow
+                  key={c.test_id}
+                  c={c}
+                  active={c.test_id === selected}
+                  onClick={() => {
+                    pick(c.test_id);
+                    setMobileTab('report');
+                  }}
+                />
+              ))}
+            </ul>
+            <AskBox
+              busy={lab.asking}
+              disabled={!lab.pack}
+              onAsk={async (q) => {
+                pick(AD_HOC);
+                setMobileTab('report');
+                await lab.ask(q);
+              }}
+            />
+          </div>
+        </aside>
+
+        <main className={cn('relative min-h-0 flex-col gap-3', mobileTab === 'report' ? 'flex' : 'hidden lg:flex')}>
+          {/* Mobile back to questions shortcut */}
+          <div className="flex items-center justify-between pb-1 lg:hidden">
+            <button
+              onClick={() => setMobileTab('questions')}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--accent)] hover:opacity-80"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to questions list
+            </button>
+            {selected && <span className="font-mono text-xs text-[var(--ink-2)]">{selected}</span>}
+          </div>
+
+          {lab.error && (
+            <div className="flex items-start justify-between gap-3 rounded-xl border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] bg-[color:color-mix(in_srgb,var(--gen)_10%,transparent)] px-4 py-2.5 text-sm text-[var(--gen-deep)]">
+              <span>{lab.error}</span>
+              <button onClick={lab.clearError} className="text-[var(--gen)] hover:text-[var(--ink)]">
+                Dismiss
+              </button>
+            </div>
+          )}
+          {/* Scrolls when the report is taller than the screen (short laptop screens), so the
+              evidence and answer are never cut off below the verdict. */}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {selected === AD_HOC ? (
+              lab.asking ? (
+                <Centered>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finding text, answering and checking…
+                </Centered>
+              ) : lab.adHoc ? (
+                <CaseReport result={lab.adHoc} staleChunkIds={[]} filenames={filenames} />
+              ) : (
+                <Centered>Ask a question to evaluate it live.</Centered>
+              )
+            ) : current?.result ? (
+              <CaseReport
+                result={current.result}
+                testId={current.test_id}
+                caseType={current.type}
+                staleChunkIds={current.stale_chunk_ids}
+                filenames={filenames}
+              />
+            ) : current ? (
+              <Centered>
+                This question hasn't been evaluated yet. Run the pack to score all {lab.cases.length} questions.
+              </Centered>
+            ) : (
+              !lab.loading && <Centered>Pick a pack to begin.</Centered>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

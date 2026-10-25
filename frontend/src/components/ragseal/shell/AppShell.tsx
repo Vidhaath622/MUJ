@@ -8,6 +8,7 @@ import {
   GitCompareArrows,
   LayoutDashboard,
   ListChecks,
+  Menu,
   PlayCircle,
   Plug,
   Radar,
@@ -16,6 +17,7 @@ import {
   Stamp,
   Tags,
   User,
+  X,
 } from 'lucide-react';
 import { judgePool } from '../shared/apiExtra';
 import { cn } from '../../../lib/utils';
@@ -157,124 +159,173 @@ export const AppShell: React.FC<AppShellProps> = ({
   topBarTitle,
   fitScreen,
   children,
-}) => (
-  <div className="flex h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
-    <aside className="flex w-[60px] shrink-0 flex-col border-r border-[var(--rule)] bg-[var(--paper)] lg:w-[232px]">
-      <div className="flex h-14 items-center gap-2.5 px-[19px] lg:px-5">
-        <ShieldCheck className="h-[22px] w-[22px] shrink-0 text-[var(--ink)]" strokeWidth={1.6} />
-        <span className="hidden text-[15px] font-semibold tracking-[-0.01em] lg:inline">RAGSeal</span>
-      </div>
+}) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-      <nav className="flex-1 overflow-y-auto px-2.5 pb-4 pt-2 lg:px-3">
-        {NAV.map((g, gi) => (
-          <div key={g.group} className={cn('relative', g.step ? 'mb-4' : 'mb-3', g.group === 'Learn' && 'mt-2 border-t border-[var(--rule)] pt-3')}>
-            {g.step && (
-              <div className="mb-1.5 hidden items-center gap-2 px-2.5 lg:flex">
-                <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-[var(--rule)] bg-[var(--panel)] text-[10px] font-semibold tabular-nums text-[var(--ink-1)]">
-                  {g.step}
-                </span>
-                <span className="text-[12px] font-medium text-[var(--ink-2)]">{g.group}</span>
-              </div>
-            )}
-            {/* Connector line linking the three steps */}
-            {g.step && g.step < 3 && NAV[gi + 1]?.step && (
-              <span aria-hidden className="pointer-events-none absolute -bottom-4 left-[19px] top-[22px] hidden w-px bg-[var(--rule)] lg:block" />
-            )}
-            <ul className={cn('relative space-y-0.5', g.step && 'lg:pl-[18px]')}>
-              {g.items.map((item) => {
-                const active = route === item.id;
-                const Icon = item.icon;
-                return (
-                  <li key={item.id} className="relative">
-                    <a
-                      href={`#/${item.id}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onNavigate(item.id);
-                      }}
-                      aria-current={active ? 'page' : undefined}
-                      data-tour={`nav-${item.id}`}
-                      title={`${item.label}: ${item.hint}`}
-                      className={cn(
-                        'group relative flex h-9 items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-[background-color,color] duration-200 lg:justify-start',
-                        active
-                          ? 'bg-[var(--panel-3)] font-medium text-[var(--ink)]'
-                          : 'text-[var(--ink-2)] hover:bg-[color:color-mix(in_srgb,var(--ink)_4%,transparent)] hover:text-[var(--ink)]'
-                      )}
-                    >
-                      <span
-                        aria-hidden
-                        className={cn(
-                          'absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-[var(--accent)] transition-all duration-300',
-                          active ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
-                        )}
-                      />
-                      <Icon
-                        className={cn(
-                          'h-4 w-4 shrink-0 transition-colors duration-200',
-                          active ? 'text-[var(--accent)]' : 'text-[var(--muted)] group-hover:text-[var(--ink-1)]'
-                        )}
-                      />
-                      <span className="hidden whitespace-nowrap lg:inline">{item.label}</span>
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </nav>
+  const handleNav = (r: Route) => {
+    setMobileMenuOpen(false);
+    onNavigate(r);
+  };
 
-      <div className="border-t border-[var(--rule)] p-3">
-        <ModelStatus live={live} health={health} />
-        <ThemeToggle />
-        <button
-          onClick={() => window.dispatchEvent(new Event('ragseal:tour'))}
-          className="flex h-9 w-full items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] lg:justify-start"
-          title="Show the guided tour"
-        >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--rule)] text-[12px] font-semibold text-[var(--ink)]">?</span>
-          <span className="hidden lg:inline">Guided tour</span>
-        </button>
-        <button
-          onClick={onOpenAuth}
-          className="flex h-9 w-full items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)] lg:justify-start"
-          title={user?.email ?? 'Sign in'}
-        >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--panel-2)] text-[11px] font-medium text-[var(--ink)]">
-            {user ? user.email[0].toUpperCase() : <User className="h-3.5 w-3.5" />}
-          </span>
-          <span className="hidden truncate lg:inline">{user ? user.email.split('@')[0] : 'Sign in'}</span>
-        </button>
-      </div>
-    </aside>
+  return (
+    <div className="relative flex h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
+      {/* Mobile drawer backdrop */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm sm:hidden transition-opacity"
+          aria-hidden="true"
+        />
+      )}
 
-    <div className="flex min-w-0 flex-1 flex-col">
-      <header className="flex min-h-14 shrink-0 items-center gap-4 border-b border-[var(--rule)] px-6 py-2">
-        {/* The title block absorbs the squeeze (its blurb truncates); the controls keep their width. */}
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)]">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
-          <p className="truncate text-xs text-[var(--ink-2)]">{ROUTE_BLURB[route]}</p>
-        </div>
-        <div id={TOP_BAR_SLOT} className="ml-auto flex shrink-0 items-center gap-3">
-          {topBarControls}
-        </div>
-        {onSignIn && (
-          <button
-            onClick={onSignIn}
-            title="You're on the shared demo account. Sign in to keep your own documents and runs."
-            className="flex h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[9px] border border-[var(--rule-2)] px-3 text-[13px] text-[var(--ink-1)] transition-colors hover:text-[var(--ink)]"
-          >
-            <User className="h-3.5 w-3.5" />
-            <span className="hidden xl:inline">Sign in / Create account</span>
-            <span className="xl:hidden">Sign in</span>
-          </button>
+      {/* Sidebar: slides in as drawer on mobile (<sm), compact 60px on tablet (sm-lg), full 232px on desktop (lg+) */}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-[var(--rule)] bg-[var(--paper)] transition-transform duration-200 ease-out sm:static sm:z-auto sm:w-[60px] lg:w-[232px]',
+          mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full sm:translate-x-0'
         )}
-      </header>
-      <main className={cn('min-h-0 flex-1', fitScreen ? 'overflow-hidden' : 'overflow-y-auto')}>{children}</main>
+      >
+        <div className="flex h-14 items-center justify-between px-4 sm:px-[19px] lg:px-5 border-b border-[var(--rule)] sm:border-b-0">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="h-[22px] w-[22px] shrink-0 text-[var(--ink)]" strokeWidth={1.6} />
+            <span className="text-[15px] font-semibold tracking-[-0.01em] sm:hidden lg:inline">RAGSeal</span>
+          </div>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--ink-2)] hover:bg-[var(--panel-2)] sm:hidden"
+            aria-label="Close menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-2.5 pb-4 pt-2 lg:px-3">
+          {NAV.map((g, gi) => (
+            <div key={g.group} className={cn('relative', g.step ? 'mb-4' : 'mb-3', g.group === 'Learn' && 'mt-2 border-t border-[var(--rule)] pt-3')}>
+              {g.step && (
+                <div className="mb-1.5 flex sm:hidden lg:flex items-center gap-2 px-2.5">
+                  <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full border border-[var(--rule)] bg-[var(--panel)] text-[10px] font-semibold tabular-nums text-[var(--ink-1)]">
+                    {g.step}
+                  </span>
+                  <span className="text-[12px] font-medium text-[var(--ink-2)]">{g.group}</span>
+                </div>
+              )}
+              {/* Connector line linking the three steps */}
+              {g.step && g.step < 3 && NAV[gi + 1]?.step && (
+                <span aria-hidden className="pointer-events-none absolute -bottom-4 left-[19px] top-[22px] hidden w-px bg-[var(--rule)] lg:block" />
+              )}
+              <ul className={cn('relative space-y-0.5', g.step && 'sm:pl-0 lg:pl-[18px]')}>
+                {g.items.map((item) => {
+                  const active = route === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.id} className="relative">
+                      <a
+                        href={`#/${item.id}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNav(item.id);
+                        }}
+                        aria-current={active ? 'page' : undefined}
+                        data-tour={`nav-${item.id}`}
+                        title={`${item.label}: ${item.hint}`}
+                        className={cn(
+                          'group relative flex h-9 items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[13px] transition-[background-color,color] duration-200',
+                          active
+                            ? 'bg-[var(--panel-3)] font-medium text-[var(--ink)]'
+                            : 'text-[var(--ink-2)] hover:bg-[color:color-mix(in_srgb,var(--ink)_4%,transparent)] hover:text-[var(--ink)]'
+                        )}
+                      >
+                        <span
+                          aria-hidden
+                          className={cn(
+                            'absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-[var(--accent)] transition-all duration-300',
+                            active ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'
+                          )}
+                        />
+                        <Icon
+                          className={cn(
+                            'h-4 w-4 shrink-0 transition-colors duration-200',
+                            active ? 'text-[var(--accent)]' : 'text-[var(--muted)] group-hover:text-[var(--ink-1)]'
+                          )}
+                        />
+                        <span className="inline sm:hidden lg:inline whitespace-nowrap">{item.label}</span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+
+        <div className="border-t border-[var(--rule)] p-3">
+          <ModelStatus live={live} health={health} />
+          <ThemeToggle />
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              window.dispatchEvent(new Event('ragseal:tour'));
+            }}
+            className="flex h-9 w-full items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)]"
+            title="Show the guided tour"
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--rule)] text-[12px] font-semibold text-[var(--ink)]">?</span>
+            <span className="inline sm:hidden lg:inline">Guided tour</span>
+          </button>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              onOpenAuth();
+            }}
+            className="flex h-9 w-full items-center justify-start sm:justify-center lg:justify-start gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--ink-1)] transition-colors hover:bg-[color:color-mix(in_srgb,var(--ink)_3%,transparent)]"
+            title={user?.email ?? 'Sign in'}
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--panel-2)] text-[11px] font-medium text-[var(--ink)]">
+              {user ? user.email[0].toUpperCase() : <User className="h-3.5 w-3.5" />}
+            </span>
+            <span className="inline sm:hidden lg:inline truncate">{user ? user.email.split('@')[0] : 'Sign in'}</span>
+          </button>
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex min-h-14 shrink-0 items-center gap-2.5 sm:gap-4 border-b border-[var(--rule)] px-3 sm:px-6 py-2">
+          {/* Hamburger menu for mobile */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--rule)] text-[var(--ink-1)] hover:bg-[var(--panel-2)] sm:hidden"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+
+          {/* The title block absorbs the squeeze (its blurb truncates); the controls keep their width. */}
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-[14px] sm:text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)]">{topBarTitle ?? ROUTE_TITLE[route]}</h1>
+            <p className="hidden sm:block truncate text-xs text-[var(--ink-2)]">{ROUTE_BLURB[route]}</p>
+          </div>
+          <div id={TOP_BAR_SLOT} className="ml-auto flex max-w-[65%] sm:max-w-none shrink-0 items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar">
+            {topBarControls}
+          </div>
+          {onSignIn && (
+            <button
+              onClick={onSignIn}
+              title="You're on the shared demo account. Sign in to keep your own documents and runs."
+              className="flex h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[9px] border border-[var(--rule-2)] px-2.5 sm:px-3 text-xs sm:text-[13px] text-[var(--ink-1)] transition-colors hover:text-[var(--ink)]"
+            >
+              <User className="h-3.5 w-3.5" />
+              <span className="hidden xl:inline">Sign in / Create account</span>
+              <span className="xl:hidden">Sign in</span>
+            </button>
+          )}
+        </header>
+        <main className={cn('min-h-0 flex-1', fitScreen ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto')}>{children}</main>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /** Which chatbot and grading model the backend actually has loaded, straight from /api/health. */
 const ModelStatus: React.FC<{ live: boolean; health: HealthResponse | null }> = ({ live, health }) => {

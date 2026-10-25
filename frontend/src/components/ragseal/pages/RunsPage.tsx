@@ -134,52 +134,54 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
             Run a pack to score every question and see where the retriever or generator failed.
           </EmptyState>
         ) : (
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-[var(--rule)] text-left text-xs text-[var(--ink-2)]">
-                <th className="px-5 py-2.5 font-normal">Run</th>
-                <th className="px-3 py-2.5 font-normal">Pack</th>
-                <th className="px-3 py-2.5 font-normal">Status</th>
-                <th className="px-3 py-2.5 text-right font-normal">Questions</th>
-                <th className="px-3 py-2.5 text-right font-normal">Accurate</th>
-                <th className="px-3 py-2.5 text-right font-normal">Speed</th>
-                <th className="px-3 py-2.5 text-right font-normal">Started</th>
-                <th className="w-10" />
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r) => {
-                const status = progress[r.batch_id]?.status ?? r.status ?? 'done';
-                const openable = status === 'done';
-                return (
-                  <tr
-                    key={r.batch_id}
-                    onClick={() => openable && onOpenRun(r.batch_id, r.pack_id)}
-                    className={cn(
-                      'border-b border-[var(--panel)] last:border-0',
-                      openable ? 'cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]' : 'opacity-80'
-                    )}
-                  >
-                    <td className="px-5 py-3 font-mono text-xs text-[var(--ink-1)]">
-                      {r.batch_id}
-                      {r.sample && <SampleBadge className="ml-2 font-sans" />}
-                    </td>
-                    <td className="px-3 py-3 text-[var(--ink)]">{PACK_LABEL[r.pack_id ?? ''] ?? r.pack_id ?? '—'}</td>
-                    <td className="px-3 py-3">
-                      <StatusPill status={status} />
-                    </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-1)]">{r.total_evaluated ?? '—'}</td>
-                    <td className="px-3 py-3 text-right tabular-nums text-[var(--ink)]">{pct(r.pass_rate)}</td>
-                    <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-2)]">
-                      {r.timing?.cases_per_min ? `${r.timing.cases_per_min.toFixed(1)}/min` : '—'}
-                    </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-2)]">{fmtTime(r.created_at)}</td>
-                    <td className="pr-4 text-[var(--muted)]">{openable && <ChevronRight className="h-4 w-4" />}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[620px] text-[13px]">
+              <thead>
+                <tr className="border-b border-[var(--rule)] text-left text-xs text-[var(--ink-2)]">
+                  <th className="px-5 py-2.5 font-normal">Run</th>
+                  <th className="px-3 py-2.5 font-normal">Pack</th>
+                  <th className="px-3 py-2.5 font-normal">Status</th>
+                  <th className="px-3 py-2.5 text-right font-normal">Questions</th>
+                  <th className="px-3 py-2.5 text-right font-normal">Accurate</th>
+                  <th className="px-3 py-2.5 text-right font-normal">Speed</th>
+                  <th className="px-3 py-2.5 text-right font-normal">Started</th>
+                  <th className="w-10" />
+                </tr>
+              </thead>
+              <tbody>
+                {runs.map((r) => {
+                  const status = progress[r.batch_id]?.status ?? r.status ?? 'done';
+                  const openable = status === 'done';
+                  return (
+                    <tr
+                      key={r.batch_id}
+                      onClick={() => openable && onOpenRun(r.batch_id, r.pack_id)}
+                      className={cn(
+                        'border-b border-[var(--panel)] last:border-0',
+                        openable ? 'cursor-pointer hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]' : 'opacity-80'
+                      )}
+                    >
+                      <td className="px-5 py-3 font-mono text-xs text-[var(--ink-1)]">
+                        {r.batch_id}
+                        {r.sample && <SampleBadge className="ml-2 font-sans" />}
+                      </td>
+                      <td className="px-3 py-3 text-[var(--ink)]">{PACK_LABEL[r.pack_id ?? ''] ?? r.pack_id ?? '—'}</td>
+                      <td className="px-3 py-3">
+                        <StatusPill status={status} />
+                      </td>
+                      <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-1)]">{r.total_evaluated ?? '—'}</td>
+                      <td className="px-3 py-3 text-right tabular-nums text-[var(--ink)]">{pct(r.pass_rate)}</td>
+                      <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-2)]">
+                        {r.timing?.cases_per_min ? `${r.timing.cases_per_min.toFixed(1)}/min` : '—'}
+                      </td>
+                      <td className="px-3 py-3 text-right tabular-nums text-[var(--ink-2)]">{fmtTime(r.created_at)}</td>
+                      <td className="pr-4 text-[var(--muted)]">{openable && <ChevronRight className="h-4 w-4" />}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </Panel>
     </div>
@@ -210,7 +212,7 @@ const LiveRun: React.FC<{ progress: RunProgress; packId?: string }> = ({ progres
           <span className="text-lg text-[var(--ink-2)] tabular-nums">/ {total || '—'} questions</span>
           {!!progress.failed && <span className="ml-2 text-sm text-[var(--gen)]">{progress.failed} not scored</span>}
         </div>
-        <div className="flex gap-8 text-right">
+        <div className="flex flex-wrap gap-4 sm:gap-8 text-left sm:text-right">
           <Mini label="Elapsed" value={fmtDuration(progress.elapsed_ms)} />
           <Mini label="Time left" value={progress.eta_ms == null ? 'estimating…' : fmtDuration(progress.eta_ms)} />
           <Mini label="Pace" value={progress.cases_per_min ? `${progress.cases_per_min.toFixed(1)}/min` : '—'} />

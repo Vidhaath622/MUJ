@@ -215,32 +215,32 @@ const Stage: React.FC<{
 
   return (
     <div
-      className="relative mx-auto flex h-full max-w-[1240px] flex-col px-8 pb-8 pt-7"
+      className="relative mx-auto flex h-full max-w-[1240px] flex-col px-4 sm:px-8 pb-6 sm:pb-8 pt-5 sm:pt-7"
       style={{ opacity: 1 - outro, transform: `translateX(${jitter}px) scale(${1 - 0.03 * outro})` }}
     >
       {/* Progress bar */}
       {!still && (
-        <div className="absolute left-8 right-8 top-0 h-[2px] origin-left" style={{ background: 'var(--ink)', transform: `scaleX(${Math.min(1, c / CHAPTERS)})` }} />
+        <div className="absolute left-4 right-4 sm:left-8 sm:right-8 top-0 h-[2px] origin-left" style={{ background: 'var(--ink)', transform: `scaleX(${Math.min(1, c / CHAPTERS)})` }} />
       )}
 
       {/* Caption: one per chapter, cross-faded */}
-      <div className="relative h-[112px] shrink-0">
+      <div className="relative min-h-[90px] sm:h-[112px] shrink-0">
         {CAPTIONS.slice(0, 7).map((cap, i) => {
           // Strictly sequential: chapter i fades out over i+0.88..0.95, chapter i+1 fades in from i+0.96.
           const fadeOut = 1 - seg(c, i + 0.88, i + 0.95);
           const o = still ? (Math.floor(c) === i ? 1 : 0) : i === 0 ? fadeOut : seg(c, i - 0.04, i + 0.05) * fadeOut;
           return (
             <div key={i} className="absolute inset-0" style={{ opacity: o, transform: `translateY(${(1 - o) * 8}px)` }}>
-              <div className="flex items-baseline gap-3 font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--ink-2)' }}>
+              <div className="flex items-baseline gap-2 sm:gap-3 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.14em]" style={{ color: 'var(--ink-2)' }}>
                 <span>{String(i + 1).padStart(2, '0')} / {String(CHAPTERS).padStart(2, '0')}</span>
                 <span>{cap.eyebrow}</span>
                 {i === 1 && docCount > 0 && (
-                  <span style={{ color: 'var(--ink)' }}>
+                  <span className="hidden sm:inline" style={{ color: 'var(--ink)' }}>
                     · {docCount} documents{passageCount ? ` · ${passageCount} passages` : ''}
                   </span>
                 )}
               </div>
-              <h2 className="mt-2 max-w-[1120px] text-[31px] leading-[1.15]" style={{ color: 'var(--ink)' }}>
+              <h2 className="mt-1 sm:mt-2 max-w-[1120px] text-[20px] sm:text-[26px] md:text-[31px] leading-[1.15]" style={{ color: 'var(--ink)' }}>
                 {cap.title}
               </h2>
             </div>
@@ -250,8 +250,8 @@ const Stage: React.FC<{
 
       {/* Scene */}
       <div
-        className="grid min-h-0 flex-1 gap-6"
-        style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.3fr) minmax(0,0.85fr)', opacity: 1 - 0.55 * easeOut(stampIn) }}
+        className="grid min-h-0 flex-1 gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,0.85fr)] overflow-y-auto lg:overflow-visible"
+        style={{ opacity: 1 - 0.55 * easeOut(stampIn) }}
       >
         {/* Chat */}
         <div className="flex min-h-0 flex-col gap-3 rounded-2xl p-5" style={{ background: 'var(--panel)', border: '1px solid var(--rule)', opacity: qIn }}>

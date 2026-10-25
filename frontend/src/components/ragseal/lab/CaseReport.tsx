@@ -55,9 +55,9 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
     // key on the case so the entrance motion replays when the selection changes
     <KeyFigures.Provider value={keyFigures}>
     <div key={result.evaluation_id ?? result.query} className="flex min-h-full flex-col gap-4">
-      <header className="lab-fade-up flex flex-wrap items-end justify-between gap-6">
+      <header className="lab-fade-up flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-6">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2.5 text-xs text-[var(--ink-2)]">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs text-[var(--ink-2)]">
             {testId && <span className="font-mono">{testId}</span>}
             {type && (
               <>
@@ -78,19 +78,19 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
               </>
             )}
           </div>
-          <h1 className="mt-2 text-[22px] font-semibold leading-tight tracking-[-0.025em] text-[var(--ink)] 2xl:text-[26px]">{result.query}</h1>
+          <h1 className="mt-2 text-[20px] sm:text-[22px] font-semibold leading-tight tracking-[-0.025em] text-[var(--ink)] 2xl:text-[26px]">{result.query}</h1>
         </div>
         {result.ground_truth && (
-          <div className="max-w-[34%] shrink-0 text-right">
+          <div className="w-full sm:max-w-[38%] shrink-0 sm:text-right rounded-xl sm:rounded-none bg-[var(--panel-2)] sm:bg-transparent p-3 sm:p-0">
             <div className="text-[11px] text-[var(--ink-2)]">Known answer</div>
-            <div className="mt-0.5 text-[15px] text-[var(--ink)]">{result.ground_truth}</div>
+            <div className="mt-0.5 text-[14px] sm:text-[15px] font-medium sm:font-normal text-[var(--ink)]">{result.ground_truth}</div>
           </div>
         )}
       </header>
 
       {/* Verdict + pipeline trace */}
       <section
-        className="lab-fade-up flex flex-wrap items-center gap-6 rounded-[18px] border px-6 py-5 2xl:gap-8"
+        className="lab-fade-up flex flex-wrap items-center gap-5 sm:gap-6 rounded-[18px] border px-4 sm:px-6 py-4 sm:py-5 2xl:gap-8"
         style={{
           animationDelay: '60ms',
           borderColor: tint(v.color, 0.28),
@@ -130,7 +130,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
           )}
         </div>
 
-        <div className="flex min-w-0 flex-[1.4_1_420px] items-stretch">
+        <div className="flex min-w-0 w-full lg:w-auto flex-[1.4_1_420px] items-stretch overflow-x-auto no-scrollbar py-1">
           <Stage
             name="Found the right text"
             tech="retriever"
@@ -182,7 +182,7 @@ export const CaseReport: React.FC<CaseReportProps> = ({ result, testId, caseType
             id: 'answer',
             label: 'Answer & evidence',
             content: (
-      <section className="grid min-h-0 flex-1 grid-cols-2 gap-4">
+      <section className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2 gap-4">
         <Pane title="Text the bot was given" note={`${chunks.length} passages`} delay={120}>
           {mainChunks.map((c) => (
             <ChunkCard key={c.chunk.chunk_id} {...c} filename={c.chunk.filename ?? (c.chunk.document_id ? filenames[c.chunk.document_id] : undefined)} />

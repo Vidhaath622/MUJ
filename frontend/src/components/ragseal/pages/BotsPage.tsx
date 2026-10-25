@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, ArrowUp, Check, Loader2, Minus, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, Check, Loader2, Minus, X } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { loadPackBackend } from '../../../lib/api';
 import { PackId } from '../../../types/ragseal';
@@ -60,6 +60,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
   const [threads, setThreads] = useState<Partial<Record<PackId, Turn[]>>>({});
   const [selectedTurn, setSelectedTurn] = useState<Partial<Record<PackId, number>>>({});
   const [highlight, setHighlight] = useState<string | null>(null);
+  const [mobilePane, setMobilePane] = useState<'chat' | 'xray'>('chat');
   const [draft, setDraft] = useState('');
   const [open, setOpen] = useState<LabResult | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -160,10 +161,35 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
   };
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+      {/* Mobile pane switcher for screens < lg */}
+      <div className="flex shrink-0 items-center gap-1 border-b border-[var(--rule)] bg-[var(--panel-2)] p-1 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobilePane('chat')}
+          className={cn(
+            'flex-1 rounded-lg py-1.5 text-center text-xs font-medium transition-colors',
+            mobilePane === 'chat' ? 'bg-[var(--paper)] text-[var(--ink)] shadow-sm' : 'text-[var(--ink-2)] hover:text-[var(--ink)]'
+          )}
+        >
+          Chat ({turns.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobilePane('xray')}
+          className={cn(
+            'flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-center text-xs font-medium transition-colors',
+            mobilePane === 'xray' ? 'bg-[var(--paper)] text-[var(--ink)] shadow-sm' : 'text-[var(--ink-2)] hover:text-[var(--ink)]'
+          )}
+        >
+          <span>X-ray of reply</span>
+          {xrayTurn?.result && <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />}
+        </button>
+      </div>
+
       {/* Chat */}
-      <section className="flex min-w-0 flex-[55] flex-col">
-        <div className="flex items-center gap-2 border-b border-[var(--rule)] px-5 py-3">
+      <section className={cn('min-w-0 flex-[55] flex-col', mobilePane === 'chat' ? 'flex' : 'hidden lg:flex')}>
+        <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-[var(--rule)] px-3 py-2.5 sm:px-5 sm:py-3 no-scrollbar">
           {PERSONAS.map((p) => {
             const active = p.pack === botPack;
             return (
@@ -174,7 +200,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                   setHighlight(null);
                 }}
                 className={cn(
-                  'flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-[13px] transition-colors',
+                  'flex shrink-0 items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-[13px] transition-colors',
                   active ? 'text-[var(--ink)]' : 'border-transparent text-[var(--ink-2)] hover:text-[var(--ink)]'
                 )}
                 style={active ? { borderColor: `${tint(p.accent, 0.4)}`, background: `${tint(p.accent, 0.08)}` } : undefined}
@@ -187,7 +213,7 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
         </div>
 
         <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto flex max-w-[760px] flex-col gap-5 px-6 py-5">
+          <div className="mx-auto flex max-w-[760px] flex-col gap-5 px-4 sm:px-6 py-4 sm:py-5">
             <ErrorBanner message={packError} onDismiss={() => setPackError(null)} />
 
             {/* Persona header */}
@@ -195,10 +221,10 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
               <Avatar persona={persona} size={44} />
               <div className="min-w-0">
                 <div className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--ink)]">{persona.org}</div>
-                <div className="flex items-center gap-2 text-xs text-[var(--ink-2)]">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--ink-2)]">
                   {persona.role}
-                  <span className="h-1 w-1 rounded-full bg-[var(--rule-3)]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--ok)]" />
+                  <span className="hidden sm:inline-block h-1 w-1 rounded-full bg-[var(--rule-3)]" />
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--ok)]" />
                   {pack ? `Online · reads ${pack.documents.length} documents` : 'Connecting…'}
                 </div>
               </div>
@@ -222,10 +248,14 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
                   persona={persona}
                   selected={t.id === xrayTurn?.id}
                   filenames={filenames}
-                  onSelect={() => setSelectedTurn((s) => ({ ...s, [botPack]: t.id }))}
+                  onSelect={() => {
+                    setSelectedTurn((s) => ({ ...s, [botPack]: t.id }));
+                    setMobilePane('xray');
+                  }}
                   onCite={(chunkId) => {
                     setSelectedTurn((s) => ({ ...s, [botPack]: t.id }));
                     setHighlight(chunkId);
+                    setMobilePane('xray');
                   }}
                 />
                 {t.example && (
@@ -297,14 +327,28 @@ export const BotsPage: React.FC<BotsPageProps> = ({ token, initialPack }) => {
       </section>
 
       {/* X-ray */}
-      <aside data-tour="xray" className="flex min-w-0 flex-[45] flex-col border-l border-[var(--rule)] bg-[var(--paper)]">
-        <div className="flex items-center justify-between border-b border-[var(--rule)] px-5 py-3.5">
-          <div>
-            <div className="text-[13px] font-semibold text-[var(--ink)]">X-ray of this reply</div>
-            <div className="text-[11px] text-[var(--ink-2)]">What the bot read, three checks, and who is to blame</div>
+      <aside
+        data-tour="xray"
+        className={cn(
+          'min-w-0 flex-[45] flex-col border-l border-[var(--rule)] bg-[var(--paper)]',
+          mobilePane === 'xray' ? 'flex' : 'hidden lg:flex'
+        )}
+      >
+        <div className="flex items-center justify-between border-b border-[var(--rule)] px-4 py-3 sm:px-5 sm:py-3.5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMobilePane('chat')}
+              className="mr-1 inline-flex items-center gap-1 rounded-md border border-[var(--rule)] px-2 py-1 text-xs text-[var(--accent)] hover:bg-[var(--panel-2)] lg:hidden"
+            >
+              <ArrowLeft className="h-3 w-3" /> Chat
+            </button>
+            <div>
+              <div className="text-[13px] font-semibold text-[var(--ink)]">X-ray of this reply</div>
+              <div className="hidden sm:block text-[11px] text-[var(--ink-2)]">What the bot read, three checks, and who is to blame</div>
+            </div>
           </div>
           {xrayTurn?.example && (
-            <span className="rounded-full border border-[var(--rule-2)] px-2 py-0.5 text-[10.5px] text-[var(--review)]">From the latest test run</span>
+            <span className="rounded-full border border-[var(--rule-2)] px-2 py-0.5 text-[10.5px] text-[var(--review)]">From latest test</span>
           )}
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
