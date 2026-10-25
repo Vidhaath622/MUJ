@@ -1,0 +1,328 @@
+{
+  "pack_id": "travel_jaipur_goa",
+  "name": "Travel guide (Jaipur & Goa)",
+  "description": "Entry fees and timings in a 2022 edition vs the current edition, with visitor rules as a distractor.",
+  "demo_data": true,
+  "data_note": "Documents written by a teammate (Anuvesha) in the style of the cited sources and kept as given (bold markers removed); figures were not re-checked against the live sources. Questions with origin 'hand' were written by her; 'synthetic' ones by RAGSeal's builder from exact quotes.",
+  "sources": [
+    "travel_jaipur_goa_2022.md | Wikivoyage Jaipur & Goa historical revision (Archive ID: 4410291) | Dated: 15-May-2022",
+    "travel_jaipur_goa_current.md | Wikivoyage Jaipur & Goa current pages | Dated: 10-Oct-2025",
+    "distractor_rajasthan_goa_rules.md | Rajasthan Tourism & Goa Tourism Department Official Visitor Guidelines | Dated: 01-Jan-2024"
+  ],
+  "documents": [
+    {
+      "file": "travel_jaipur_goa_current.md"
+    },
+    {
+      "file": "travel_jaipur_goa_2022.md",
+      "superseded_by": "travel_jaipur_goa_current.md"
+    },
+    {
+      "file": "travel_distractor.md"
+    }
+  ],
+  "risk_rules": [
+    "Never quote 2022 prices or timings as current."
+  ],
+  "test_cases": [
+    {
+      "test_id": "trv_01",
+      "question": "How much is the composite City Palace ticket for Indian adults currently?",
+      "ground_truth_answer": "Composite entrance ticket costs ₹700 for Indian adults, which includes same-day admission to Jaigarh Fort.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Composite entrance ticket costs ₹700 for Indian adults, which includes same-day admission to Jaigarh Fort."
+        }
+      ],
+      "stale": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "A combined entrance ticket costs ₹400 for Indian adults, which includes 1-week entry access to Jaigarh Fort."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_02",
+      "question": "What is the current entry fee for domestic visitors at Hawa Mahal?",
+      "ground_truth_answer": "Standard admission is ₹100 for domestic visitors and ₹500 for international tourists.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Standard admission is ₹100 for domestic visitors and ₹500 for international tourists."
+        }
+      ],
+      "stale": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Standard admission is ₹50 for domestic visitors and ₹200 for international tourists."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_03",
+      "question": "What is the ticket price for the Amber Fort Light & Sound show currently?",
+      "ground_truth_answer": "The daily Hindi light show ticket costs ₹350 per person at the venue.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "The daily Hindi light show ticket costs ₹350 per person at the venue."
+        }
+      ],
+      "stale": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "The daily Hindi light show ticket costs ₹200 per person at the venue."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_04",
+      "question": "What are the daily visiting hours for Albert Hall Museum according to current guidelines?",
+      "ground_truth_answer": "Open daily from 9:00 AM to 7:00 PM continuously, with no separate night show closure.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Open daily from 9:00 AM to 7:00 PM continuously, with no separate night show closure."
+        }
+      ],
+      "stale": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Open daily from 9:00 AM to 5:00 PM for day visits, and 7:00 PM to 10:00 PM for night viewing."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_05",
+      "question": "How much does a GTDC Mandovi River sunset cruise cost currently?",
+      "ground_truth_answer": "Public 1-hour sunset cruise organized by GTDC costs ₹500 per passenger.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Public 1-hour sunset cruise organized by GTDC costs ₹500 per passenger."
+        }
+      ],
+      "stale": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Public 1-hour sunset cruise organized by GTDC costs ₹300 per passenger."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_06",
+      "question": "What is the seat cost for the Dudhsagar Waterfalls jeep safari currently?",
+      "ground_truth_answer": "Mandatory jeep trek operator charges ₹800 per seat from the Collem junction.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Mandatory jeep trek operator charges ₹800 per seat from the Collem junction."
+        }
+      ],
+      "stale": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Mandatory jeep trek operator charges ₹500 per seat from the Collem junction."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_07",
+      "question": "What is the ticket price for Pilar Monastery Museum in Goa currently?",
+      "ground_truth_answer": "The entry ticket for the historical artifact collection is ₹50 per visitor.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "The entry ticket for the historical artifact collection is ₹50 per visitor."
+        }
+      ],
+      "stale": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "The entry ticket for the historical artifact collection is ₹20 per visitor."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_08",
+      "question": "Is entry to Hawa Mahal free on International Museum Day (18th May)?",
+      "ground_truth_answer": "Entry remains free on 18th May (International Museum Day).",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Entry remains free on 18th May (International Museum Day)."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_09",
+      "question": "What is the cost of a camera permit at state-protected heritage sites?",
+      "ground_truth_answer": "Professional DSLR camera permits at state-protected heritage sites cost ₹100 per device unless waived.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_distractor.md",
+          "quote": "Professional DSLR camera permits at state-protected heritage sites cost ₹100 per device unless waived."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_10",
+      "question": "Is swimming allowed at Goa beaches after 6:00 PM?",
+      "ground_truth_answer": "Swimming at Goa beaches after 6:00 PM is strictly prohibited due to strong ocean currents.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_distractor.md",
+          "quote": "Swimming at Goa beaches after 6:00 PM is strictly prohibited due to strong ocean currents."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_11",
+      "question": "Is drone photography allowed over heritage forts in Rajasthan without clearance?",
+      "ground_truth_answer": "Drone flying is strictly prohibited over all heritage forts and sanctuaries without explicit Archeological Survey of India (ASI) clearance.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_distractor.md",
+          "quote": "Drone flying is strictly prohibited over all heritage forts and sanctuaries without explicit Archeological Survey of India (ASI) clearance."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_12",
+      "question": "Where does the Dudhsagar jeep trek start from?",
+      "ground_truth_answer": "From the Collem junction.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Mandatory jeep trek operator charges ₹800 per seat from the Collem junction."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_13",
+      "question": "How long is the public Mandovi River sunset cruise organized by GTDC?",
+      "ground_truth_answer": "1 hour.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Public 1-hour sunset cruise organized by GTDC costs ₹500 per passenger."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_14",
+      "question": "How much did the City Palace composite ticket cost for Indian adults in 2022?",
+      "ground_truth_answer": "A combined entrance ticket costs ₹400 for Indian adults, which includes 1-week entry access to Jaigarh Fort.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "A combined entrance ticket costs ₹400 for Indian adults, which includes 1-week entry access to Jaigarh Fort."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_15",
+      "question": "By how much did the City Palace composite ticket price for Indian adults increase from 2022 to the current pricing?",
+      "ground_truth_answer": "The composite ticket price increased by ₹300 (from ₹400 in 2022 to ₹700 currently).",
+      "type": "factoid",
+      "origin": "hand",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Composite entrance ticket costs ₹700 for Indian adults, which includes same-day admission to Jaigarh Fort."
+        },
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "A combined entrance ticket costs ₹400 for Indian adults, which includes 1-week entry access to Jaigarh Fort."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_16",
+      "question": "How much more does the Mandovi river sunset cruise cost now compared to 2022?",
+      "ground_truth_answer": "The price increased by ₹200 (from ₹300 in 2022 to ₹500 currently).",
+      "type": "factoid",
+      "origin": "hand",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Public 1-hour sunset cruise organized by GTDC costs ₹500 per passenger."
+        },
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Public 1-hour sunset cruise organized by GTDC costs ₹300 per passenger."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_17",
+      "question": "By how much did the seat price for the Dudhsagar waterfall jeep safari increase?",
+      "ground_truth_answer": "The jeep safari price increased by ₹300 per seat (from ₹500 in 2022 to ₹800 currently).",
+      "type": "factoid",
+      "origin": "hand",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "travel_jaipur_goa_current.md",
+          "quote": "Mandatory jeep trek operator charges ₹800 per seat from the Collem junction."
+        },
+        {
+          "file": "travel_jaipur_goa_2022.md",
+          "quote": "Mandatory jeep trek operator charges ₹500 per seat from the Collem junction."
+        }
+      ]
+    },
+    {
+      "test_id": "trv_18",
+      "question": "What is the ticket price for foreign tourists visiting the Amber Fort light show?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "hand"
+    },
+    {
+      "test_id": "trv_19",
+      "question": "What is the student discount percentage for Hawa Mahal entry?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "hand"
+    },
+    {
+      "test_id": "trv_20",
+      "question": "How much is the scuba diving certification course in North Goa?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "hand"
+    }
+  ]
+}
