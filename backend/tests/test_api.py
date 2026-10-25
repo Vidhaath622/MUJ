@@ -240,3 +240,40 @@ def test_health_reports_database_backend(client):
 
     expected = "postgres" if os.environ.get("RAGSEAL_TEST_DATABASE_URL") else "sqlite"
     assert client.get("/api/health").json()["database"] == expected
+
+
+BOT = {"url": "https://bot.example.com/ask", "headers": {"Authorization": "Bearer s3cret"}, "answer_path": "data.reply",
+       "contexts_path": "sources[*].text"}
+
+
+def test_bot_test_endpoint(client, alice, fake_engine):
+    resp = client.post("/api/bots/test", headers=alice, json={"bot": BOT, "question": "hi"})
+    assert resp.status_code == 200 and resp.json()["ok"] is True and resp.json()["latency_ms"] == 12
+    assert "s3cret" not in resp.text and fake_engine.last_bot["headers"] == {"Authorization": "Bearer s3cret"}
+    assert client.post("/api/bots/test", headers=alice, json={"bot": {**BOT, "url": "fail://x/y"}}).status_code == 400
+    assert client.post("/api/bots/test", headers=alice, json={"bot": {**BOT, "verify": False}}).status_code == 422
+    assert client.post("/api/bots/test", json={"bot": BOT}).status_code == 401
+
+
+def test_batch_and_query_pass_the_bot_through(client, alice, fake_engine):
+    client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking", "bot": BOT})
+    assert fake_engine.last_batch_bot["url"] == BOT["url"] and fake_engine.last_batch_bot["accepts_contexts"] is False
+    client.post("/api/evaluate/batch", headers=alice, json={"pack_id": "banking"})
+    assert fake_engine.last_batch_bot is None  # no bot: the built-in RAG answers
+
+
+def test_builtin_reference_bot(client, alice, fake_engine):
+    doc = upload(client, alice)["document_id"]
+    out = client.post("/api/bots/builtin", headers=alice, params={"document_ids": [doc]}, json={"question": "q?"}).json()
+    assert out["answer"] == "answer to q?" and out["contexts"] == ["retrieved"]
+    given = client.post("/api/bots/builtin", headers=alice, json={"question": "q?", "contexts": ["only this"]}).json()
+    assert given["contexts"] == ["only this"]
+
+
+def test_bot_routes_pass_the_hosts_we_were_reached_on(client, alice, fake_engine):
+    bot = {"url": "https://ragseal.vercel.app/api/bots/builtin?pack_id=banking"}
+    headers = {**alice, "X-Forwarded-Host": "ragseal.vercel.app"}
+    assert client.post("/api/bots/test", headers=headers, json={"bot": bot}).status_code == 200
+    assert "ragseal.vercel.app" in fake_engine.last_self_hosts and "testserver" in fake_engine.last_self_hosts
+    client.post("/api/evaluate/batch", headers=headers, json={"pack_id": "banking", "bot": bot})
+    assert "ragseal.vercel.app" in fake_engine.last_self_hosts

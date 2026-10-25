@@ -26,6 +26,14 @@ def get_db(request: Request) -> Database:
     return request.app.state.db
 
 
+def request_hosts(request: Request) -> tuple[str, ...]:
+    """The hosts this request reached us on (behind Vercel and a tunnel: X-Forwarded-Host too).
+    A bot URL on one of them is our own reference bot, answered in-process."""
+    hosts = [request.url.hostname or "", request.headers.get("host", "").split(":")[0]]
+    hosts += [h.strip().split(":")[0] for h in request.headers.get("x-forwarded-host", "").split(",")]
+    return tuple(dict.fromkeys(h.lower() for h in hosts if h))
+
+
 def get_jobs(request: Request) -> BatchJobs:
     return request.app.state.jobs
 

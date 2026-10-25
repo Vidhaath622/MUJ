@@ -1,9 +1,9 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from ..db import Database, User
-from ..deps import get_current_user, get_db, get_engine, get_jobs
+from ..deps import get_current_user, get_db, get_engine, get_jobs, request_hosts
 from ..engine_bridge import Engine
 from ..jobs import BatchJobs
 from ..schemas import EvaluateBatchRequest, EvaluateQueryRequest
@@ -15,6 +15,7 @@ router = APIRouter(prefix="/evaluate", tags=["evaluate"])
 @router.post("/query")
 def evaluate_query(
     body: EvaluateQueryRequest,
+    request: Request,
     user: User = Depends(get_current_user),
     engine: Engine = Depends(get_engine),
     db: Database = Depends(get_db),
@@ -42,6 +43,7 @@ def evaluate_query(
         stale_chunk_ids=body.stale_chunk_ids or case.get("stale_chunk_ids"),
         test_id=body.test_id,
         distractor_document_ids=pack["distractor_document_ids"] if body.pack_id and "distractor_document_ids" in pack else None,
+        **({"bot": body.bot.model_dump(), "gold_snippet": case.get("context_snippet"), "self_hosts": request_hosts(request)} if body.bot else {}),
     )
     db.save_evaluation(user.id, result)
     return result
@@ -50,6 +52,7 @@ def evaluate_query(
 @router.post("/batch")
 def evaluate_batch(
     body: EvaluateBatchRequest,
+    request: Request,
     response: Response,
     user: User = Depends(get_current_user),
     engine: Engine = Depends(get_engine),
@@ -74,8 +77,9 @@ def evaluate_batch(
     if not test_cases:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "test_cases is empty")
 
+    bot = {"bot": body.bot.model_dump(), "self_hosts": request_hosts(request)} if body.bot else {}
     if not body.run_async:
-        result = engine.evaluate_batch(user.id, document_ids, test_cases, pack_id=body.pack_id, concurrency=body.concurrency)
+        result = engine.evaluate_batch(user.id, document_ids, test_cases, pack_id=body.pack_id, concurrency=body.concurrency, **bot)
         db.save_run(user.id, result)
         return result
 
@@ -86,7 +90,7 @@ def evaluate_batch(
         user.id,
         len(test_cases),
         work=lambda report: engine.evaluate_batch(
-            user.id, document_ids, test_cases, pack_id=body.pack_id, progress=report, batch_id=batch_id, concurrency=body.concurrency
+            user.id, document_ids, test_cases, pack_id=body.pack_id, progress=report, batch_id=batch_id, concurrency=body.concurrency, **bot
         ),
         on_done=lambda result: db.save_run(user.id, {**result, "created_at": created_at}),
         on_error=lambda error: db.fail_run(batch_id, error),

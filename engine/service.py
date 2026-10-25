@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+import json
 import threading
 import time
 import uuid
@@ -15,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
 from .agreement import judge_agreement, load_labels
+from .connector import BotConfig, BotError, ExternalBot, is_own_builtin_url
 from .config import Settings, get_settings
 from .evaluate import Evaluator, TestCase, failed_result, summarize_batch
 from .ingest import ParsedDocument, document_id_for, parse_document
@@ -43,6 +46,7 @@ def _case_from_dict(raw: dict) -> TestCase:
         distractor_document_ids=list(raw.get("distractor_document_ids") or []),
         forced_chunk_ids=raw.get("forced_chunk_ids"),
         true_failure_type=raw.get("true_failure_type"),
+        gold_snippet=raw.get("context_snippet") or None,
     )
 
 
@@ -234,11 +238,15 @@ class Engine:
         stale_chunk_ids: list[str] | None = None,
         test_id: str | None = None,
         distractor_document_ids: list[str] | None = None,
+        bot: dict | None = None,
+        gold_snippet: str | None = None,
+        self_hosts: tuple[str, ...] = (),
     ) -> dict:
         self._check_documents(owner_id, document_ids)
+        external = self.external_bot(bot, owner_id=owner_id, self_hosts=self_hosts) if bot else None
         with self._interactive():
             return self._evaluate_query(owner_id, query, document_ids, ground_truth, manual_answer, gold_chunk_ids,
-                                        case_type, stale_chunk_ids, test_id, distractor_document_ids)
+                                        case_type, stale_chunk_ids, test_id, distractor_document_ids, external, gold_snippet)
 
     def _interactive(self):
         """Judge calls made inside this block go ahead of running batches."""
@@ -247,7 +255,7 @@ class Engine:
         return self.live_judge.interactive() if hasattr(self.live_judge, "interactive") else nullcontext()
 
     def _evaluate_query(self, owner_id, query, document_ids, ground_truth, manual_answer, gold_chunk_ids,
-                        case_type, stale_chunk_ids, test_id, distractor_document_ids) -> dict:
+                        case_type, stale_chunk_ids, test_id, distractor_document_ids, bot=None, gold_snippet=None) -> dict:
         case = TestCase(
             question=query,
             ground_truth=ground_truth or None,
@@ -257,8 +265,12 @@ class Engine:
             type=case_type,
             manual_answer=manual_answer,
             distractor_document_ids=distractor_document_ids or [],
+            gold_snippet=gold_snippet,
         )
-        return self.live_evaluator.evaluate(owner_id, case, document_ids)
+        try:
+            return self.live_evaluator.evaluate(owner_id, case, document_ids, bot=bot)
+        except BotError as exc:
+            raise ModelUnavailable(f"your bot: {exc}") from exc
 
     def evaluate_batch(
         self,
@@ -270,9 +282,15 @@ class Engine:
         batch_id: str | None = None,
         concurrency: int | None = None,
         top_k: int | None = None,
+        bot: dict | None = None,
+        self_hosts: tuple[str, ...] = (),
     ) -> dict:
-        """Evaluate many cases. `progress(done, total, failed)` is called after each case."""
+        """Evaluate many cases. `progress(done, total, failed)` is called after each case.
+
+        With `bot` (a BotConfig as a dict) the user's own RAG endpoint answers instead of ours.
+        """
         self._check_documents(owner_id, document_ids)
+        external = self.external_bot(bot, owner_id=owner_id, self_hosts=self_hosts) if bot else None
         started = time.perf_counter()
         cases = [_case_from_dict(raw) for raw in test_cases]
         for i, case in enumerate(cases, start=1):
@@ -284,8 +302,8 @@ class Engine:
 
         def run(case: TestCase) -> dict:
             try:
-                result = self.evaluator.evaluate(owner_id, case, document_ids, top_k)
-            except (ModelUnavailable, JudgeError) as exc:
+                result = self.evaluator.evaluate(owner_id, case, document_ids, top_k, bot=external)
+            except (ModelUnavailable, JudgeError, BotError) as exc:
                 result = failed_result(case, exc, self.judge, self.generator.model)
             with lock:
                 counts["done"] += 1
@@ -298,6 +316,8 @@ class Engine:
         # Several cases in flight: the local generator and the hosted judge overlap, and the
         # judge pool keeps each model inside its rate limit.
         workers = max(1, min(concurrency or self.settings.batch_concurrency, len(cases) or 1))
+        if external is not None:
+            workers = min(workers, max(1, external.config.max_concurrency))  # do not flood the user's bot
         with ThreadPoolExecutor(max_workers=workers) as pool:
             evaluations = list(pool.map(run, cases))
         if evaluations and all(ev.get("error") for ev in evaluations):
@@ -335,7 +355,9 @@ class Engine:
             "judge_models_used": sorted({m for ev in evaluations for m in ev.get("judge_models_used", [])}),
             "judge_fallback_cases": sum(bool(ev.get("judge_fallback_used")) for ev in evaluations),
             "judge_fallback_models": fallback_models,
-            "generator_model": self.generator.model,
+            "generator_model": self.generator.model if external is None else None,
+            "answer_source": external.source if external is not None else "builtin",
+            **({"bot": external.public()} if external is not None else {}),
             "top_k": top_k or self.settings.top_k,
             "duration_ms": wall_ms,
             "timing": {
@@ -586,6 +608,102 @@ class Engine:
             "at_risk": at_risk,
             "judge_model": self.judge.model,
         }
+
+    # --------------------------------------------------------- your own bot
+
+    def external_bot(self, config: dict, client=None, owner_id: str | None = None, self_hosts: tuple[str, ...] = ()) -> "ExternalBot":
+        """An ExternalBot from a config dict; refuses private URLs unless RAGSEAL_ALLOW_PRIVATE_BOT_URLS=1.
+
+        A URL that is our own reference bot (/api/bots/builtin on this server: localhost, a host in
+        RAGSEAL_PUBLIC_URL, or one of `self_hosts`) is answered in-process for `owner_id` instead of
+        calling ourselves over the network (through Vercel and the tunnel). The bot adapter, the
+        request and the reply are the same; results say answer_source "builtin_via_connector".
+        """
+        import os
+
+        allowed = {f.name for f in dataclasses.fields(BotConfig)}
+        unknown = set(config) - allowed
+        if unknown:
+            raise ValueError(f"unknown bot settings: {', '.join(sorted(unknown))}")
+        allow_private = os.environ.get("RAGSEAL_ALLOW_PRIVATE_BOT_URLS", "").strip() in ("1", "true", "yes")
+        source = "external"
+        if client is None and owner_id is not None and is_own_builtin_url(str(config.get("url", "")), self_hosts):
+            client, source, allow_private = self._builtin_client(owner_id), "builtin_via_connector", True
+        try:
+            return ExternalBot(BotConfig(**config), client=client, allow_private=allow_private, source=source)
+        except BotError as exc:
+            raise ValueError(str(exc)) from exc
+
+    def _builtin_client(self, owner_id: str):
+        """An httpx client whose "network" is the /api/bots/builtin handler, run in this process."""
+        import httpx
+
+        def handle(request: "httpx.Request") -> "httpx.Response":
+            try:
+                body = json.loads(request.content or b"{}")
+                question, contexts = body.get("question"), body.get("contexts")
+                if not isinstance(question, str) or not question.strip():
+                    return httpx.Response(422, json={"detail": "question is required"})
+                document_ids = request.url.params.get_list("document_ids")
+                pack_id = request.url.params.get("pack_id")
+                if pack_id:
+                    document_ids = list(dict.fromkeys([*self.load_pack(owner_id, pack_id)["document_ids"], *document_ids]))
+                return httpx.Response(200, json=self.builtin_bot_answer(owner_id, question, document_ids, contexts))
+            except (NotFound, ValueError) as exc:
+                return httpx.Response(404, json={"detail": str(exc)})
+
+        return httpx.Client(transport=httpx.MockTransport(handle))
+
+    def builtin_bot_answer(self, owner_id: str, question: str, document_ids: list[str], contexts: list[str] | None = None) -> dict:
+        """Our RAG behind the external-bot contract. With `contexts`, it answers only from those passages."""
+        from .ingest import Chunk
+
+        if contexts is not None:
+            chunks = [Chunk(f"ctx_{i:02d}", "provided", i, text, None) for i, text in enumerate(contexts)]
+            answer, _, latency = self.rag.generate(question, chunks)
+            return {"answer": answer, "contexts": contexts, "latency_ms": latency}
+        self._check_documents(owner_id, document_ids)
+        result = self.rag.ask(owner_id, question, document_ids)
+        return {"answer": result.answer, "contexts": [s.chunk.text for s in result.retrieved], "latency_ms": result.latency_ms}
+
+    def test_bot(
+        self, config: dict, question: str | None = None, client=None, owner_id: str | None = None, self_hosts: tuple[str, ...] = ()
+    ) -> dict:
+        """One round trip to the user's bot, plus a check of the contexts override when it claims one."""
+        bot = self.external_bot(config, client=client, owner_id=owner_id, self_hosts=self_hosts)
+        question = question or "What can you help me with?"
+        out: dict = {"ok": False, "bot": bot.public(), "question": question, "errors": []}
+        try:
+            reply = bot.ask(question)
+        except BotError as exc:
+            out["errors"].append(str(exc))
+            return out
+        out.update(
+            ok=True,
+            latency_ms=reply.latency_ms,
+            status_code=reply.status_code,
+            answer=reply.answer[:1000],
+            n_contexts=len(reply.contexts),
+            contexts=[c[:300] for c in reply.contexts[:3]],
+        )
+        if not reply.contexts:
+            out["errors"].append("the bot returned no contexts, so retrieval cannot be evaluated (check contexts_path)")
+        override = {"claimed": bot.config.accepts_contexts, "works": None}
+        if bot.config.accepts_contexts:
+            # A made-up fact: only a bot that really answers from the given passage can say "Elara".
+            probe = "RAGSeal connection test. The test lighthouse is called Elara and it stands 41 metres tall."
+            try:
+                check = bot.ask("What is the test lighthouse called?", contexts=[probe])
+                override["works"] = "elara" in check.answer.lower()
+                override["answer"] = check.answer[:300]
+                if not override["works"]:
+                    out["errors"].append("the bot accepted a contexts override but did not answer from it; replay would not be trustworthy")
+            except BotError as exc:
+                override["works"] = False
+                out["errors"].append(f"contexts override failed: {exc}")
+        out["contexts_override"] = override
+        out["replay"] = "available" if override["works"] else "unavailable"
+        return out
 
     # ------------------------------------------------------ fault injection
 

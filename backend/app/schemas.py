@@ -59,6 +59,33 @@ class AskRequest(DocumentScope):
     k: int | None = Field(default=None, ge=1, le=20)
 
 
+class BotConfigIn(BaseModel):
+    """Your own RAG endpoint. Header values are used for the calls only: never stored or returned."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    url: str = Field(min_length=8, max_length=2048)
+    headers: dict[str, str] = Field(default_factory=dict, max_length=5)
+    question_field: str = Field(default="question", min_length=1, max_length=64)
+    contexts_field: str = Field(default="contexts", min_length=1, max_length=64)
+    answer_path: str = Field(default="answer", min_length=1, max_length=200)
+    contexts_path: str = Field(default="contexts", min_length=1, max_length=200)
+    accepts_contexts: bool = False
+    timeout_s: float = Field(default=30.0, gt=0, le=120)
+    max_concurrency: int = Field(default=2, ge=1, le=8)
+    name: str | None = Field(default=None, max_length=80)
+
+
+class BotTestRequest(BaseModel):
+    bot: BotConfigIn
+    question: str | None = Field(default=None, max_length=2000)
+
+
+class BuiltinBotRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    contexts: list[str] | None = Field(default=None, max_length=20)
+
+
 class EvaluateQueryRequest(DocumentScope):
     query: str = Field(min_length=1)
     optional_manual_answer: str | None = None
@@ -69,6 +96,7 @@ class EvaluateQueryRequest(DocumentScope):
     # A pack case: the backend restores its documents and trap metadata (gold, stale, type, ground truth).
     pack_id: str | None = None
     test_id: str | None = None
+    bot: BotConfigIn | None = None  # evaluate your own RAG endpoint instead of the built-in one
 
 
 class TestCaseIn(BaseModel):
@@ -92,6 +120,7 @@ class EvaluateBatchRequest(DocumentScope):
     # "async" is a Python keyword, so the field has another name.
     run_async: bool = Field(default=False, alias="async")
     concurrency: int | None = Field(default=None, ge=1, le=12)
+    bot: BotConfigIn | None = None  # evaluate your own RAG endpoint instead of the built-in one
 
 
 class SyntheticRequest(BaseModel):

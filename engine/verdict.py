@@ -36,6 +36,7 @@ class Facts:
     replay_failed: bool = False
     contradicted_claims: bool = False  # a claim contradicts the retrieved context
     distractor_retrieved: bool = False  # the top retrieved chunk comes from a distractor document
+    replay_unavailable: bool = False  # an external bot that cannot take a contexts override
 
 
 @dataclass
@@ -212,6 +213,13 @@ def decide(f: Facts) -> Verdict:
             "The retriever missed the gold chunk, and even with the gold chunk the generator still answered wrongly.",
             "Fix retrieval and the generator: improve chunk ranking and use a stricter prompt or stronger model.",
             "Replay with the gold chunk did not fix the answer, so the generator also fails.",
+        )
+    if f.replay_unavailable:
+        return Verdict(
+            "UNRESOLVED",
+            "Your bot did not return the gold passage and the answer is wrong. Replay with only the gold passage would show"
+            " whether retrieval or generation failed, but this bot does not accept a contexts override.",
+            "Let your endpoint accept a \"contexts\" list and answer only from it, then re-run to get a proven verdict.",
         )
     return Verdict(
         "UNRESOLVED",

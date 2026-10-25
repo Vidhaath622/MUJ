@@ -84,7 +84,8 @@ class FakeEngine:
         }
 
     def evaluate_query(self, owner_id, query, document_ids, ground_truth=None, manual_answer=None, gold_chunk_ids=None,
-                       case_type="factoid", stale_chunk_ids=None, test_id=None, distractor_document_ids=None):
+                       case_type="factoid", stale_chunk_ids=None, test_id=None, distractor_document_ids=None, bot=None, gold_snippet=None,
+                       self_hosts=()):
         self.last_query = {"ground_truth": ground_truth, "gold_chunk_ids": gold_chunk_ids, "case_type": case_type,
                            "stale_chunk_ids": stale_chunk_ids, "test_id": test_id, "document_ids": list(document_ids)}
         self.calls.append(("evaluate_query", owner_id, query, tuple(document_ids), case_type))
@@ -93,7 +94,10 @@ class FakeEngine:
         self._check(owner_id, document_ids)
         return self._evaluation(query, ground_truth)
 
-    def evaluate_batch(self, owner_id, document_ids, test_cases, pack_id=None, progress=None, batch_id=None, concurrency=None):
+    def evaluate_batch(self, owner_id, document_ids, test_cases, pack_id=None, progress=None, batch_id=None, concurrency=None, bot=None,
+                       self_hosts=()):
+        self.last_batch_bot = bot
+        self.last_self_hosts = self_hosts
         if self.batch_error is not None:
             raise self.batch_error
         if self.batch_delay:
@@ -203,3 +207,15 @@ class FakeEngine:
                 "tests": [{"test_id": "imp_01", "question": "fee?", "answer": "$35", "verdict": "RETRIEVAL_FAILURE",
                            "failure_type": "STALE_SOURCE", "at_risk": True}],
                 "at_risk": 1, "judge_model": "fake"}
+
+    def test_bot(self, config, question=None, owner_id=None, self_hosts=()):
+        self.last_bot = config
+        self.last_self_hosts = self_hosts
+        if "fail" in config["url"]:
+            raise ValueError("the bot URL must start with http:// or https:// and name a host")
+        return {"ok": True, "latency_ms": 12, "answer": "hello", "n_contexts": 1, "contexts": ["c"], "replay": "unavailable",
+                "bot": {"host": "bot.example.com", "header_names": sorted(config.get("headers", {}))}, "errors": []}
+
+    def builtin_bot_answer(self, owner_id, question, document_ids, contexts=None):
+        self._check(owner_id, document_ids) if contexts is None else None
+        return {"answer": f"answer to {question}", "contexts": contexts or ["retrieved"], "latency_ms": 1}
