@@ -407,6 +407,41 @@ class Database:
             out.append(item)
         return out
 
+    def baseline_runs(self, user_id: str) -> list[dict]:
+        """This user's latest baseline run per pack, as list_runs items.
+
+        Baseline: finished and scored, the default (v1) RAG profile, the built-in RAG (not a connected
+        bot), not an injection run, and the pack's largest run, so a partial run never stands in for it.
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate, status,"
+                f" {self.d.json_number('overall_score')} AS overall_score, {self.d.json_text('timing')} AS timing,"
+                f" {self.d.json_text('profile')} AS profile, {self.d.json_text('kind')} AS kind,"
+                f" {self.d.json_text('answer_source')} AS answer_source"
+                f" FROM runs WHERE user_id = ? AND status = 'done' AND pack_id IS NOT NULL"
+                f" ORDER BY created_at DESC, {self.d.tie} DESC",
+                (user_id,),
+            ).fetchall()
+
+        def text(value):  # Postgres returns JSON text ('"v2"', 'null'); SQLite the plain value
+            return json.loads(value) if self.d.postgres and value is not None else value
+
+        by_pack: dict[str, list[dict]] = {}
+        for row in rows:
+            item = dict(row)
+            if text(item.pop("profile")) not in (None, "v1") or text(item.pop("kind")) or text(item.pop("answer_source")) not in (None, "builtin"):
+                continue
+            if item["overall_score"] is None or item["pack_id"] == "injection":  # placeholders and injection runs
+                continue
+            item["timing"] = json.loads(item["timing"]) if item["timing"] else None
+            by_pack.setdefault(item["pack_id"], []).append(item)
+        out = []
+        for items in by_pack.values():  # newest first within each pack
+            full = max(i["total_evaluated"] for i in items)
+            out.append(next(i for i in items if i["total_evaluated"] == full))
+        return sorted(out, key=lambda i: i["created_at"], reverse=True)
+
     def get_run(self, user_id: str, batch_id: str) -> dict | None:
         if self.d.postgres and (run := self._run_json(batch_id, user_id)) is not None:
             return run

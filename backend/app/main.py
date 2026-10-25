@@ -13,6 +13,7 @@ from .jobs import BatchJobs
 from .routers import auth, bots, compare, documents, evaluate, health, impact, labels, packs, rag, runs, synthetic, trust
 from .security import DEMO_EMAIL, DEMO_PASSWORD, hash_password
 from .settings import load_settings
+from .showcase import Showcase
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
     app.state.db = db
     app.state.engine = None  # built lazily by deps.get_engine
     app.state.jobs = BatchJobs()
+    app.state.showcase = Showcase(db, settings.showcase_email)
 
     app.add_middleware(
         CORSMiddleware,

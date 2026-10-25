@@ -13,6 +13,7 @@ from .engine_bridge import Engine
 from .jobs import BatchJobs
 from .security import decode_token
 from .settings import AppSettings
+from .showcase import Showcase
 
 _engine_lock = threading.Lock()
 _bearer = HTTPBearer(auto_error=False)
@@ -36,6 +37,10 @@ def request_hosts(request: Request) -> tuple[str, ...]:
 
 def get_jobs(request: Request) -> BatchJobs:
     return request.app.state.jobs
+
+
+def get_showcase(request: Request) -> Showcase:
+    return request.app.state.showcase
 
 
 def get_engine(request: Request) -> Engine:
