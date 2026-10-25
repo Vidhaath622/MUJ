@@ -181,6 +181,7 @@ def run(cases: int, keys: int, workers: int | None, gen_latency: float, gen_para
         "avg_call_tokens": sim.stats["tokens"] // max(1, sim.stats["ok"]),
         "token_ceiling_calls_per_min": round(keys * tpm / max(1, sim.stats["tokens"] / max(1, sim.stats["ok"])), 1),
         "categories": batch["root_cause_breakdown"],
+        "errors": sorted({r["error"][:120] for r in batch["results"] if r.get("error")}),
         **{k: timing[k] for k in ("generation_s_total", "judge_s_total", "judge_rate_wait_s", "judge_slot_wait_s",
                                   "tokens_per_judge_call", "judge_calls_by_key") if k in timing},
     }

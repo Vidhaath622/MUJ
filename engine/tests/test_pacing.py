@@ -71,3 +71,30 @@ def test_a_batch_on_tight_keys_stays_inside_the_limits(tmp_path):
         list(pool.map(lambda n: judge.ask(SYSTEM, _user(n), SCHEMA), range(12)))
     assert sim.stats["ok"] == 12 and time.monotonic() - started > 1.0  # the limit really bound
     assert sim.stats["429"] <= 2  # only the first burst, before any key's headers are known
+
+
+def test_waiting_batch_calls_take_turns_in_arrival_order(tmp_path):
+    # One key refilling about one call's worth every 60 ms; eight calls arrive 10 ms apart.
+    # Without turns, whichever thread wakes first takes the budget and a call can starve.
+    sim = GroqSim(keys=1, tpm=400_000, rpm=100_000, latency_s=0.005)
+    judge, _ = _pool(tmp_path, sim, 1)
+    next(iter(sim.limits.values()))[0].level = 450
+    admitted, original = [], sim.handle
+
+    def handle(request):
+        response = original(request)
+        if response.status_code == 200:
+            admitted.append(int(request.content.decode().split("case ", 1)[1].split("?", 1)[0]))
+        return response
+
+    sim.handle = handle
+    judge.chat_model.client._http._transport = httpx.MockTransport(handle)
+    from concurrent.futures import ThreadPoolExecutor
+
+    def ask(n):
+        time.sleep(n * 0.01)
+        judge.ask(SYSTEM, _user(n), SCHEMA)
+
+    with ThreadPoolExecutor(8) as pool:
+        list(pool.map(ask, range(8)))
+    assert admitted == list(range(8)) and sim.stats["429"] == 0

@@ -12,6 +12,7 @@ schema, so re-running a batch only pays for calls it has not seen before.
 from __future__ import annotations
 
 import hashlib
+import itertools
 import json
 import logging
 import re
@@ -429,6 +430,9 @@ class Judge:
         self._inflight: dict[int, list[tuple[float, int]]] = {id(m): [] for m in self.members}
         self._answered: set[int] = set()  # members that have answered at least once (their limits may be known)
         self._pace_lock = threading.RLock()
+        # Batch calls waiting for budget take turns in arrival order, so none starves past its deadline.
+        self._tickets = itertools.count()
+        self._queue: set[int] = set()
         self._local = threading.local()
         self.calls = 0
         self.cache_hits = 0
@@ -531,14 +535,17 @@ class Judge:
         clients = {id(m.client): m.client for m in self.members if getattr(m, "client", None) is not None}
         return sum(sum(getattr(c, "usage", {}).values()) for c in clients.values())
 
-    def _reserve(self, member: ChatModel, cost: int) -> tuple[float, int] | None:
-        """Claim budget for one call on `member`, atomically; None when it has no room right now.
+    def _reserve(self, member: ChatModel, cost: int, ticket: int | None = None) -> tuple[float, int] | None:
+        """Claim budget for one call on `member`, atomically; None when it has no room right now,
+        or when an older batch call is still waiting for budget (`ticket` orders batch calls).
 
         Until a member first answers, its limits are unknown: one call at a time probes them."""
         with self._pace_lock:
             inflight = self._inflight[id(member)]
             state = self._rate(member)
             if state is not None:
+                if ticket is not None and any(t < ticket for t in self._queue):
+                    return None
                 if state.free_in(cost, *self._pending(member, state.at)) > 0:
                     return None
             elif inflight and id(member) not in self._answered:
@@ -614,6 +621,15 @@ class Judge:
                     self._interactive_waiting -= 1
 
     def _ask_live(self, system: str, user: str, schema: dict, interactive: bool) -> dict:
+        ticket = None if interactive else next(self._tickets)
+        try:
+            return self._ask_live_turn(system, user, schema, interactive, ticket)
+        finally:
+            if ticket is not None:
+                with self._pace_lock:
+                    self._queue.discard(ticket)
+
+    def _ask_live_turn(self, system: str, user: str, schema: dict, interactive: bool, ticket: int | None) -> dict:
         max_wait = min(self.max_wait_s, 3.0) if interactive else self.max_wait_s
         deadline = time.time() + 300
         last_error: Exception | None = None
@@ -622,6 +638,9 @@ class Judge:
             if not interactive and self._interactive_waiting:
                 time.sleep(0.2)  # someone is waiting on a live answer: let their call go first
                 continue
+            if ticket is not None:
+                with self._pace_lock:
+                    self._queue.add(ticket)  # waiting (again, after a failed attempt) in arrival order
             now = time.time()
             usable = [m for m in self.members if id(m) not in broken and self._member_ready(m)]
             if not usable:
@@ -653,20 +672,26 @@ class Judge:
                         self._wait("rate_wait_s", min(2.0, max(0.1, reopen - now)))
                         continue
             member = sent = None
+            budget_blocked = False
             for m in sorted(candidates, key=self._headroom, reverse=True):  # the key with the most budget left first
                 if not interactive and not self._batch_slots[id(m)].acquire(blocking=False):
                     continue
                 if self._slots[id(m)].acquire(blocking=False):
-                    sent = self._reserve(m, self._cost(m, system, user, schema))
+                    sent = self._reserve(m, self._cost(m, system, user, schema), ticket)
                     if sent is not None:
                         member = m
                         break
-                    self._slots[id(m)].release()  # another thread took the last of its budget
+                    budget_blocked = True  # another call took the budget, or an older call goes first
+                    self._slots[id(m)].release()
                 if not interactive:
                     self._batch_slots[id(m)].release()
             if member is None:
-                self._wait("slot_wait_s", 0.1)  # every open member already has its maximum calls in flight
+                # Every open member is at its maximum calls in flight, or it is another call's turn.
+                self._wait("rate_wait_s" if budget_blocked else "slot_wait_s", 0.05 if budget_blocked else 0.1)
                 continue
+            if ticket is not None:
+                with self._pace_lock:
+                    self._queue.discard(ticket)
             slot = self._slots[id(member)]
             batch_slot = None if interactive else self._batch_slots[id(member)]
             try:
