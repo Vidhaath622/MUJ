@@ -1,0 +1,18 @@
+# Only engine/ and backend/ go into the image; never secrets, data or local environments.
+**/.env
+**/.env.*
+!**/.env.example
+**/.venv
+**/venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/.pgtest
+**/*.sqlite
+**/*.sqlite-*
+backend/data
+engine/.data
+frontend
+docs
+.git
+.github

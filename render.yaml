@@ -1,0 +1,44 @@
+# Render blueprint for the RAGSeal API (backend + engine), next to the Neon database in Singapore.
+# Nothing here is secret: keys are set in the Render dashboard (sync: false). See backend/HOSTING.md.
+services:
+  - type: web
+    name: ragseal-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: singapore          # same region as Neon (ap-southeast-1): one short round trip per query
+    plan: starter              # a persistent disk needs a paid instance; free instances lose /data on restart
+    healthCheckPath: /api/health
+    autoDeploy: false
+    disk:
+      name: ragseal-data       # uploaded documents' vectors and the judge cache (runs and users live in Neon)
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL      # Neon Singapore pooler URL (postgresql://...-pooler.c-4.ap-southeast-1.aws.neon.tech/...)
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true    # fixed per service, so logins survive restarts
+      - key: GROQ_API_KEY      # judge (openai/gpt-oss-120b) and generator (openai/gpt-oss-20b)
+        sync: false
+      - key: GROQ_API_KEY_2    # optional extra keys: GROQ_API_KEY_3, _4, ... each adds rate limit
+        sync: false
+      - key: NVIDIA_API_KEY    # embeddings (nvidia/nemotron-3.5-embed-1b)
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://ragseal.vercel.app
+      - key: RAGSEAL_PUBLIC_URL
+        value: https://ragseal.vercel.app
+      - key: RAGSEAL_GENERATOR_PROVIDER
+        value: groq
+      - key: RAGSEAL_GROQ_GENERATOR_MODEL
+        value: openai/gpt-oss-20b
+      - key: RAGSEAL_JUDGE_PROVIDER
+        value: groq
+      - key: RAGSEAL_EMBED_PROVIDER
+        value: nvidia
+      - key: NVIDIA_EMBED_MODEL
+        value: nvidia/nemotron-3.5-embed-1b
+      - key: RAGSEAL_JUDGE_FALLBACK_PROVIDER
+        value: none            # no local Ollama in the container
