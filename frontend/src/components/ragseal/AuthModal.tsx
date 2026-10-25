@@ -100,7 +100,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   v2 Auth
                 </Badge>
               </div>
-              <p className="text-[11px] text-[var(--ink-2)] font-mono mt-0.5">
+              <p className="text-[0.75rem] text-[var(--ink-2)] font-mono mt-0.5">
                 Local SQLite &amp; JWT session storage
               </p>
             </div>
@@ -125,7 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </Badge>
                 </div>
                 <div className="text-sm font-bold text-[var(--ink)] font-mono">{currentUser.email}</div>
-                <div className="text-[11px] text-[var(--ink-2)] font-mono">User ID: {currentUser.id}</div>
+                <div className="text-[0.75rem] text-[var(--ink-2)] font-mono">User ID: {currentUser.id}</div>
               </div>
 
               <div className="flex items-center justify-between pt-2">
@@ -145,7 +145,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="p-3 rounded-xl bg-[var(--teal-tint)] border border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)] flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-[var(--teal)] block">Seeded Pitch Account</span>
-                  <span className="text-[10px] font-mono text-[var(--ink-2)]">demo@ragseal.dev / demo1234</span>
+                  <span className="text-[0.71875rem] font-mono text-[var(--ink-2)]">demo@ragseal.dev / demo1234</span>
                 </div>
                 <Button
                   type="button"
@@ -236,7 +236,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
         </CardContent>
 
-        <CardFooter className="bg-[var(--panel)] p-4 border-t border-[var(--rule)] flex items-center justify-between text-[11px] font-mono text-[var(--ink-2)]">
+        <CardFooter className="bg-[var(--panel)] p-4 border-t border-[var(--rule)] flex items-center justify-between text-[0.75rem] font-mono text-[var(--ink-2)]">
           <span>Bearer JWT storage supported</span>
           <Button variant="ghost" size="xs" onClick={onClose} className="text-[var(--ink-2)] hover:text-[var(--ink)]">
             Cancel

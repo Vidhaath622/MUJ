@@ -97,7 +97,7 @@ export const LiveDashboardPreview: React.FC = () => {
         {/* Diagnosis Pill Display */}
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <span className="text-[10px] font-mono uppercase text-[var(--muted)] block">
+            <span className="text-[0.71875rem] font-mono uppercase text-[var(--muted)] block">
               Automated Root-Cause
             </span>
             <DiagnosticBadge category={activeDiagnosis} size="md" pulse />

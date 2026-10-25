@@ -35,7 +35,7 @@ export const ComponentLibraryTab: React.FC = () => {
       {/* Reference Strip */}
       <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--rule)] space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-mono text-[var(--ink-2)] uppercase tracking-wider font-semibold">
+          <span className="text-[0.75rem] font-mono text-[var(--ink-2)] uppercase tracking-wider font-semibold">
             19 Curated Free UI/UX Inspiration Foundations:
           </span>
           <Badge variant="neon" size="sm">
@@ -49,7 +49,7 @@ export const ComponentLibraryTab: React.FC = () => {
               href={src.url}
               target="_blank"
               rel="noreferrer"
-              className="px-2 py-0.5 rounded-md bg-[var(--panel)] hover:bg-[var(--panel)] text-[var(--ink-1)] hover:text-[var(--ink)] border border-[var(--rule)] transition text-[11px] font-mono flex items-center gap-1"
+              className="px-2 py-0.5 rounded-md bg-[var(--panel)] hover:bg-[var(--panel)] text-[var(--ink-1)] hover:text-[var(--ink)] border border-[var(--rule)] transition text-[0.75rem] font-mono flex items-center gap-1"
             >
               <span>{src.name}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-60" />

@@ -27,7 +27,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {shortcut && (
-          <span className="absolute right-3 text-[10px] font-mono bg-[var(--panel)] text-[var(--ink-2)] px-1.5 py-0.5 rounded border border-[var(--rule)] pointer-events-none">
+          <span className="absolute right-3 text-[0.71875rem] font-mono bg-[var(--panel)] text-[var(--ink-2)] px-1.5 py-0.5 rounded border border-[var(--rule)] pointer-events-none">
             {shortcut}
           </span>
         )}

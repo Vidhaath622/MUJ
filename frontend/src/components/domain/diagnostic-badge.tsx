@@ -78,7 +78,7 @@ export const DiagnosticBadge: React.FC<DiagnosticBadgeProps> = ({
 
   const sizeClasses =
     size === 'sm'
-      ? 'text-[10px] px-2 py-0.5'
+      ? 'text-[0.71875rem] px-2 py-0.5'
       : size === 'lg'
       ? 'text-sm px-4 py-1.5'
       : 'text-xs px-2.5 py-1';

@@ -7,6 +7,12 @@ export default {
   ],
   theme: {
     extend: {
+      // Readability floor: text-xs is 13px and text-sm 15px (Tailwind's defaults are 12 and 14).
+      // Everything is in rem, so the root step-up on wide screens (index.css) scales it too.
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.25rem' }],
+        sm: ['0.9375rem', { lineHeight: '1.45rem' }],
+      },
       fontFamily: {
         sans: ['Geist', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],

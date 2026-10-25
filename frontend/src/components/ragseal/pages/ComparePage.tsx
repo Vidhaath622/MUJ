@@ -103,7 +103,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
   const fixes = flips.filter((f) => f.direction === 'fail_to_pass');
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
+    <div className="mx-auto flex max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-5 px-6 py-6">
       <TopBarControls>
         <PrimaryButton onClick={run} busy={running} disabled={!token || !base || !candidate || base === candidate || !packs.length}>
           {!running && <GitCompareArrows className="h-3.5 w-3.5" />}
@@ -136,7 +136,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
                       onClick={() => setPacks((cur) => (on ? cur.filter((x) => x !== p.id) : [...cur, p.id]))}
                       aria-pressed={on}
                       className={cn(
-                        'h-8 rounded-lg border px-3 text-[13px] transition-colors',
+                        'h-8 rounded-lg border px-3 text-[0.875rem] transition-colors',
                         on ? 'border-[var(--rule-3)] bg-[var(--panel-2)] text-[var(--ink)]' : 'border-[var(--rule)] text-[var(--ink-2)] hover:text-[var(--ink)]'
                       )}
                     >
@@ -153,7 +153,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
 
       {running && !finished && (
         <Panel title="Running both versions…">
-          <div className="text-[13px] text-[var(--ink-2)]">
+          <div className="text-[0.875rem] text-[var(--ink-2)]">
             {result?.progress
               ? `${result.progress.done ?? 0} / ${result.progress.total ?? '—'} questions scored`
               : 'Scoring every selected question under both versions.'}
@@ -184,7 +184,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
               <EmptyState className="m-5" title="No question changed outcome" />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[540px] text-[13px]">
+                <table className="w-full min-w-[540px] text-[0.875rem]">
                   <thead>
                     <tr className="border-b border-[var(--rule)] text-left text-xs text-[var(--ink-2)]">
                       <th className="px-5 py-2.5 font-normal">Question</th>
@@ -202,7 +202,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({ token }) => {
                         <tr key={`${f.test_id}-${f.direction}`} className="border-b border-[var(--panel)] last:border-0">
                           <td className="max-w-[460px] px-5 py-3">
                             <div className="truncate text-[var(--ink)]">{f.question ?? f.test_id}</div>
-                            <div className="font-mono text-[11px] text-[var(--muted)]">{f.test_id}</div>
+                            <div className="font-mono text-[0.75rem] text-[var(--muted)]">{f.test_id}</div>
                           </td>
                           <td className="px-3 py-3 text-[var(--ink-2)]">{PACK_LABEL[f.pack_id ?? ''] ?? f.pack_id ?? '—'}</td>
                           <td className="px-3 py-3 text-[var(--ink-1)]">{f.base_verdict ? failureLabel(f.base_verdict) : '—'}</td>
@@ -242,7 +242,7 @@ const ProfilePicker: React.FC<{
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 h-9 w-full rounded-[9px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 text-[13px] text-[var(--ink)] focus:border-[var(--rule-3)] focus:outline-none"
+        className="mt-1.5 h-9 w-full rounded-[9px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 text-[0.875rem] text-[var(--ink)] focus:border-[var(--rule-3)] focus:outline-none"
       >
         {profiles.map((x) => (
           <option key={x.id} value={x.id}>
@@ -285,10 +285,10 @@ const Verdict: React.FC<{ r: CompareResult; regressions: number; fixes: number }
           <div className="text-xs" style={{ color }}>
             {r.base ?? 'base'} → {r.candidate ?? 'candidate'}
           </div>
-          <div className="mt-1.5 text-[36px] font-semibold leading-none tracking-[-0.035em]" style={{ color }}>
+          <div className="mt-1.5 text-[2.25rem] font-semibold leading-none tracking-[-0.035em]" style={{ color }}>
             {headline}
           </div>
-          <p className="mt-3 max-w-[56ch] text-[13px] leading-relaxed text-[var(--ink-1)]">
+          <p className="mt-3 max-w-[56ch] text-[0.875rem] leading-relaxed text-[var(--ink-1)]">
             {regressions} question{regressions === 1 ? '' : 's'} went from pass to fail and {fixes} from fail to pass.{' '}
             {meaningful
               ? 'The change is larger than chance would explain on this many questions.'

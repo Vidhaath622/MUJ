@@ -165,7 +165,7 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
   }, [token, judgeA, judgeB, pollStability]);
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
+    <div className="mx-auto flex max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-5 px-6 py-6">
       <TopBarControls>
         <GhostButton onClick={runInjection} disabled={injecting || !token}>
           <FlaskConical className="h-3.5 w-3.5 text-[var(--ink-2)]" />
@@ -222,7 +222,7 @@ export const TrustPage: React.FC<TrustPageProps> = ({ token, health }) => {
             ) : stabilityErr ? (
               <LoadState error={stabilityErr} what="stability" />
             ) : (
-              <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">
+              <p className="text-[0.875rem] leading-relaxed text-[var(--ink-2)]">
                 Re-scores the latest run with both judges and with chunks and cases in shuffled order (cache bypassed).
                 Scores should barely move.
               </p>
@@ -257,7 +257,7 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
     >
       {agreement.original && (
         <div className="mb-6 rounded-xl border border-[var(--rule)] p-4">
-          <div className="mb-3 text-[13px] font-medium text-[var(--ink-1)]">
+          <div className="mb-3 text-[0.875rem] font-medium text-[var(--ink-1)]">
             Inter-annotator agreement (before review) · labels as first given, n = {agreement.original.n ?? agreement.original.human_human?.n ?? '—'}
           </div>
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
@@ -269,7 +269,7 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
         </div>
       )}
       {agreement.original && (
-        <div className="mb-3 text-[13px] font-medium text-[var(--ink-1)]">After disagreement review (adjudicated)</div>
+        <div className="mb-3 text-[0.875rem] font-medium text-[var(--ink-1)]">After disagreement review (adjudicated)</div>
       )}
       <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
         <Metric big label="Pipeline agrees with humans" value={pct(pv.agreement)} sub={`Cohen's κ ${fmtNum(pv.kappa)}`} color={tone(pv.agreement)} />
@@ -303,7 +303,7 @@ const AgreementSection: React.FC<{ agreement: Agreement | null; error: unknown }
       {!!agreement.disagreements?.length && (
         <div className="mt-5 border-t border-[var(--rule)] pt-4">
           <div className="mb-2 text-xs text-[var(--ink-2)]">Disagreements ({agreement.disagreements.length})</div>
-          <ul className="space-y-1.5 text-[13px]">
+          <ul className="space-y-1.5 text-[0.875rem]">
             {agreement.disagreements.slice(0, 4).map((d) => (
               <li key={`${d.batch_id}-${d.test_id}-${d.kind}`} className="flex gap-3">
                 <span className="w-16 shrink-0 font-mono text-xs text-[var(--ink-2)]">{d.test_id}</span>
@@ -336,7 +336,7 @@ const ProgressNote: React.FC<{ what: string; p: RunProgress | null }> = ({ what,
   const frac = p?.total ? Math.min(1, (p.done ?? 0) / p.total) : null;
   return (
     <div className="flex flex-col gap-2.5 py-2">
-      <div className="flex items-baseline justify-between text-[13px]">
+      <div className="flex items-baseline justify-between text-[0.875rem]">
         <span className="text-[var(--ink-1)]">{what}…</span>
         <span className="tabular-nums text-[var(--ink-2)]">
           {p?.total ? `${p.done ?? 0} / ${p.total}` : 'starting'}
@@ -366,12 +366,12 @@ const ConfusionMatrix: React.FC<{ c: Confusion }> = ({ c }) => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline gap-3">
-        <span className="text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums" style={{ color: tone(c.accuracy) }}>
+        <span className="text-[2.125rem] font-semibold leading-none tracking-[-0.03em] tabular-nums" style={{ color: tone(c.accuracy) }}>
           {pct(c.accuracy)}
         </span>
-        <span className="text-[13px] text-[var(--ink-2)]">of failures named correctly</span>
+        <span className="text-[0.875rem] text-[var(--ink-2)]">of failures named correctly</span>
         {c.stage_accuracy != null && (
-          <span className="ml-auto text-[13px] text-[var(--ink-2)]">
+          <span className="ml-auto text-[0.875rem] text-[var(--ink-2)]">
             right stage blamed{' '}
             <span className="font-semibold tabular-nums" style={{ color: tone(c.stage_accuracy) }}>
               {pct(c.stage_accuracy)}
@@ -380,7 +380,7 @@ const ConfusionMatrix: React.FC<{ c: Confusion }> = ({ c }) => {
         )}
       </div>
       <div className="overflow-x-auto">
-        <table className="border-separate border-spacing-[3px] text-[11px]">
+        <table className="border-separate border-spacing-[3px] text-[0.75rem]">
           <thead>
             <tr>
               <th className="pr-2 text-right align-bottom font-normal text-[var(--muted)]">true ↓ / predicted →</th>
@@ -438,7 +438,7 @@ const JudgeInput: React.FC<{ label: string; value: string; onChange: (v: string)
     <input
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="mt-1 h-9 w-full rounded-[9px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 font-mono text-[12px] text-[var(--ink)] focus:border-[var(--rule-3)] focus:outline-none"
+      className="mt-1 h-9 w-full rounded-[9px] border border-[var(--rule-2)] bg-[var(--paper)] px-3 font-mono text-[0.8125rem] text-[var(--ink)] focus:border-[var(--rule-3)] focus:outline-none"
     />
   </label>
 );
@@ -449,7 +449,7 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
   return (
     <div className="flex flex-col gap-4 border-t border-[var(--rule)] pt-4">
       {stable != null && (
-        <div className="text-[15px] font-semibold" style={{ color: stable ? PASS : RED }}>
+        <div className="text-[1rem] font-semibold" style={{ color: stable ? PASS : RED }}>
           {stable ? 'Stable' : 'Unstable'} when the grading model is swapped or the order shuffled
         </div>
       )}
@@ -457,7 +457,7 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
         <div className="mb-2 flex items-center gap-2 text-xs text-[var(--ink-2)]">
           <Scale className="h-3.5 w-3.5" /> Judge swap {s.judges?.length ? `· ${s.judges.map((j) => j.split('/').pop()).join(' vs ')}` : ''}
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[0.875rem]">
           {Object.entries(corr).map(([metric, v]) => (
             <Row key={metric} label={`${metric.replace(/_/g, ' ')} correlation`} value={fmtNum(v)} />
           ))}
@@ -470,7 +470,7 @@ const StabilityResult: React.FC<{ s: Stability }> = ({ s }) => {
         <div className="mb-2 flex items-center gap-2 text-xs text-[var(--ink-2)]">
           <Shuffle className="h-3.5 w-3.5" /> Shuffle × {s.shuffle?.runs ?? '—'}
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[0.875rem]">
           <Row label="Largest score change" value={fmtNum(s.shuffle?.max_delta)} />
           <Row label="Mean score change" value={fmtNum(s.shuffle?.mean_delta, 3)} />
           <Row label="Cases that moved" value={s.shuffle?.unstable_cases ?? '—'} />
@@ -494,7 +494,7 @@ const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value
 const ExternalValidation: React.FC = () => (
   <Panel title="Checked against outside human labels" note="RAGTruth · Niu et al., ACL 2024 · MIT licence">
     <div className="flex flex-col gap-5">
-      <p className="max-w-[760px] text-[13.5px] leading-relaxed text-[var(--ink-2)]">
+      <p className="max-w-[760px] text-[0.90625rem] leading-relaxed text-[var(--ink-2)]">
         Our own labels come from our team. To check RAGSeal against people we don&apos;t know, we ran its faithfulness check on
         a balanced sample of RAGTruth answers whose hallucinations were marked by the dataset&apos;s human annotators.
       </p>
@@ -506,13 +506,13 @@ const ExternalValidation: React.FC = () => (
           ['Sample', '48', '24 hallucinated · 24 clean'],
         ].map(([k, v, n]) => (
           <div key={k} className="rounded-xl border border-[var(--rule)] bg-[var(--panel)] p-4">
-            <div className="text-[12px] text-[var(--ink-2)]">{k}</div>
-            <div className="mt-1 text-[26px] font-semibold tabular-nums text-[var(--ink)]">{v}</div>
-            <div className="mt-0.5 text-[12px] text-[var(--ink-2)]">{n}</div>
+            <div className="text-[0.8125rem] text-[var(--ink-2)]">{k}</div>
+            <div className="mt-1 text-[1.625rem] font-semibold tabular-nums text-[var(--ink)]">{v}</div>
+            <div className="mt-0.5 text-[0.8125rem] text-[var(--ink-2)]">{n}</div>
           </div>
         ))}
       </div>
-      <p className="text-[12px] text-[var(--ink-2)]">
+      <p className="text-[0.8125rem] text-[var(--ink-2)]">
         Tuned for recall: it would rather flag a clean answer for review than miss a made-up one. Source:{' '}
         <span className="font-mono">github.com/ParticleMedia/RAGTruth</span>, test split, seed 13.
       </p>

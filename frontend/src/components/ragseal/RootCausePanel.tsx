@@ -69,7 +69,7 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
         {/* Left: Category & Explanation */}
         <div className="space-y-3 flex-1">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)] font-semibold">
+            <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--ink-2)] font-semibold">
               Root Cause Diagnosis:
             </span>
             <DiagnosticBadge
@@ -87,7 +87,7 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
           <div className="flex items-start gap-2.5 text-xs text-[var(--ink-1)] bg-[var(--panel)] p-3 rounded-lg border border-[var(--rule)]">
             <Wrench className="w-4 h-4 text-[var(--accent)] mt-0.5 flex-shrink-0" />
             <div>
-              <span className="font-semibold text-[var(--accent)] font-mono text-[11px] uppercase tracking-wider block mb-0.5">
+              <span className="font-semibold text-[var(--accent)] font-mono text-[0.75rem] uppercase tracking-wider block mb-0.5">
                 Recommended Remediation:
               </span>
               <p className="leading-relaxed text-[var(--ink-1)]">{diagnosis.recommended_action}</p>
@@ -96,7 +96,7 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
 
           {/* Evidence Notes if any */}
           {diagnosis.evidence_notes && diagnosis.evidence_notes.length > 0 && (
-            <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--ink-2)] flex-wrap">
+            <div className="flex items-center gap-2 text-[0.75rem] font-mono text-[var(--ink-2)] flex-wrap">
               <span className="text-[var(--muted)]">Evidence notes:</span>
               {diagnosis.evidence_notes.map((note, idx) => (
                 <span key={idx} className="bg-[var(--panel)] px-2 py-0.5 rounded border border-[var(--rule)] text-[var(--ink-1)]">
@@ -112,21 +112,21 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
           {/* Release Verdict */}
           {releaseConfig && release && (
             <div className="w-full text-left md:text-right">
-              <span className="text-[10px] font-mono text-[var(--ink-2)] uppercase tracking-wider block mb-1">
+              <span className="text-[0.71875rem] font-mono text-[var(--ink-2)] uppercase tracking-wider block mb-1">
                 Release Gate Decision
               </span>
               <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono font-bold text-sm ${releaseConfig.bgColor} ${releaseConfig.textColor}`}>
                 <releaseConfig.icon className="w-4 h-4" />
                 <span>VERDICT: {releaseConfig.label}</span>
               </div>
-              <p className="text-[11px] text-[var(--ink-2)] mt-1 max-w-[200px] leading-tight md:ml-auto">
+              <p className="text-[0.75rem] text-[var(--ink-2)] mt-1 max-w-[200px] leading-tight md:ml-auto">
                 {release.rule}
               </p>
             </div>
           )}
 
           {/* Evaluation Mode & Trace Metadata */}
-          <div className="text-left md:text-right space-y-1 text-[11px] font-mono text-[var(--ink-2)] mt-auto">
+          <div className="text-left md:text-right space-y-1 text-[0.75rem] font-mono text-[var(--ink-2)] mt-auto">
             <div>
               <span className="text-[var(--muted)]">Eval Mode: </span>
               <Badge variant="outline" size="sm" className="font-mono text-[var(--teal)] border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)] bg-[var(--teal-tint)]">
@@ -140,7 +140,7 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
               </div>
             )}
             {evaluationId && (
-              <div className="text-[10px] text-[var(--muted)]">
+              <div className="text-[0.71875rem] text-[var(--muted)]">
                 id: {evaluationId}
               </div>
             )}
@@ -162,7 +162,7 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
               </Badge>
             </div>
 
-            <div className="text-[11px] font-mono text-[var(--ink-2)] flex items-center gap-2">
+            <div className="text-[0.75rem] font-mono text-[var(--ink-2)] flex items-center gap-2">
               <span>Replay Accuracy:</span>
               <span className="text-[var(--violet)] font-bold">
                 {replay.answer_accuracy ? `${(replay.answer_accuracy * 100).toFixed(0)}%` : 'N/A'}
@@ -178,20 +178,20 @@ export const RootCausePanel: React.FC<RootCausePanelProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono pt-1">
             {/* Original Output */}
             <div className="p-3 rounded-lg bg-[var(--paper)] border border-[var(--rule)] space-y-1">
-              <span className="text-[10px] uppercase text-[var(--gen)] font-bold flex items-center gap-1">
+              <span className="text-[0.71875rem] uppercase text-[var(--gen)] font-bold flex items-center gap-1">
                 <XCircle className="w-3 h-3" />
                 Original System Output (With Retrieval Flaw):
               </span>
-              <p className="text-[var(--ink-1)] line-clamp-3 text-[11px]">{originalAnswer || 'Original response'}</p>
+              <p className="text-[var(--ink-1)] line-clamp-3 text-[0.75rem]">{originalAnswer || 'Original response'}</p>
             </div>
 
             {/* Replay Output */}
             <div className="p-3 rounded-lg bg-[var(--ok-tint)] border border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] space-y-1">
-              <span className="text-[10px] uppercase text-[var(--ok)] font-bold flex items-center gap-1">
+              <span className="text-[0.71875rem] uppercase text-[var(--ok)] font-bold flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
                 Replay Output (With Forced Gold Passage Only):
               </span>
-              <p className="text-[var(--ink)] line-clamp-3 text-[11px]">{replay.answer}</p>
+              <p className="text-[var(--ink)] line-clamp-3 text-[0.75rem]">{replay.answer}</p>
             </div>
           </div>
         </div>

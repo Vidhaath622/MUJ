@@ -229,10 +229,10 @@ const CaseRow: React.FC<{ c: LabCase; active: boolean; onClick: () => void }> = 
       >
         <span className="mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full" style={{ background: color }} />
         <span className="min-w-0 flex-1">
-          <span className={cn('block truncate text-[13px] leading-snug', active ? 'text-[var(--ink)]' : 'text-[var(--ink-1)]')}>
+          <span className={cn('block truncate text-[0.875rem] leading-snug', active ? 'text-[var(--ink)]' : 'text-[var(--ink-1)]')}>
             {c.question}
           </span>
-          <span className="mt-0.5 flex flex-wrap gap-x-2 whitespace-nowrap text-[11px] text-[var(--ink-2)]">
+          <span className="mt-0.5 flex flex-wrap gap-x-2 whitespace-nowrap text-[0.75rem] text-[var(--ink-2)]">
             <span className="font-mono">{c.test_id}</span>
             {v && (
               <span style={{ color: v.color }}>
@@ -273,10 +273,10 @@ const PackSummary: React.FC<{
         {run?.sample && <SampleBadge />}
       </div>
       <div className="mt-2.5 flex items-baseline gap-2.5">
-        <span className="text-[52px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-[var(--ink)]">
+        <span className="text-[3.25rem] font-semibold leading-none tracking-[-0.04em] tabular-nums text-[var(--ink)]">
           <CountUp key={run?.batch_id} value={run?.aggregates?.pass_rate} />
         </span>
-        <span className="text-[13px] text-[var(--ink-2)]">{run ? 'answered accurately' : 'no run yet'}</span>
+        <span className="text-[0.875rem] text-[var(--ink-2)]">{run ? 'answered accurately' : 'no run yet'}</span>
       </div>
 
       {n > 0 && (
@@ -309,19 +309,19 @@ const PackSummary: React.FC<{
       <button
         onClick={onRun}
         disabled={running || !total}
-        className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-[9px] bg-[var(--ink)] text-[13px] font-semibold text-[var(--paper)] transition-colors hover:bg-[var(--ink-1)] disabled:cursor-not-allowed disabled:bg-[var(--panel-2)] disabled:text-[var(--ink-2)]"
+        className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-[9px] bg-[var(--ink)] text-[0.875rem] font-semibold text-[var(--paper)] transition-colors hover:bg-[var(--ink-1)] disabled:cursor-not-allowed disabled:bg-[var(--panel-2)] disabled:text-[var(--ink-2)]"
       >
         {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3 w-3 fill-current" />}
         {running ? `Scoring ${total} questions · ${elapsed}s` : run ? 'Re-run pack' : 'Run pack'}
       </button>
       )}
       {running && (
-        <p className="mt-2 text-[11px] leading-snug text-[var(--ink-2)]">
+        <p className="mt-2 text-[0.75rem] leading-snug text-[var(--ink-2)]">
           About 10 s a question the first time; repeat runs take seconds.
         </p>
       )}
       {!running && run?.judge_model && (
-        <p className="mt-2.5 truncate text-[11px] text-[var(--ink-2)]">
+        <p className="mt-2.5 truncate text-[0.75rem] text-[var(--ink-2)]">
           Graded by <span className="font-mono">{run.judge_model.split('/').pop()}</span> · {pct(run.gold_retrieval_rate)} of questions got the right text
         </p>
       )}
@@ -331,8 +331,8 @@ const PackSummary: React.FC<{
 
 const Stat: React.FC<{ label: string; value: number | null | undefined }> = ({ label, value }) => (
   <div>
-    <dt className="text-[11px] text-[var(--ink-2)]">{label}</dt>
-    <dd className="mt-0.5 text-[17px] font-medium tabular-nums text-[var(--ink)]">
+    <dt className="text-[0.75rem] text-[var(--ink-2)]">{label}</dt>
+    <dd className="mt-0.5 text-[1.125rem] font-medium tabular-nums text-[var(--ink)]">
       <CountUp value={value} />
     </dd>
   </div>
@@ -354,7 +354,7 @@ const AskBox: React.FC<{ busy: boolean; disabled: boolean; onAsk: (q: string) =>
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           disabled={disabled}
           placeholder="Ask your own question…"
-          className="h-full flex-1 bg-transparent text-[13px] text-[var(--ink)] placeholder:text-[var(--ink-2)] focus:outline-none"
+          className="h-full flex-1 bg-transparent text-[0.875rem] text-[var(--ink)] placeholder:text-[var(--ink-2)] focus:outline-none"
         />
         {busy ? (
           <Loader2 className="h-4 w-4 animate-spin text-[var(--ink-2)]" />
@@ -363,7 +363,7 @@ const AskBox: React.FC<{ busy: boolean; disabled: boolean; onAsk: (q: string) =>
             onClick={submit}
             disabled={disabled || !q.trim()}
             aria-label="Evaluate question"
-            className="rounded-[5px] border border-[var(--rule-2)] px-1.5 font-mono text-[11px] text-[var(--ink-2)] hover:text-[var(--ink)] disabled:opacity-50"
+            className="rounded-[5px] border border-[var(--rule-2)] px-1.5 font-mono text-[0.75rem] text-[var(--ink-2)] hover:text-[var(--ink)] disabled:opacity-50"
           >
             ↵
           </button>

@@ -120,7 +120,7 @@ const Chunk: React.FC<{ file: string; text: string; tone?: 'stale' | 'gold'; tag
   const color = tone === 'stale' ? 'var(--retr)' : tone === 'gold' ? 'var(--ok)' : 'var(--rule-3)';
   return (
     <div
-      className="flex h-[32px] w-[212px] items-center gap-2 rounded-md border px-2.5 text-[11px] transition-[box-shadow] duration-500"
+      className="flex h-[32px] w-[212px] items-center gap-2 rounded-md border px-2.5 text-[0.75rem] transition-[box-shadow] duration-500"
       style={{
         borderColor: tone ? `color-mix(in srgb, ${color} 55%, transparent)` : 'var(--rule)',
         background: tone ? `color-mix(in srgb, ${color} 9%, var(--paper))` : 'var(--paper)',
@@ -129,11 +129,11 @@ const Chunk: React.FC<{ file: string; text: string; tone?: 'stale' | 'gold'; tag
     >
       <span className="h-4 w-[3px] shrink-0 rounded-full" style={{ background: color }} />
       <span className="min-w-0 flex-1 truncate">
-        <span className="font-mono text-[10px] text-[var(--muted)]">{file}</span>
+        <span className="font-mono text-[0.71875rem] text-[var(--muted)]">{file}</span>
         <span className="ml-1.5 text-[var(--ink-1)]">{text}</span>
       </span>
       {tag && (
-        <span className="shrink-0 rounded px-1 font-mono text-[9px]" style={{ color, background: `color-mix(in srgb, ${color} 14%, transparent)` }}>
+        <span className="shrink-0 rounded px-1 font-mono text-[0.6875rem]" style={{ color, background: `color-mix(in srgb, ${color} 14%, transparent)` }}>
           {tag}
         </span>
       )}
@@ -151,8 +151,8 @@ const Node: React.FC<{ title: string; meta: string; active: boolean; children?: 
     }}
   >
     <div className="flex items-baseline justify-between">
-      <span className="text-[12.5px] font-semibold text-[var(--ink)]">{title}</span>
-      <span className="font-mono text-[10px] text-[var(--muted)]">{meta}</span>
+      <span className="text-[0.84375rem] font-semibold text-[var(--ink)]">{title}</span>
+      <span className="font-mono text-[0.71875rem] text-[var(--muted)]">{meta}</span>
     </div>
     {children}
   </div>
@@ -162,7 +162,7 @@ const Check: React.FC<{ label: string; pass: boolean; on: boolean }> = ({ label,
   const color = pass ? 'var(--ok)' : 'var(--gen)';
   return (
     <div
-      className="flex h-[34px] items-center gap-2 rounded-lg border px-2.5 text-[11.5px] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)]"
+      className="flex h-[34px] items-center gap-2 rounded-lg border px-2.5 text-[0.78125rem] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.2,0.7,0.2,1)]"
       style={{
         opacity: on ? 1 : 0,
         transform: on ? 'none' : 'translateY(6px) scale(0.98)',
@@ -205,8 +205,8 @@ export const SignInTrace: React.FC = () => {
     >
       {/* Question */}
       <Step t={t} at={T.question} style={{ left: 0, top: 0 }}>
-        <div className="flex h-[40px] items-center gap-2.5 rounded-full border border-[var(--rule-2)] bg-[var(--paper)] pl-1.5 pr-4 text-[13px] text-[var(--ink)] shadow-[0_8px_24px_-16px_rgba(0,0,0,0.5)]">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--ink)] font-mono text-[11px] text-[var(--paper)]">Q</span>
+        <div className="flex h-[40px] items-center gap-2.5 rounded-full border border-[var(--rule-2)] bg-[var(--paper)] pl-1.5 pr-4 text-[0.875rem] text-[var(--ink)] shadow-[0_8px_24px_-16px_rgba(0,0,0,0.5)]">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--ink)] font-mono text-[0.75rem] text-[var(--paper)]">Q</span>
           What’s the ATM withdrawal fee?
         </div>
       </Step>
@@ -251,19 +251,19 @@ export const SignInTrace: React.FC = () => {
       <Step t={t} at={T.generator} style={{ left: 284, top: 62, width: 236, height: 196 }}>
         <Node title="Generator" meta="the chatbot" active={shown(t, T.generator) && !shown(t, T.checks[0])}>
           <Step t={t} at={T.answer} className="!relative mt-2.5" dim={shown(t, T.fixed)}>
-            <div className="rounded-lg rounded-tl-sm border border-[var(--rule)] bg-[var(--paper)] px-3 py-2 text-[12.5px] text-[var(--ink)]">
+            <div className="rounded-lg rounded-tl-sm border border-[var(--rule)] bg-[var(--paper)] px-3 py-2 text-[0.84375rem] text-[var(--ink)]">
               The ATM fee is <span className="font-semibold" style={{ color: 'var(--gen)' }}>$3.00</span>.
             </div>
           </Step>
           <Step t={t} at={T.replay} className="!relative mt-2.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-[10px]" style={{ color: 'var(--ok)', background: 'var(--ok-tint)' }}>
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-[0.71875rem]" style={{ color: 'var(--ok)', background: 'var(--ok-tint)' }}>
               <span className={`h-1.5 w-1.5 rounded-full bg-[var(--ok)] ${replaying && !shown(t, T.fixed) ? 'animate-ping' : ''}`} />
               replay · correct text only
             </span>
           </Step>
           <Step t={t} at={T.fixed} className="!relative mt-2">
             <div
-              className="rounded-lg rounded-tl-sm border px-3 py-2 text-[12.5px] text-[var(--ink)]"
+              className="rounded-lg rounded-tl-sm border px-3 py-2 text-[0.84375rem] text-[var(--ink)]"
               style={{ borderColor: 'color-mix(in srgb, var(--ok) 45%, transparent)', background: 'color-mix(in srgb, var(--ok) 8%, var(--paper))' }}
             >
               The ATM fee is <span className="font-semibold" style={{ color: 'var(--ok)' }}>$2.50</span>. ✓
@@ -294,8 +294,8 @@ export const SignInTrace: React.FC = () => {
             <path d="M40 61l13 13 27-28" fill="none" stroke="var(--ok)" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <span className="leading-tight">
-            <span className="block text-[13px] font-semibold text-[var(--ink)]">Retriever at fault</span>
-            <span className="block text-[10.5px] text-[var(--ink-2)]">proved by replay</span>
+            <span className="block text-[0.875rem] font-semibold text-[var(--ink)]">Retriever at fault</span>
+            <span className="block text-[0.71875rem] text-[var(--ink-2)]">proved by replay</span>
           </span>
         </div>
       </div>

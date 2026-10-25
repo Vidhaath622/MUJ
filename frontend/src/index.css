@@ -347,3 +347,10 @@
   .trace-grid, .trace-glow, .trace-run-down, .trace-run-across, .trace-tick, .trace-stamp, .signin-rise { animation: none; }
   .trace-tick { stroke-dashoffset: 0; }
 }
+
+/* Type scale. Sizes across the app are rem (see tailwind.config.js and the text-[…rem] classes),
+   so one root step makes wide screens comfortably readable instead of leaving small text in
+   wide gutters. Spacing scales with it. Not CSS zoom: the scroll story measures real pixels. */
+html { font-size: 16px; }
+@media (min-width: 1600px) { html { font-size: 17px; } }
+@media (min-width: 1880px) { html { font-size: 18px; } }

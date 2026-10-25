@@ -106,7 +106,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <div className="text-sm text-[var(--ink)] leading-relaxed font-sans">
           {renderedParts}
         </div>
-        <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--gen)] bg-[var(--gen-tint)] p-2 rounded border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)]">
+        <div className="flex items-center gap-2 text-[0.75rem] font-mono text-[var(--gen)] bg-[var(--gen-tint)] p-2 rounded border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)]">
           <AlertCircle className="w-3.5 h-3.5 text-[var(--gen)] flex-shrink-0" />
           <span>Wavy red underline marks factual claims unsupported by retrieved context.</span>
         </div>
@@ -122,7 +122,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       <Card variant="glass" className="p-4 border-[var(--rule)] bg-[color:color-mix(in_srgb,var(--paper)_90%,transparent)]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--accent)] bg-[var(--accent-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] font-semibold">
+            <span className="text-[0.71875rem] font-mono uppercase tracking-wider text-[var(--accent)] bg-[var(--accent-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)] font-semibold">
               Live Query Under Test
             </span>
             {documentName && (
@@ -158,7 +158,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 </button>
               </div>
             )}
-            <div className="text-[11px] font-mono text-[var(--ink-2)] hidden sm:block">
+            <div className="text-[0.75rem] font-mono text-[var(--ink-2)] hidden sm:block">
               Retrieval coverage: <span className="font-semibold text-[var(--ink)]">{relevantCount} of {retrievedChunks.length} relevant</span>
             </div>
           </div>
@@ -198,7 +198,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                         : 'bg-[var(--gen-tint)] border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] text-[var(--ink-2)] opacity-80'
                     )}
                   >
-                    <div className="flex items-center justify-between font-mono text-[11px] flex-wrap gap-1">
+                    <div className="flex items-center justify-between font-mono text-[0.75rem] flex-wrap gap-1">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-[var(--accent)] bg-[var(--accent-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)]">
                           {chunk.chunk_id}
@@ -212,7 +212,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                       </div>
                       <div className="flex items-center gap-2">
                         {isTarget && (
-                          <Badge variant="outline" size="sm" className="text-[10px] text-[var(--teal)] border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)] bg-[var(--teal-tint)]">
+                          <Badge variant="outline" size="sm" className="text-[0.71875rem] text-[var(--teal)] border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)] bg-[var(--teal-tint)]">
                             Target Chunk
                           </Badge>
                         )}
@@ -226,7 +226,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                       {chunk.text}
                     </p>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-[var(--rule)] text-[11px] font-mono">
+                    <div className="flex items-center justify-between pt-1 border-t border-[var(--rule)] text-[0.75rem] font-mono">
                       <span className="text-[var(--muted)]">Relevance Score:</span>
                       <div className="flex items-center gap-2">
                         <span className="text-[var(--ink-1)] font-bold">
@@ -252,7 +252,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                     <AlertCircle className="w-4 h-4 text-[var(--retr)]" />
                     <span>RETRIEVAL GAP DETECTED</span>
                   </div>
-                  <p className="text-[var(--ink-1)] text-[11px] leading-relaxed">
+                  <p className="text-[var(--ink-1)] text-[0.75rem] leading-relaxed">
                     Canonical target chunk <span className="font-mono text-[var(--retr)]">[{groundTruthChunkIds.join(', ')}]</span> was not fetched in the top-k retrieved set.
                   </p>
                 </div>
@@ -275,7 +275,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                   className="text-[var(--ink-2)] hover:text-[var(--ink)]"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-[var(--ok)]" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span className="ml-1 text-[11px] font-mono">{copied ? 'Copied' : 'Copy'}</span>
+                  <span className="ml-1 text-[0.75rem] font-mono">{copied ? 'Copied' : 'Copy'}</span>
                 </Button>
               </div>
             </CardHeader>
@@ -284,11 +284,11 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               {/* Active Generated Answer */}
               <div className="bg-[var(--panel)] border border-[var(--rule)] rounded-xl p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-[var(--teal)] uppercase font-semibold flex items-center gap-1">
+                  <span className="text-[0.75rem] font-mono text-[var(--teal)] uppercase font-semibold flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-[var(--teal)]" />
                     Generated Candidate Response
                   </span>
-                  <span className="text-[10px] font-mono text-[var(--ink-2)] bg-[var(--panel)] px-2 py-0.5 rounded border border-[var(--rule)]">
+                  <span className="text-[0.71875rem] font-mono text-[var(--ink-2)] bg-[var(--panel)] px-2 py-0.5 rounded border border-[var(--rule)]">
                     Model Output
                   </span>
                 </div>
@@ -298,7 +298,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               {/* Ground Truth Reference */}
               {groundTruth ? (
                 <div className="bg-[var(--ok-tint)] border border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] rounded-xl p-3 space-y-1 text-xs">
-                  <span className="text-[10px] font-mono text-[var(--ok)] uppercase font-bold flex items-center gap-1">
+                  <span className="text-[0.71875rem] font-mono text-[var(--ok)] uppercase font-bold flex items-center gap-1">
                     <BookmarkCheck className="w-3 h-3" />
                     Ground Truth Reference:
                   </span>
@@ -308,7 +308,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 </div>
               ) : (
                 <div className="bg-[var(--retr-tint)] border border-[color:color-mix(in_srgb,var(--retr)_40%,transparent)] rounded-xl p-3 space-y-1 text-xs">
-                  <span className="text-[10px] font-mono text-[var(--retr)] uppercase font-bold flex items-center gap-1">
+                  <span className="text-[0.71875rem] font-mono text-[var(--retr)] uppercase font-bold flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
                     No Ground Truth Provided
                   </span>
@@ -319,8 +319,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               )}
 
               {/* Principle Note */}
-              <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--rule)] text-[11px] text-[var(--ink-2)] flex items-start gap-2">
-                <span className="font-bold text-[var(--ink)] uppercase font-mono text-[10px]">Note:</span>
+              <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--rule)] text-[0.75rem] text-[var(--ink-2)] flex items-start gap-2">
+                <span className="font-bold text-[var(--ink)] uppercase font-mono text-[0.71875rem]">Note:</span>
                 <p className="leading-relaxed">
                   Even if the generated answer is truthful in the real world, it fails <span className="text-[var(--teal)] font-mono">Faithfulness</span> if it asserts facts not present in the retrieved passages.
                 </p>
@@ -343,7 +343,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                     HERO PROOF
                   </Badge>
                 </h4>
-                <p className="text-[11px] text-[var(--ink-2)] font-mono">
+                <p className="text-[0.75rem] text-[var(--ink-2)] font-mono">
                   Isolates retriever vs generator: re-runs the generator with ONLY the canonical gold passage.
                 </p>
               </div>
@@ -365,7 +365,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           <div className="p-3.5 rounded-xl bg-[var(--violet-tint)] border border-[color:color-mix(in_srgb,var(--violet)_40%,transparent)] flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-[var(--violet)] mt-0.5 flex-shrink-0" />
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--violet)] font-bold block mb-0.5">
+              <span className="text-[0.71875rem] font-mono uppercase tracking-wider text-[var(--violet)] font-bold block mb-0.5">
                 Causal Experiment Finding:
               </span>
               <p className="text-sm text-[var(--ink)] font-medium leading-relaxed">
@@ -383,7 +383,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                   <XCircle className="w-3.5 h-3.5" />
                   1. Original System Output (Standard RAG)
                 </span>
-                <span className="text-[10px] font-mono text-[var(--muted)]">
+                <span className="text-[0.71875rem] font-mono text-[var(--muted)]">
                   Retrieved Context (Incomplete/Noise)
                 </span>
               </div>
@@ -399,7 +399,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   2. Replay Output (Forced Gold Chunk Only)
                 </span>
-                <span className="text-[10px] font-mono text-[var(--ok)] bg-[var(--ok-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] font-bold">
+                <span className="text-[0.71875rem] font-mono text-[var(--ok)] bg-[var(--ok-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--ok)_40%,transparent)] font-bold">
                   Perfect Evidence Injected
                 </span>
               </div>

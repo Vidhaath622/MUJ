@@ -124,7 +124,7 @@ export const TabbedPanes: React.FC<{ panes: Pane[]; initial?: number; fill?: boo
               role="tab"
               aria-selected={i === index}
               onClick={() => go(i)}
-              className={`-mb-px border-b-2 px-3.5 py-2.5 text-[13.5px] transition-colors ${
+              className={`-mb-px border-b-2 px-3.5 py-2.5 text-[0.90625rem] transition-colors ${
                 i === index
                   ? 'border-[var(--ink)] text-[var(--ink)]'
                   : 'border-transparent text-[var(--ink-2)] hover:text-[var(--ink)]'
@@ -150,7 +150,7 @@ export const TabbedPanes: React.FC<{ panes: Pane[]; initial?: number; fill?: boo
       {!fill && index < panes.length - 1 && (
         <button
           onClick={() => go(index + 1)}
-          className="self-center text-[12px] text-[var(--ink-2)] transition-opacity hover:opacity-70"
+          className="self-center text-[0.8125rem] text-[var(--ink-2)] transition-opacity hover:opacity-70"
         >
           Next: {panes[index + 1].label} → <span className="opacity-70">(or scroll on past the end)</span>
         </button>

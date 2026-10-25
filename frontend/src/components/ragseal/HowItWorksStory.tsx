@@ -161,7 +161,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
   };
 
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-6 py-2">
+    <div className="mx-auto flex max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-6 py-2">
       <DiagnosisTree fig="Fig. 1" />
       <ArchitectureGraph fig="Fig. 2" />
       <ReleaseGate fig="Fig. 3" />
@@ -170,10 +170,10 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--teal)] font-semibold">
+              <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--teal)] font-semibold">
                 Architecture &amp; Methodology
               </span>
-              <span className="rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[10px] font-mono text-[var(--ink-2)]">
+              <span className="rounded-full bg-[var(--panel-2)] px-2 py-0.5 text-[0.71875rem] font-mono text-[var(--ink-2)]">
                 System Proof
               </span>
             </div>
@@ -210,7 +210,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono font-bold text-[var(--violet)]">
+                  <span className="text-[0.71875rem] font-mono font-bold text-[var(--violet)]">
                     STEP 0{s.step}
                   </span>
                   <Icon className="w-4 h-4 opacity-80 text-[var(--violet)]" />
@@ -269,7 +269,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
             <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1">
-              <span className="text-[10px] text-[var(--ink-2)] uppercase block">Roundtrip Latency</span>
+              <span className="text-[0.71875rem] text-[var(--ink-2)] uppercase block">Roundtrip Latency</span>
               <div className="text-[var(--ok)] font-bold text-sm flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5" />
                 <span>{activeHealth?.latencyMs !== undefined ? `${activeHealth.latencyMs} ms` : 'Local Host'}</span>
@@ -277,14 +277,14 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
             </div>
 
             <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1">
-              <span className="text-[10px] text-[var(--ink-2)] uppercase block">Evaluation Mode</span>
+              <span className="text-[0.71875rem] text-[var(--ink-2)] uppercase block">Evaluation Mode</span>
               <div className="text-[var(--ink)] font-bold text-sm capitalize">
                 {activeHealth?.evaluation_mode || 'Local Ollama'}
               </div>
             </div>
 
             <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1">
-              <span className="text-[10px] text-[var(--ink-2)] uppercase block">Generator</span>
+              <span className="text-[0.71875rem] text-[var(--ink-2)] uppercase block">Generator</span>
               <div className="text-[var(--accent)] font-bold text-sm truncate flex items-center gap-1.5">
                 <Cpu className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>{activeHealth?.generator_model || 'llama3.2:3b'}</span>
@@ -292,7 +292,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
             </div>
 
             <div className="p-3 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1">
-              <span className="text-[10px] text-[var(--ink-2)] uppercase block">Judge Model</span>
+              <span className="text-[0.71875rem] text-[var(--ink-2)] uppercase block">Judge Model</span>
               <div className="text-[var(--violet)] font-bold text-sm truncate flex items-center gap-1.5">
                 <Cpu className="w-3.5 h-3.5 text-[var(--violet)]" />
                 <span>{activeHealth?.judge_model || 'llama3.2:3b'}</span>
@@ -301,8 +301,8 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
           </div>
 
           {showHealthJson && activeHealth && (
-            <div className="p-3.5 rounded-xl bg-[var(--paper)] border border-[var(--panel-2)] font-mono text-[11px] text-[var(--ok)] overflow-x-auto">
-              <div className="text-[var(--ink-2)] text-[10px] mb-1">// GET http://localhost:8000/api/health</div>
+            <div className="p-3.5 rounded-xl bg-[var(--paper)] border border-[var(--panel-2)] font-mono text-[0.75rem] text-[var(--ok)] overflow-x-auto">
+              <div className="text-[var(--ink-2)] text-[0.71875rem] mb-1">// GET http://localhost:8000/api/health</div>
               <pre>{JSON.stringify(activeHealth, null, 2)}</pre>
             </div>
           )}
@@ -322,25 +322,25 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
         <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs font-mono">
             <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1.5">
-              <span className="text-[10px] text-[var(--ink-2)] uppercase block font-semibold">Stage 1 · Evidence Seed</span>
+              <span className="text-[0.71875rem] text-[var(--ink-2)] uppercase block font-semibold">Stage 1 · Evidence Seed</span>
               <div className="font-bold text-[var(--teal)] text-sm">Corpus &amp; Canonical Truth</div>
-              <p className="text-[11px] text-[var(--ink-2)] font-sans leading-relaxed pt-1">
+              <p className="text-[0.75rem] text-[var(--ink-2)] font-sans leading-relaxed pt-1">
                 Documents are chunked into vector storage. Test cases include immutable canonical gold chunk IDs (<code className="text-[var(--teal)]">chk_gold</code>).
               </p>
             </div>
 
             <div className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--panel-2)] space-y-1.5">
-              <span className="text-[10px] text-[var(--ink-2)] uppercase block font-semibold">Stage 2 · Standard RAG</span>
+              <span className="text-[0.71875rem] text-[var(--ink-2)] uppercase block font-semibold">Stage 2 · Standard RAG</span>
               <div className="font-bold text-[var(--accent)] text-sm">Retriever &rarr; Generator</div>
-              <p className="text-[11px] text-[var(--ink-2)] font-sans leading-relaxed pt-1">
+              <p className="text-[0.75rem] text-[var(--ink-2)] font-sans leading-relaxed pt-1">
                 Top-k chunks retrieved. If retriever omits the gold chunk or catches a distractor/stale chunk, the candidate answer is corrupted.
               </p>
             </div>
 
             <div className="p-4 rounded-xl bg-[var(--violet-tint-2)] border border-[color:color-mix(in_srgb,var(--violet)_40%,transparent)] space-y-1.5 shadow-sm shadow-[color:color-mix(in_srgb,var(--violet)_10%,transparent)]">
-              <span className="text-[10px] text-[var(--violet)] uppercase block font-bold">Stage 3 · Causal Replay</span>
+              <span className="text-[0.71875rem] text-[var(--violet)] uppercase block font-bold">Stage 3 · Causal Replay</span>
               <div className="font-bold text-[var(--violet)] text-sm">Forced Gold Injection</div>
-              <p className="text-[11px] text-[var(--violet)] font-sans leading-relaxed pt-1">
+              <p className="text-[0.75rem] text-[var(--violet)] font-sans leading-relaxed pt-1">
                 RAGSeal isolates the components: re-runs the same query with <strong className="text-[var(--ink)]">only the gold chunk</strong> injected. Proves causality!
               </p>
             </div>
@@ -352,12 +352,12 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
               <span className="text-xs font-mono uppercase tracking-wider text-[var(--ink)] font-semibold">
                 Scientific Verdict Decision Table
               </span>
-              <span className="text-[11px] font-mono text-[var(--ink-2)]">Proven Decoupling Logic</span>
+              <span className="text-[0.75rem] font-mono text-[var(--ink-2)]">Proven Decoupling Logic</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-mono">
-                <thead className="bg-[var(--panel)] text-[var(--ink-2)] uppercase text-[10px] border-b border-[var(--panel-2)]">
+                <thead className="bg-[var(--panel)] text-[var(--ink-2)] uppercase text-[0.71875rem] border-b border-[var(--panel-2)]">
                   <tr>
                     <th className="py-2.5 px-3">Gold Chunk Retrieved?</th>
                     <th className="py-2.5 px-3">Answer Faithful?</th>
@@ -366,7 +366,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
                     <th className="py-2.5 px-3">Engineering Remediation</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--panel-2)] text-[11px]">
+                <tbody className="divide-y divide-[var(--panel-2)] text-[0.75rem]">
                   <tr>
                     <td className="py-3 px-3 text-[var(--ok)]">Yes (Retrieved)</td>
                     <td className="py-3 px-3 text-[var(--ok)]">Yes, Faithful</td>
@@ -426,7 +426,7 @@ export const HowItWorksStory: React.FC<HowItWorksStoryProps> = ({
             </p>
 
             <div className="space-y-2 pt-1">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)] block font-semibold">
+              <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--ink-2)] block font-semibold">
                 Technical Guarantees &amp; Method:
               </span>
               <ul className="space-y-2 text-xs text-[var(--ink-1)] font-mono">

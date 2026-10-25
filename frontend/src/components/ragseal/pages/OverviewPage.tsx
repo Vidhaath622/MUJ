@@ -64,22 +64,22 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ token, health, onOpe
     <div className="flex flex-col">
       {/* The whole idea, told by following one real question through the pipeline */}
       {error && !latest ? (
-        <div className="mx-auto w-full max-w-[1240px] px-6 pt-6">
+        <div className="mx-auto w-full max-w-[77.5rem] 2xl:max-w-[88rem] px-6 pt-6">
           <LoadState loading={false} error={error} what="runs" />
         </div>
       ) : (
         <StartStory token={token} latest={latest} onOpenPack={onOpenPack} onNavigate={onNavigate} />
       )}
 
-      <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-4 px-6 pb-10 pt-6">
+      <div className="mx-auto flex w-full max-w-[77.5rem] 2xl:max-w-[88rem] flex-col gap-4 px-6 pb-10 pt-6">
         <DiagnosisTree fig="Fig. 2" />
         <details className="group rounded-2xl" style={{ background: 'var(--panel)', border: '1px solid var(--rule)' }}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-4">
             <span>
-              <span className="block font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)' }}>
+              <span className="block font-mono text-[0.75rem] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-2)' }}>
                 Fig. 1
               </span>
-              <span className="text-[17px]" style={{ color: 'var(--ink)' }}>
+              <span className="text-[1.125rem]" style={{ color: 'var(--ink)' }}>
                 See the full pipeline: indexing, answering, and where RAGSeal checks it
               </span>
             </span>
@@ -95,7 +95,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ token, health, onOpe
 
         <button
           onClick={() => onNavigate('trust')}
-          className="flex items-center gap-2 self-start text-[13px] transition-opacity hover:opacity-70"
+          className="flex items-center gap-2 self-start text-[0.875rem] transition-opacity hover:opacity-70"
           style={{ color: 'var(--ink-2)' }}
         >
           <ListChecks className="h-4 w-4" /> Why trust the checker? See how it agrees with humans

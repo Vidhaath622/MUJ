@@ -121,7 +121,7 @@ export const GoogleSignInButton: React.FC<Props> = ({ onSignedIn, onError }) => 
 
   if (!CLIENT_ID) return null;
   if (failed) {
-    return <p className="text-center text-[12px] text-[var(--muted)]">Google sign-in couldn’t load. Use email instead.</p>;
+    return <p className="text-center text-[0.8125rem] text-[var(--muted)]">Google sign-in couldn’t load. Use email instead.</p>;
   }
   return <div ref={ref} data-testid="google-signin" className="gsi-host flex min-h-[44px] w-full items-center justify-center overflow-hidden rounded-[10px]" />;
 };

@@ -214,11 +214,11 @@ export const Tour: React.FC<{ enabled: boolean }> = ({ enabled }) => {
         className="tour-card absolute rounded-2xl border border-[var(--rule)] bg-[var(--panel)] p-5 shadow-2xl"
         style={{ ...cardStyle, width: CARD_W }}
       >
-        <div className="text-[12px] text-[var(--ink-2)]">
+        <div className="text-[0.8125rem] text-[var(--ink-2)]">
           Step {step + 1} of {STEPS.length}
         </div>
-        <h3 className="mt-1.5 text-[17px] font-semibold leading-snug text-[var(--ink)]">{current.title}</h3>
-        <p className="mt-2 text-[13px] leading-relaxed text-[var(--ink-1)]">{current.body}</p>
+        <h3 className="mt-1.5 text-[1.125rem] font-semibold leading-snug text-[var(--ink)]">{current.title}</h3>
+        <p className="mt-2 text-[0.875rem] leading-relaxed text-[var(--ink-1)]">{current.body}</p>
         <div className="mt-4 flex items-center justify-between">
           <div className="flex gap-1.5" aria-hidden="true">
             {STEPS.map((_, i) => (
@@ -230,20 +230,20 @@ export const Tour: React.FC<{ enabled: boolean }> = ({ enabled }) => {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={close} className="px-2 py-1 text-[12px] text-[var(--ink-2)] hover:text-[var(--ink)]">
+            <button onClick={close} className="px-2 py-1 text-[0.8125rem] text-[var(--ink-2)] hover:text-[var(--ink)]">
               Skip
             </button>
             {step > 0 && (
               <button
                 onClick={() => setStep(step - 1)}
-                className="rounded-lg border border-[var(--rule)] px-3 py-1.5 text-[12px] text-[var(--ink)] hover:bg-[var(--panel-2)]"
+                className="rounded-lg border border-[var(--rule)] px-3 py-1.5 text-[0.8125rem] text-[var(--ink)] hover:bg-[var(--panel-2)]"
               >
                 Back
               </button>
             )}
             <button
               onClick={() => (step < STEPS.length - 1 ? setStep(step + 1) : close())}
-              className="rounded-lg bg-[var(--ink)] px-3 py-1.5 text-[12px] font-medium text-[var(--paper)]"
+              className="rounded-lg bg-[var(--ink)] px-3 py-1.5 text-[0.8125rem] font-medium text-[var(--paper)]"
             >
               {step < STEPS.length - 1 ? 'Next' : 'Done'}
             </button>

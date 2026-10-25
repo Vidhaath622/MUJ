@@ -134,11 +134,11 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                 <h3 className="text-base font-bold text-[var(--ink)] tracking-tight">
                   Corpus Vault &amp; Chunks Inspector
                 </h3>
-                <Badge variant="outline" size="sm" className="font-mono text-[10px]">
+                <Badge variant="outline" size="sm" className="font-mono text-[0.71875rem]">
                   5 Pre-loaded Documents
                 </Badge>
               </div>
-              <p className="text-[11px] text-[var(--ink-2)] font-mono">
+              <p className="text-[0.75rem] text-[var(--ink-2)] font-mono">
                 Inspect ATS recruitment policy, candidate resumes, and distractor chunks.
               </p>
             </div>
@@ -180,7 +180,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Left: Document List */}
               <div className="space-y-2 md:border-r border-[var(--rule)] md:pr-4">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)] block mb-1">
+                <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--ink-2)] block mb-1">
                   Corpus Documents:
                 </span>
                 {documents.map((doc) => {
@@ -207,7 +207,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                           <Badge variant="success" size="sm">ACTIVE</Badge>
                         )}
                       </div>
-                      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--ink-2)]">
+                      <div className="flex items-center justify-between text-[0.71875rem] font-mono text-[var(--ink-2)]">
                         <span>{doc.filename}</span>
                         <span>{doc.chunk_count} chunks</span>
                       </div>
@@ -223,7 +223,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                     <div className="p-3.5 rounded-xl bg-[var(--panel)] border border-[var(--rule)] mb-3 space-y-1">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-bold text-[var(--ink)]">{currentDoc.title}</h4>
-                        <span className="text-[10px] font-mono text-[var(--ink-2)]">
+                        <span className="text-[0.71875rem] font-mono text-[var(--ink-2)]">
                           id: {currentDoc.document_id}
                         </span>
                       </div>
@@ -233,7 +233,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                       </div>
                     </div>
 
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--ink-2)] block mb-2">
+                    <span className="text-[0.75rem] font-mono uppercase tracking-wider text-[var(--ink-2)] block mb-2">
                       Extracted Chunks ({currentDoc.chunks.length}):
                     </span>
 
@@ -243,7 +243,7 @@ export const DocumentVaultModal: React.FC<DocumentVaultModalProps> = ({
                           key={chk.chunk_id}
                           className="p-3 rounded-lg bg-[var(--paper)] border border-[var(--rule)] space-y-1.5"
                         >
-                          <div className="flex items-center justify-between text-[11px] font-mono">
+                          <div className="flex items-center justify-between text-[0.75rem] font-mono">
                             <span className="text-[var(--teal)] font-semibold bg-[var(--teal-tint)] px-2 py-0.5 rounded border border-[color:color-mix(in_srgb,var(--teal)_40%,transparent)]">
                               {chk.chunk_id}
                             </span>

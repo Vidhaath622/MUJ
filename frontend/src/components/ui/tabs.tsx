@@ -87,7 +87,7 @@ export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>
         {badge !== undefined && (
           <span
             className={cn(
-              'px-1.5 py-0.2 rounded-full text-[10px] font-mono',
+              'px-1.5 py-0.2 rounded-full text-[0.71875rem] font-mono',
               isActive
                 ? 'bg-[var(--accent)] text-[var(--accent)] border border-[color:color-mix(in_srgb,var(--accent)_40%,transparent)]'
                 : 'bg-[var(--panel)] text-[var(--ink-2)]'
