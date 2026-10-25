@@ -64,6 +64,9 @@ class Settings:
     )
     top_k: int = field(default_factory=lambda: int(_env("RAGSEAL_TOP_K", "4")))
     chunk_chars: int = field(default_factory=lambda: int(_env("RAGSEAL_CHUNK_CHARS", "700")))
+    # Characters each chunk repeats from the end of the previous one (text and markdown; 0 = none).
+    # Applies to documents ingested after it is set.
+    chunk_overlap: int = field(default_factory=lambda: int(_env("RAGSEAL_CHUNK_OVERLAP", "0")))
     seed: int = 42
     request_timeout_s: float = field(default_factory=lambda: float(_env("RAGSEAL_TIMEOUT_S", "180")))
     # Cases evaluated at once; a hosted judge with many API keys raises it to two per key (at most 16).

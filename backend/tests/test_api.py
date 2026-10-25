@@ -277,3 +277,17 @@ def test_bot_routes_pass_the_hosts_we_were_reached_on(client, alice, fake_engine
     assert "ragseal.vercel.app" in fake_engine.last_self_hosts and "testserver" in fake_engine.last_self_hosts
     client.post("/api/evaluate/batch", headers=headers, json={"pack_id": "banking", "bot": bot})
     assert "ragseal.vercel.app" in fake_engine.last_self_hosts
+
+
+def test_chunking_lab_runs_in_the_background(client, alice, fake_engine):
+    started = client.post("/api/lab/chunking", headers=alice, json={"pack_id": "banking", "chunk_sizes": [300, 1200, 300], "rerank": [False]})
+    assert started.status_code == 202 and started.json()["configs"] == 4
+    lab_id = started.json()["lab_id"]
+    for _ in range(50):
+        body = client.get(f"/api/lab/chunking/{lab_id}", headers=alice).json()
+        if body["status"] != "running":
+            break
+    assert body["status"] == "done" and len(body["rows"]) == 4 and body["best"]["chunk_chars"] == 1200
+    assert fake_engine.last_lab[1] == (300, 1200)  # duplicates dropped
+    assert client.get("/api/lab/chunking/latest", headers=alice).json()["lab_id"] == lab_id
+    assert client.post("/api/lab/chunking", headers=alice, json={"pack_id": "banking", "modes": ["sparse"]}).status_code == 422

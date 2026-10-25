@@ -24,6 +24,7 @@ from .ingest import ParsedDocument, document_id_for, parse_document
 from .llm import ChatModel, EmbedModel, Judge, JudgeError, ModelUnavailable, build_models
 from .packs import PackError, discover, read_document_bytes, resolve_test_cases
 from .rag import RagSystem
+from .retrieval import RetrievalConfig
 from .store import VectorStore
 from .synth import THIN_CHARS, THIN_WORDS, SyntheticGenerator, has_substance, version_key
 
@@ -89,7 +90,7 @@ class Engine:
         # Interactive calls (live questions, synthetic) may use their own judge; batches use self.judge.
         self.live_judge = live_judge or judge
         self.store = VectorStore(self.settings.data_dir / "vectors.sqlite")
-        self.rag = RagSystem(self.store, generator, embedder, self.settings.top_k)
+        self.rag = RagSystem(self.store, generator, embedder, self.settings.top_k, RetrievalConfig.from_env(), reranker=self.judge)
         self.evaluator = Evaluator(self.store, self.rag, self.judge)
         self.live_evaluator = Evaluator(self.store, self.rag, self.live_judge)
         self.synth = SyntheticGenerator(self.live_judge, self.rag)
@@ -154,7 +155,7 @@ class Engine:
             self.store.replace_embeddings(owner_id, document_id, {c.chunk_id: v for c, v in zip(chunks, vectors)}, self.embedder.key)
 
     def ingest(self, owner_id: str, filename: str, data: bytes, pack_id: str | None = None) -> dict:
-        doc = parse_document(filename, data, self.settings.chunk_chars)
+        doc = parse_document(filename, data, self.settings.chunk_chars, self.settings.chunk_overlap)
         stored = self._embed_and_store(owner_id, doc, pack_id)
         return {
             "document_id": doc.document_id,
@@ -454,7 +455,7 @@ class Engine:
         document_ids = []
         for entry in spec.documents:
             filename, data = read_document_bytes(spec, entry)
-            doc = parse_document(filename, data, self.settings.chunk_chars)
+            doc = parse_document(filename, data, self.settings.chunk_chars, self.settings.chunk_overlap)
             docs_by_file[filename] = doc
             document_ids.append(doc.document_id)
             if not self.store.has_document(owner_id, doc.document_id):
@@ -793,6 +794,87 @@ class Engine:
         return run_stability(self, owner_id, batch, pools, shuffles=shuffles, max_cases=max_cases, progress=progress)
 
     # ------------------------------------------------------- RAG versions
+
+    # ------------------------------------------------------ chunking lab
+
+    def chunking_lab(
+        self,
+        owner_id: str,
+        pack_id: str,
+        chunk_sizes: tuple[int, ...] = (300, 700, 1200),
+        modes: tuple[str, ...] = ("dense", "hybrid"),
+        rerank_options: tuple[bool, ...] = (False, True),
+        k: int = 4,
+        overlap: int = 0,
+        progress: Callable[[int, int, int], None] | None = None,
+    ) -> dict:
+        """Retrieval only, across chunk sizes x dense/hybrid x rerank: no generator, no answer judging
+        (rerank configs make one judge call per question). For every question with gold quotes:
+
+          context recall@k  share of its gold quotes found in the top-k chunks' text
+          MRR               1 / rank of the first chunk that holds a gold quote (0 if none)
+
+        Each chunk size is ingested under its own lab owner, so real documents are never touched.
+        Returns one row per config and the best one (highest recall, then MRR, then the cheaper config).
+        """
+        from .connector import covers
+
+        spec = self._pack(pack_id)
+        cases = [c for c in spec.test_cases if c.get("gold") and c.get("type", "factoid") != "unanswerable"]
+        if not cases:
+            raise ValueError(f"pack {pack_id} has no questions with gold quotes")
+        configs = [RetrievalConfig(mode=m, rerank=r) for m in modes for r in rerank_options]
+        total, done = len(chunk_sizes) * len(configs) * len(cases), 0
+        rows = []
+        for size in chunk_sizes:
+            lab_owner = f"lab:{owner_id}:{size}:{overlap}"
+            document_ids, lengths = [], []
+            for entry in spec.documents:
+                filename, data = read_document_bytes(spec, entry)
+                doc = parse_document(filename, data, size, overlap)
+                document_ids.append(doc.document_id)
+                lengths += [len(c.text) for c in doc.chunks]
+                if not self.store.has_document(lab_owner, doc.document_id):
+                    self._embed_and_store(lab_owner, doc, pack_id)
+            for config in configs:
+                recalls, ranks = [], []
+                started = time.perf_counter()
+                for case in cases:
+                    retrieved = [s.chunk.text for s in self.rag.retrieve(lab_owner, case["question"], document_ids, k, config)]
+                    quotes = [g["quote"] for g in case["gold"]]
+                    context = "\n\n".join(retrieved)
+                    recalls.append(sum(covers(context, q) for q in quotes) / len(quotes))
+                    first = next((i for i, text in enumerate(retrieved, start=1) if any(covers(text, q) for q in quotes)), None)
+                    ranks.append(1 / first if first else 0.0)
+                    done += 1
+                    if progress:
+                        progress(done, total, 0)
+                rows.append({
+                    "chunk_chars": size,
+                    "overlap": overlap,
+                    "mode": config.mode,
+                    "rerank": config.rerank,
+                    "label": f"{size} chars, {config.label}",
+                    f"context_recall_at_{k}": round(sum(recalls) / len(recalls), 3),
+                    "mrr": round(sum(ranks) / len(ranks), 3),
+                    "questions_fully_covered": sum(r == 1 for r in recalls),
+                    "chunks": len(lengths),
+                    "avg_chunk_chars": round(sum(lengths) / len(lengths)) if lengths else 0,
+                    "ms_per_question": round((time.perf_counter() - started) * 1000 / len(cases)),
+                    "rerank_calls": len(cases) if config.rerank else 0,
+                })
+        recall_key = f"context_recall_at_{k}"
+        best = max(rows, key=lambda r: (r[recall_key], r["mrr"], not r["rerank"], r["mode"] == "dense", -r["chunk_chars"]))
+        return {
+            "pack_id": pack_id,
+            "k": k,
+            "questions": len(cases),
+            "metric": recall_key,
+            "rows": rows,
+            "best": best,
+            "note": "Retrieval only: no answers are generated or judged. Recall counts a gold quote as found when the "
+                    "top-k text covers it (all its figures and most of its words).",
+        }
 
     def profiles(self) -> list[dict]:
         from .compare import PROFILES
