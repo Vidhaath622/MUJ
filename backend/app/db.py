@@ -7,6 +7,7 @@ row-order tie-breaker (SQLite's implicit rowid becomes an explicit seq column).
 
 from __future__ import annotations
 
+import atexit
 import json
 import sqlite3
 import time
@@ -19,8 +20,9 @@ TABLES = {
     "users": """
         id TEXT PRIMARY KEY,
         email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        created_at TEXT NOT NULL""",
+        password_hash TEXT,
+        created_at TEXT NOT NULL,
+        google_sub TEXT UNIQUE""",
     "runs": """
         batch_id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id),
@@ -160,8 +162,17 @@ class Database:
                 check=ConnectionPool.check_connection,  # Neon closes idle connections
                 open=True,
             )
+            if not Database._pools:
+                atexit.register(Database.close_pools)
             Database._pools[self.url] = pool
         return pool
+
+    @staticmethod
+    def close_pools() -> None:
+        """Close pooled connections before the interpreter tears its threads down."""
+        for pool in Database._pools.values():
+            pool.close()
+        Database._pools.clear()
 
     @property
     def backend(self) -> str:
@@ -172,12 +183,25 @@ class Database:
         if self.d.postgres:
             conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'done'")
             conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS error TEXT")
+            conn.execute("ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL")
+            conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub TEXT")
+            conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub ON users(google_sub)")
             return
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(runs)")}
         if "status" not in columns:
             conn.execute("ALTER TABLE runs ADD COLUMN status TEXT NOT NULL DEFAULT 'done'")
         if "error" not in columns:
             conn.execute("ALTER TABLE runs ADD COLUMN error TEXT")
+        users = {row["name"]: row for row in conn.execute("PRAGMA table_info(users)")}
+        if "google_sub" not in users or users["password_hash"]["notnull"]:
+            # SQLite cannot drop NOT NULL in place, so rebuild the users table with the same rows.
+            # Build users_new, copy, drop users, then rename: the order SQLite documents, which keeps
+            # the foreign keys in runs, labels and the other tables pointing at "users".
+            keep = "id, email, password_hash, created_at" + (", google_sub" if "google_sub" in users else "")
+            conn.execute(self.d.create_table("users").replace("EXISTS users (", "EXISTS users_new (", 1))
+            conn.execute(f"INSERT INTO users_new ({keep}) SELECT {keep} FROM users")
+            conn.execute("DROP TABLE users")
+            conn.execute("ALTER TABLE users_new RENAME TO users")
 
     @contextmanager
     def _connect(self):
@@ -205,10 +229,35 @@ class Database:
             )
         return user
 
-    def user_by_email(self, email: str) -> tuple[User, str] | None:
+    def user_by_email(self, email: str) -> tuple[User, str | None] | None:
+        """(user, password hash); the hash is None for accounts that only sign in with Google."""
         with self._connect() as conn:
             row = conn.execute("SELECT id, email, password_hash FROM users WHERE email = ?", (email,)).fetchone()
         return (User(row["id"], row["email"]), row["password_hash"]) if row else None
+
+    def user_by_google_sub(self, sub: str) -> User | None:
+        with self._connect() as conn:
+            row = conn.execute("SELECT id, email FROM users WHERE google_sub = ?", (sub,)).fetchone()
+        return User(row["id"], row["email"]) if row else None
+
+    def google_sub_of(self, user_id: str) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute("SELECT google_sub FROM users WHERE id = ?", (user_id,)).fetchone()
+        return row["google_sub"] if row else None
+
+    def create_google_user(self, email: str, sub: str) -> User:
+        """A user who signs in with Google only: no password."""
+        user = User(id="usr_" + uuid.uuid4().hex[:12], email=email)
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO users (id, email, password_hash, created_at, google_sub) VALUES (?, ?, NULL, ?, ?)",
+                (user.id, email, utc_now(), sub),
+            )
+        return user
+
+    def link_google(self, user_id: str, sub: str) -> None:
+        with self._connect() as conn:
+            conn.execute("UPDATE users SET google_sub = ? WHERE id = ?", (sub, user_id))
 
     def user_by_id(self, user_id: str) -> User | None:
         with self._connect() as conn:

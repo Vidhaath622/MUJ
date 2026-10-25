@@ -22,6 +22,8 @@ class AppSettings:
     token_ttl_hours: int = 72
     # Postgres connection string (for example a Neon database); empty means the local SQLite file.
     database_url: str | None = None
+    # OAuth client ID for Google Sign-In; empty means POST /api/auth/google answers 503.
+    google_client_id: str | None = None
 
     @property
     def db_path(self) -> Path:
@@ -55,4 +57,5 @@ def load_settings() -> AppSettings:
         jwt_secret=_jwt_secret(data_dir),
         cors_origins=origins,
         database_url=(os.environ.get("DATABASE_URL") or "").strip() or None,
+        google_client_id=(os.environ.get("GOOGLE_CLIENT_ID") or "").strip() or None,
     )
