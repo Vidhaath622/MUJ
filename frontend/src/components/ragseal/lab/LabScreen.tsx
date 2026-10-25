@@ -3,10 +3,11 @@ import { ArrowLeft, Loader2, Play } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { failureLabel } from '../shared/taxonomy';
 import { PackId } from '../../../types/ragseal';
+import { usePacks } from '../shared/packs';
 import { CaseReport } from './CaseReport';
 import { CountUp } from './motion';
 import { isExternalRun, LabCase, LabRun, useLabData } from './useLabData';
-import { SampleBadge } from '../shared/ui';
+import { PACK_LABEL, SampleBadge } from '../shared/ui';
 import { AMBER, pct, tint, VERDICT_ORDER, VERDICTS, verdictStyle } from './verdict';
 
 interface LabScreenProps {
@@ -18,17 +19,15 @@ interface LabScreenProps {
 
 const AD_HOC = '__ad_hoc__';
 
-const PACK_NAME: Record<string, string> = {
-  recruitment: 'Recruitment',
-  banking: 'Banking',
-  healthcare: 'Healthcare',
-};
+// Every pack the backend serves, kept current by shared/packs.ts.
+const PACK_NAME = PACK_LABEL;
 
 /**
  * Single-screen Lab: pick a test question on the left, read the diagnosis on the
  * right. Everything shown comes from the backend; nothing is mocked.
  */
 export const LabScreen: React.FC<LabScreenProps> = ({ packId, token, batchId }) => {
+  usePacks(); // re-render with the backend's pack names once they load
   const lab = useLabData(packId, token, batchId);
   const [selected, setSelected] = useState<string | null>(null);
   const [userPicked, setUserPicked] = useState(false);

@@ -4,6 +4,7 @@ import { PackId } from '../../../types/ragseal';
 import { loadPackBackend } from '../../../lib/api';
 import { RunSummary } from '../shared/apiExtra';
 import { PACKS } from '../shared/ui';
+import { usePacks } from '../shared/packs';
 import { easeInOut, easeOut, seg, usePrefersReducedMotion, useScrollStory } from './useScrollStory';
 
 // "Follow one question": a scroll-driven walk through one real failed case from the latest
@@ -690,7 +691,9 @@ const Outro: React.FC<{
   onOpenPack: (p: PackId) => void;
   onNavigate: (r: Route) => void;
   style: React.CSSProperties;
-}> = ({ latest, onOpenPack, onNavigate, style }) => (
+}> = ({ latest, onOpenPack, onNavigate, style }) => {
+  const more = usePacks().filter((p) => !PACKS.some((q) => q.id === p.id));
+  return (
   <div className="flex items-center justify-center px-8" style={style}>
     <div className="flex w-full max-w-[1100px] flex-col gap-6">
       <div>
@@ -742,6 +745,19 @@ const Outro: React.FC<{
           );
         })}
       </div>
+      {more.length > 0 && (
+        <p className="-mt-2 text-[13px] leading-relaxed" style={{ color: 'var(--ink-2)' }}>
+          Plus {more.length} more test packs, including{' '}
+          {more
+            .slice(0, 4)
+            .map((p) => p.label)
+            .join(', ')}
+          .{' '}
+          <button onClick={() => onNavigate('runs')} className="underline underline-offset-2 hover:text-[var(--ink)]">
+            Run any of them →
+          </button>
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Cta icon={<MessagesSquare className="h-5 w-5" />} title="Try a chatbot" body="Ask anything and watch each reply get X-rayed." onClick={() => onNavigate('bots')} primary />
         <Cta icon={<ScanSearch className="h-5 w-5" />} title="Diagnose answers" body="Open any wrong answer and its replay proof." onClick={() => onNavigate('diagnose')} />
@@ -749,7 +765,8 @@ const Outro: React.FC<{
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const Cta: React.FC<{ icon: React.ReactNode; title: string; body: string; onClick: () => void; primary?: boolean }> = ({ icon, title, body, onClick, primary }) => (
   <button

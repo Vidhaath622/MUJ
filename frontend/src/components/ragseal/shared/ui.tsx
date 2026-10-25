@@ -1,8 +1,9 @@
 import React from 'react';
-import { Loader2, PlugZap } from 'lucide-react';
+import { ChevronDown, Loader2, PlugZap } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { PackId } from '../../../types/ragseal';
 import { NotAvailable } from './apiExtra';
+import { PACK_GROUPS, PACK_NAMES, PackOption, usePacks } from './packs';
 
 // Small building blocks shared by every page, in the Lab's visual language.
 
@@ -19,7 +20,8 @@ export const ALL_PACKS: { id: PackId; label: string }[] = [
   { id: 'ragseal', label: 'RAGSeal guide' },
 ];
 
-export const PACK_LABEL: Record<string, string> = Object.fromEntries(ALL_PACKS.map((p) => [p.id, p.label]));
+/** Display names by pack id; every pack the backend serves once the list has loaded (shared/packs.ts). */
+export const PACK_LABEL: Record<string, string> = PACK_NAMES;
 
 export const Panel: React.FC<{
   title?: React.ReactNode;
@@ -62,30 +64,72 @@ export const Metric: React.FC<{
   </div>
 );
 
+/** Tabs fit a handful of packs; past this many the switcher becomes a grouped menu. */
+const MAX_TABS = 6;
+
 export const PackSwitcher: React.FC<{
   value: PackId;
   onChange: (p: PackId) => void;
+  /** A fixed list; omitted, the switcher offers every pack the backend serves. */
   packs?: { id: PackId; label: string }[];
-}> = ({ value, onChange, packs = PACKS }) => (
-  <div className="flex max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-[10px] border border-[var(--panel-2)] p-[3px] text-xs sm:text-[13px] no-scrollbar" role="tablist">
-    {packs.map((p) => (
-      <button
-        key={p.id}
-        role="tab"
-        aria-selected={value === p.id}
-        onClick={() => onChange(p.id)}
-        className={cn(
-          'shrink-0 whitespace-nowrap rounded-[7px] px-2.5 sm:px-3 py-1 sm:py-[5px] transition-colors',
-          value === p.id
-            ? 'bg-[var(--panel-2)] text-[var(--ink)] shadow-[inset_0_1px_0_rgba(27,27,24,0.06)]'
-            : 'text-[var(--ink-2)] hover:text-[var(--ink)]'
-        )}
+}> = ({ value, onChange, packs }) => {
+  const all = usePacks();
+  const options: (PackOption | { id: PackId; label: string; group?: string; questions?: number })[] = packs ?? all;
+  if (options.length > MAX_TABS) return <PackMenu value={value} onChange={onChange} options={options} />;
+  return (
+    <div className="flex max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-[10px] border border-[var(--panel-2)] p-[3px] text-xs sm:text-[13px] no-scrollbar" role="tablist">
+      {options.map((p) => (
+        <button
+          key={p.id}
+          role="tab"
+          aria-selected={value === p.id}
+          onClick={() => onChange(p.id)}
+          className={cn(
+            'shrink-0 whitespace-nowrap rounded-[7px] px-2.5 sm:px-3 py-1 sm:py-[5px] transition-colors',
+            value === p.id
+              ? 'bg-[var(--panel-2)] text-[var(--ink)] shadow-[inset_0_1px_0_rgba(27,27,24,0.06)]'
+              : 'text-[var(--ink-2)] hover:text-[var(--ink)]'
+          )}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+/** The grouped form of PackSwitcher: a native select (keyboard and screen-reader friendly) dressed like the tabs. */
+const PackMenu: React.FC<{
+  value: PackId;
+  onChange: (p: PackId) => void;
+  options: { id: PackId; label: string; group?: string; questions?: number }[];
+}> = ({ value, onChange, options }) => {
+  const groups = PACK_GROUPS.map((g) => ({ g, items: options.filter((o) => (o.group ?? 'Other') === g) })).filter((x) => x.items.length);
+  const known = options.some((o) => o.id === value);
+  return (
+    <label className="relative flex shrink-0 items-center rounded-[10px] border border-[var(--panel-2)] text-xs sm:text-[13px]">
+      <span className="sr-only">Test pack</span>
+      <select
+        value={known ? value : ''}
+        onChange={(e) => onChange(e.target.value as PackId)}
+        className="h-[32px] max-w-[300px] cursor-pointer appearance-none truncate rounded-[10px] bg-transparent pl-3 pr-8 text-[var(--ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--rule-3)]"
       >
-        {p.label}
-      </button>
-    ))}
-  </div>
-);
+        {!known && <option value="">Choose a pack</option>}
+        {groups.map(({ g, items }) => (
+          <optgroup key={g} label={g}>
+            {items.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}
+                {o.questions != null ? ` · ${o.questions} questions` : ''}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2.5 h-3.5 w-3.5 text-[var(--ink-2)]" />
+    </label>
+  );
+};
 
 export const PrimaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { busy?: boolean }> = ({
   busy,
