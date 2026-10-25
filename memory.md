@@ -130,6 +130,9 @@
 | `2026-10-24 18:05` | Full Repo Merge & Real Backend Live | Merged `sarthak/docs-brief`, `sarthak/core-engine`, and `sarthak/backend-api` cleanly into `main`. Spawned FastAPI backend on port 8000. Connected Tab 1 (Lab) and Tab 2 (How It Works) to `http://localhost:8000`. Auto-login and health polling verified. Pushed commit `7e25811` to `origin/main` and `origin/vidhaath/ui-frontend`. |
 | `2026-10-25 11:00` | Team Role & DB Protocol Locked | Vidhaath designated owner of Neon Postgres provisioning, secret dispatch via private DM to Sarthak, `frontend/src/lib/api.ts` API client ownership, and GitHub PR merge gating. |
 | `2026-10-25 11:06` | Merged PR #16 & #17 | Merged PR #16 (`frontend/vercel.json` Cloudflare tunnel refresh) and PR #17 (Backend Neon Postgres support + one-shot SQLite migration script `migrate_sqlite_to_postgres.py`). Pulled into local `main`. |
+| `2026-10-25 13:46` | Merged PR #28 | Merged PR #28 (`sarthak/all-groq-keys` into `main`) enabling arbitrary number of Groq API keys (`GROQ_API_KEY_<n>`) for judge concurrency. |
+| `2026-10-25 14:00` | Mobile & Tablet Layout Audit & Fixes | Fixed mobile and tablet responsive layouts across all 11 views: added slide-in drawer for navigation, responsive header & scrollable pack switcher, segmented mobile views for LabScreen and BotsPage (Chat vs X-ray), table horizontal scrolling wrapper, and responsive card grids. Pushed commit `882e8ad` to `main` for Vercel deployment. |
+
 
 ---
 
