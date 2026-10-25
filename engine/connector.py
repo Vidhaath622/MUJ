@@ -17,6 +17,7 @@ unless explicitly allowed (RAGSEAL_ALLOW_PRIVATE_BOT_URLS=1 for local developmen
 from __future__ import annotations
 
 import ipaddress
+import os
 import re
 import socket
 import time
@@ -86,6 +87,25 @@ def check_url(url: str, allow_private: bool = False) -> None:
             )
 
 
+BUILTIN_PATH = "/api/bots/builtin"
+
+
+def is_own_builtin_url(url: str, self_hosts: tuple[str, ...] = ()) -> bool:
+    """Is this URL RAGSeal's own reference bot? Its path on one of our hosts: localhost, the hosts
+    in RAGSEAL_PUBLIC_URL (comma-separated, e.g. https://ragseal.vercel.app), or `self_hosts`
+    (the host the current request came in on)."""
+    parts = urlsplit(url)
+    if not parts.hostname or parts.path.rstrip("/") != BUILTIN_PATH:
+        return False
+    public = []
+    for item in os.environ.get("RAGSEAL_PUBLIC_URL", "").split(","):
+        item = item.strip()
+        if item:
+            public.append(urlsplit(item if "://" in item else "https://" + item).hostname)
+    hosts = {"localhost", "127.0.0.1", "::1", *(h.lower() for h in public if h), *(h.lower() for h in self_hosts if h)}
+    return parts.hostname.lower() in hosts
+
+
 _SEGMENT = re.compile(r"([^.\[\]]+)|\[(\*|\d+)\]")
 
 
@@ -114,10 +134,16 @@ def resolve_path(data, path: str):
 
 
 class ExternalBot:
-    def __init__(self, config: BotConfig, client: httpx.Client | None = None, allow_private: bool = False):
+    def __init__(self, config: BotConfig, client: httpx.Client | None = None, allow_private: bool = False, source: str = "external"):
+        """`source` says who really answers: "external" (the user's endpoint over HTTP) or
+        "builtin_via_connector" (RAGSeal's own reference bot, called in-process through this adapter)."""
         check_url(config.url, allow_private)
         self.config = config
+        self.source = source
         self._client = client or httpx.Client(timeout=config.timeout_s, follow_redirects=False)
+
+    def public(self) -> dict:
+        return {**self.config.public(), "in_process": self.source != "external"}
 
     def ask(self, question: str, contexts: list[str] | None = None) -> BotReply:
         payload = {self.config.question_field: question}

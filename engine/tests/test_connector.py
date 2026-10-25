@@ -5,7 +5,7 @@ import httpx
 import pytest
 
 from engine.config import Settings
-from engine.connector import BotConfig, BotError, ExternalBot, check_url, covers, resolve_path
+from engine.connector import BotConfig, BotError, ExternalBot, check_url, covers, is_own_builtin_url, resolve_path
 from engine.service import Engine
 
 from .fakes import FakeEmbedder, FakeGenerator, FakeJudge
@@ -116,7 +116,7 @@ def test_batch_with_bot_and_its_concurrency_cap(engine):
     doc = engine.ingest("u", "policy.md", POLICY)
     client, calls = mock_bot(lambda q, ctx: "Employees receive 20 days paid leave per year.", lambda q: [LEAVE])
     original = engine.external_bot
-    engine.external_bot = lambda config, client_=None: original(config, client=client)
+    engine.external_bot = lambda config, **_: original(config, client=client)
     batch = engine.evaluate_batch("u", [doc["document_id"]], [
         {"test_id": f"t{i}", "question": "How many days paid leave per calendar year?", "ground_truth_answer": "20 days",
          "gold_chunk_ids": [doc["chunks"][0]["chunk_id"]], "context_snippet": LEAVE} for i in range(3)
@@ -140,3 +140,39 @@ def test_test_bot_round_trip_and_override_check(engine):
     assert failed["ok"] is False and "HTTP 500" in failed["errors"][0]
     with pytest.raises(ValueError, match="unknown bot settings"):
         engine.test_bot(CONFIG | {"verify": False})
+
+
+def test_own_builtin_url_is_recognised(monkeypatch):
+    monkeypatch.setenv("RAGSEAL_PUBLIC_URL", "ragseal.vercel.app, https://demo.example.org")
+    assert is_own_builtin_url("http://localhost:8000/api/bots/builtin?pack_id=banking")
+    assert is_own_builtin_url("https://ragseal.vercel.app/api/bots/builtin?pack_id=banking")
+    assert is_own_builtin_url("https://demo.example.org/api/bots/builtin/")
+    assert is_own_builtin_url("https://abc.trycloudflare.com/api/bots/builtin", ("abc.trycloudflare.com",))
+    assert not is_own_builtin_url("https://abc.trycloudflare.com/api/bots/builtin")  # not one of ours
+    assert not is_own_builtin_url("https://ragseal.vercel.app/api/bots/test")
+    assert not is_own_builtin_url("https://bot.example.com/api/bots/builtin")
+
+
+def test_our_sample_bot_is_answered_in_process_and_says_so(engine):
+    doc = engine.ingest("u", "policy.md", POLICY)
+    engine.generator.answers["How many days paid leave per calendar year?"] = "Employees receive 20 days paid leave per year."
+    config = {"url": f"https://ragseal.vercel.app/api/bots/builtin?document_ids={doc['document_id']}",
+              "headers": {"Authorization": "Bearer user-token"}, "accepts_contexts": True}
+    bot = engine.external_bot(config, owner_id="u", self_hosts=("ragseal.vercel.app",))
+    assert bot.source == "builtin_via_connector" and bot.public()["in_process"] is True
+    reply = bot.ask("How many days paid leave per calendar year?")
+    assert "20 days" in reply.answer and any("20 days paid leave" in c for c in reply.contexts)
+    assert bot.ask("Anything?", contexts=["Only this passage."]).contexts == ["Only this passage."]
+
+    from engine.evaluate import Evaluator
+    from engine.service import _case_from_dict
+
+    case = _case_from_dict({"question": "How many days paid leave per calendar year?", "ground_truth_answer": "20 days",
+                            "gold_chunk_ids": [doc["chunks"][0]["chunk_id"]], "context_snippet": LEAVE})
+    result = Evaluator(engine.store, engine.rag, engine.judge).evaluate("u", case, [doc["document_id"]], bot=bot)
+    assert result["answer_source"] == "builtin_via_connector" and result["root_cause"]["category"] == "CLEAN_PASS"
+    assert "user-token" not in json.dumps(result)
+    out = engine.test_bot(config, "How many days paid leave per calendar year?", owner_id="u", self_hosts=("ragseal.vercel.app",))
+    assert out["ok"] and out["bot"]["in_process"] is True and out["n_contexts"] >= 1
+    missing = engine.test_bot({**config, "url": "http://localhost/api/bots/builtin?document_ids=nope"}, "Q?", owner_id="u")
+    assert missing["ok"] is False and "HTTP 404" in missing["errors"][0]

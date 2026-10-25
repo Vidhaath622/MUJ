@@ -268,3 +268,12 @@ def test_builtin_reference_bot(client, alice, fake_engine):
     assert out["answer"] == "answer to q?" and out["contexts"] == ["retrieved"]
     given = client.post("/api/bots/builtin", headers=alice, json={"question": "q?", "contexts": ["only this"]}).json()
     assert given["contexts"] == ["only this"]
+
+
+def test_bot_routes_pass_the_hosts_we_were_reached_on(client, alice, fake_engine):
+    bot = {"url": "https://ragseal.vercel.app/api/bots/builtin?pack_id=banking"}
+    headers = {**alice, "X-Forwarded-Host": "ragseal.vercel.app"}
+    assert client.post("/api/bots/test", headers=headers, json={"bot": bot}).status_code == 200
+    assert "ragseal.vercel.app" in fake_engine.last_self_hosts and "testserver" in fake_engine.last_self_hosts
+    client.post("/api/evaluate/batch", headers=headers, json={"pack_id": "banking", "bot": bot})
+    assert "ragseal.vercel.app" in fake_engine.last_self_hosts

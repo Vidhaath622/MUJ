@@ -270,8 +270,8 @@ class Evaluator:
             "gold_retrieved": gold_retrieved,
             "replay": replay,
             "replay_status": replay_status,  # "ran" | "not_needed" | "unavailable" (bot takes no contexts) | "failed"
-            "answer_source": "external" if bot is not None else "builtin",
-            **({"bot": bot.config.public()} if bot is not None else {}),
+            "answer_source": bot.source if bot is not None else "builtin",
+            **({"bot": bot.public()} if bot is not None else {}),
             **self.judge.used(),
             "generator_model": self.rag.generator_model,
             "generation_ms": gen_ms,

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from ..db import User
-from ..deps import get_current_user, get_engine
+from ..deps import get_current_user, get_engine, request_hosts
 from ..engine_bridge import Engine
 from ..schemas import BotTestRequest, BuiltinBotRequest
 
@@ -13,9 +13,13 @@ router = APIRouter(prefix="/bots", tags=["bots"])
 
 
 @router.post("/test")
-def test_bot(body: BotTestRequest, user: User = Depends(get_current_user), engine: Engine = Depends(get_engine)) -> dict:
-    """One sample question round trip (with latency), plus a check of the contexts override if the bot claims one."""
-    return engine.test_bot(body.bot.model_dump(), body.question)
+def test_bot(
+    body: BotTestRequest, request: Request, user: User = Depends(get_current_user), engine: Engine = Depends(get_engine)
+) -> dict:
+    """One sample question round trip (with latency), plus a check of the contexts override if the bot claims one.
+
+    Our own /api/bots/builtin URL is answered in-process for this user (bot.in_process = true)."""
+    return engine.test_bot(body.bot.model_dump(), body.question, owner_id=user.id, self_hosts=request_hosts(request))
 
 
 @router.post("/builtin")
