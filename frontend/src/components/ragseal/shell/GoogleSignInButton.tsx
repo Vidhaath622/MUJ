@@ -47,21 +47,44 @@ function friendly(err: unknown): string {
 interface Props {
   onSignedIn: (user: AuthUser, token: string) => void;
   onError: (message: string | null) => void;
-  /** Pixel width of the button; GIS accepts 200–400. */
-  width?: number;
 }
 
-/** Renders nothing when VITE_GOOGLE_CLIENT_ID is unset, so the sign-in screens stay as they were. */
-export const GoogleSignInButton: React.FC<Props> = ({ onSignedIn, onError, width = 380 }) => {
+/** Follows the site theme, so the button is re-rendered dark or light when the toggle flips. */
+function useSiteTheme(): 'dark' | 'light' {
+  const read = () => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+  const [theme, setTheme] = useState<'dark' | 'light'>(read);
+  useEffect(() => {
+    const mo = new MutationObserver(() => setTheme(read()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => mo.disconnect();
+  }, []);
+  return theme;
+}
+
+/**
+ * Renders nothing when VITE_GOOGLE_CLIENT_ID is unset, so the sign-in screens stay as they were.
+ * The button takes the full width of its box (GIS allows 200–400 px) and sits flush: the host is
+ * light colour-scheme, see .gsi-host in index.css.
+ */
+export const GoogleSignInButton: React.FC<Props> = ({ onSignedIn, onError }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const [width, setWidth] = useState(0);
+  const theme = useSiteTheme();
   const handlers = useRef({ onSignedIn, onError });
   handlers.current = { onSignedIn, onError };
 
   useEffect(() => {
-    if (!CLIENT_ID) return;
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setWidth(Math.round(entry.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!CLIENT_ID || !width) return;
     let cancelled = false;
-    const theme = document.documentElement.dataset.theme === 'dark' ? 'filled_black' : 'outline';
     loadGsi()
       .then(() => {
         if (cancelled || !ref.current || !window.google) return;
@@ -79,9 +102,10 @@ export const GoogleSignInButton: React.FC<Props> = ({ onSignedIn, onError, width
             }
           },
         });
+        ref.current.replaceChildren();
         window.google.accounts.id.renderButton(ref.current, {
           type: 'standard',
-          theme,
+          theme: theme === 'dark' ? 'filled_black' : 'outline',
           size: 'large',
           text: 'continue_with',
           shape: 'rectangular',
@@ -93,13 +117,13 @@ export const GoogleSignInButton: React.FC<Props> = ({ onSignedIn, onError, width
     return () => {
       cancelled = true;
     };
-  }, [width]);
+  }, [width, theme]);
 
   if (!CLIENT_ID) return null;
   if (failed) {
     return <p className="text-center text-[12px] text-[var(--muted)]">Google sign-in couldn’t load. Use email instead.</p>;
   }
-  return <div ref={ref} data-testid="google-signin" className="flex min-h-[44px] w-full justify-center" />;
+  return <div ref={ref} data-testid="google-signin" className="gsi-host flex min-h-[44px] w-full items-center justify-center overflow-hidden rounded-[10px]" />;
 };
 
 export const googleSignInEnabled = Boolean(CLIENT_ID);

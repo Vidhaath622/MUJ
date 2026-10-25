@@ -284,3 +284,50 @@
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+
+/* Sign-in story (shell/SignInTrace.tsx): drifting grid, slow glows, packets, ticks and the verdict stamp. */
+.trace-grid {
+  position: absolute;
+  inset: -48px;
+  background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--ink) 16%, transparent) 1px, transparent 0);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 45% 55%, #000 25%, transparent 80%);
+  mask-image: radial-gradient(ellipse 70% 60% at 45% 55%, #000 25%, transparent 80%);
+  animation: trace-drift 22s linear infinite;
+}
+@keyframes trace-drift { to { transform: translate3d(24px, 24px, 0); } }
+.trace-glow { position: absolute; width: 560px; height: 560px; border-radius: 9999px; will-change: transform; }
+.trace-glow-ok {
+  left: -120px; top: 30%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--ok) 13%, transparent), transparent 62%);
+  animation: trace-float-a 19s ease-in-out infinite alternate;
+}
+.trace-glow-retr {
+  right: -180px; top: 5%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--retr) 10%, transparent), transparent 62%);
+  animation: trace-float-b 23s ease-in-out infinite alternate;
+}
+@keyframes trace-float-a { to { transform: translate3d(90px, -60px, 0) scale(1.08); } }
+@keyframes trace-float-b { to { transform: translate3d(-70px, 80px, 0) scale(0.94); } }
+.trace-run-down { left: 116px; top: 44px; animation: trace-run-down 650ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.trace-run-across { left: 238px; top: 155px; animation: trace-run-across 650ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+@keyframes trace-run-down { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(22px); } }
+@keyframes trace-run-across { 0% { opacity: 0; transform: translateX(0); } 20% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(38px); } }
+.trace-tick { stroke-dasharray: 1; animation: signin-draw 380ms ease-out 120ms both; }
+.trace-stamp { animation: trace-stamp 620ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes trace-stamp {
+  0% { opacity: 0; transform: scale(1.35) rotate(-14deg); }
+  60% { opacity: 1; transform: scale(0.96) rotate(-6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-7deg); }
+}
+
+/* Sign-in form: each block rises in turn; inputs glow softly on focus. */
+@keyframes signin-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.signin-rise { animation: signin-rise 560ms cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 70ms + 120ms); }
+.signin-input:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+/* Google's button is an iframe; matching its colour scheme stops Chrome painting a white box behind it. */
+.gsi-host, .gsi-host iframe { color-scheme: light; }
+@media (prefers-reduced-motion: reduce) {
+  .trace-grid, .trace-glow, .trace-run-down, .trace-run-across, .trace-tick, .trace-stamp, .signin-rise { animation: none; }
+  .trace-tick { stroke-dashoffset: 0; }
+}
