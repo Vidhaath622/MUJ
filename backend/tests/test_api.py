@@ -118,13 +118,13 @@ def test_batch_saves_run_and_lists_it(client, alice, bob):
 
     runs = client.get("/api/runs", headers=alice).json()
     assert [r["batch_id"] for r in runs] == [second["batch_id"], first["batch_id"]]
-    assert set(runs[0]) == {"batch_id", "pack_id", "created_at", "total_evaluated", "pass_rate", "status", "overall_score", "timing"}
+    assert set(runs[0]) == {"batch_id", "pack_id", "created_at", "total_evaluated", "pass_rate", "status", "overall_score", "timing", "sample"}
     assert runs[0]["status"] == "done"
     assert runs[0]["total_evaluated"] == 1
     assert runs[0]["pass_rate"] == 1.0
 
     full = client.get(f"/api/runs/{first['batch_id']}", headers=alice).json()
-    assert full == {**first, "status": "done"}
+    assert full == {**first, "status": "done", "sample": False}
 
     assert client.get("/api/runs", headers=bob).json() == []
     assert client.get(f"/api/runs/{first['batch_id']}", headers=bob).status_code == 404
@@ -214,7 +214,7 @@ def test_async_batch_failure_is_reported(client, alice, bob, fake_engine):
     progress = _wait_for(client, alice, started["batch_id"])
     assert progress["status"] == "failed" and "judge down" in progress["error"]
     assert client.get(f"/api/runs/{started['batch_id']}", headers=alice).json() == {
-        "batch_id": started["batch_id"], "status": "failed", "error": "judge down",
+        "batch_id": started["batch_id"], "status": "failed", "error": "judge down", "sample": False,
     }
     # Other users cannot see the job.
     assert client.get(f"/api/runs/{started['batch_id']}/progress", headers=bob).status_code == 404

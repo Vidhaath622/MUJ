@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .engine_bridge import BACKEND_DIR
+from .security import DEMO_EMAIL
 
 DEFAULT_CORS_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
@@ -22,6 +23,8 @@ class AppSettings:
     token_ttl_hours: int = 72
     # Postgres connection string (for example a Neon database); empty means the local SQLite file.
     database_url: str | None = None
+    # Whose latest baseline runs every user sees as read-only samples; empty turns samples off.
+    showcase_email: str | None = DEMO_EMAIL
     # OAuth client ID for Google Sign-In; empty means POST /api/auth/google answers 503.
     google_client_id: str | None = None
 
@@ -57,5 +60,6 @@ def load_settings() -> AppSettings:
         jwt_secret=_jwt_secret(data_dir),
         cors_origins=origins,
         database_url=(os.environ.get("DATABASE_URL") or "").strip() or None,
+        showcase_email=os.environ.get("RAGSEAL_SHOWCASE_EMAIL", DEMO_EMAIL).strip() or None,
         google_client_id=(os.environ.get("GOOGLE_CLIENT_ID") or "").strip() or None,
     )
