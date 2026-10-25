@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight, Play, Timer } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { PackId } from '../../../types/ragseal';
+import { usePacks } from '../shared/packs';
 import { TopBarControls } from '../shell/AppShell';
 import { AMBER, PASS, RED, pct } from '../lab/verdict';
 import { errorText, getProgress, listRuns, RunListItem, RunProgress, startRun } from '../shared/apiExtra';
@@ -12,7 +13,6 @@ import {
   fmtTime,
   LoadState,
   PACK_LABEL,
-  ALL_PACKS,
   PackSwitcher,
   Panel,
   PrimaryButton,
@@ -32,6 +32,7 @@ interface RunsPageProps {
 }
 
 export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange, onOpenRun }) => {
+  usePacks(); // re-render with the backend's pack names once they load
   const [runs, setRuns] = useState<RunListItem[] | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
@@ -111,10 +112,10 @@ export const RunsPage: React.FC<RunsPageProps> = ({ token, packId, onPackChange,
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-5 px-6 py-6">
       <TopBarControls>
-        <PackSwitcher value={packId} onChange={onPackChange} packs={ALL_PACKS} />
+        <PackSwitcher value={packId} onChange={onPackChange} />
         <PrimaryButton onClick={start} busy={starting} disabled={!token}>
           {!starting && <Play className="h-3 w-3 fill-current" />}
-          Run {PACK_LABEL[packId]} pack
+          Run {PACK_LABEL[packId] ?? packId} pack
         </PrimaryButton>
       </TopBarControls>
 

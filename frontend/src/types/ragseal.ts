@@ -9,7 +9,8 @@ export type RootCauseCategory =
   | 'UNRESOLVED'
   | 'PARTIAL_CONTEXT_MISMATCH';
 
-export type PackId = 'recruitment' | 'banking' | 'healthcare' | 'realworld' | 'ragseal' | 'custom';
+/** Built-in ids, plus any pack id the backend serves (team packs are added without a frontend change). */
+export type PackId = 'recruitment' | 'banking' | 'healthcare' | 'realworld' | 'ragseal' | 'custom' | (string & {});
 
 export type ReleaseDecision = 'SHIP' | 'REVIEW' | 'BLOCK';
 

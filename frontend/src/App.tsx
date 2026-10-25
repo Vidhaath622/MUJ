@@ -7,7 +7,8 @@ import { HowItWorksStory } from './components/ragseal/HowItWorksStory';
 import { LabScreen } from './components/ragseal/lab/LabScreen';
 import { AppShell, TopBarControls, useHashRoute } from './components/ragseal/shell/AppShell';
 import { Tour } from './components/ragseal/tour/Tour';
-import { ALL_PACKS, PACKS, PackSwitcher } from './components/ragseal/shared/ui';
+import { PACKS, PackSwitcher } from './components/ragseal/shared/ui';
+import { useLoadPacks } from './components/ragseal/shared/packs';
 import { ImpactPage } from './components/ragseal/pages/ImpactPage';
 import { OverviewPage } from './components/ragseal/pages/OverviewPage';
 import { RunsPage } from './components/ragseal/pages/RunsPage';
@@ -111,6 +112,8 @@ export const App: React.FC = () => {
   const [isLiveBackend, setIsLiveBackend] = useState<boolean>(true);
   const [backendHealth, setBackendHealth] = useState<HealthResponse | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  // Every pack the backend serves, for the pack pickers (shared/packs.ts).
+  useLoadPacks(authToken);
   // True once the startup check has finished, so the sign-in screen never flashes during it.
   const [authChecked, setAuthChecked] = useState<boolean>(false);
   // How this tab got in earlier (null = a new session, which starts on the sign-in screen).
@@ -299,7 +302,6 @@ export const App: React.FC = () => {
               )}
               <PackSwitcher
                 value={activePackId}
-                packs={ALL_PACKS}
                 onChange={(p) => {
                   handleSelectPack(p);
                   if (openBatch) go('diagnose');

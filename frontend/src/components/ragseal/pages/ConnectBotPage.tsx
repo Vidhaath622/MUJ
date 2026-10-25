@@ -3,6 +3,7 @@ import { ArrowRight, Check, Loader2, Play, Plus, Plug, X } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { loadPackBackend } from '../../../lib/api';
 import { PackId } from '../../../types/ragseal';
+import { usePacks } from '../shared/packs';
 import { LabTestCase } from '../lab/useLabData';
 import { AMBER, PASS, RED, pct, tint, VERDICT_ORDER, VERDICTS } from '../lab/verdict';
 import {
@@ -17,7 +18,7 @@ import {
   startRun,
   testBot,
 } from '../shared/apiExtra';
-import { ALL_PACKS, ErrorBanner, fmtDuration, GhostButton, PACK_LABEL, PackSwitcher, Panel, PrimaryButton } from '../shared/ui';
+import { ErrorBanner, fmtDuration, GhostButton, PACK_LABEL, PackSwitcher, Panel, PrimaryButton } from '../shared/ui';
 
 /**
  * Connect your own bot (R2): point RAGSeal at any RAG endpoint that takes {question} and
@@ -130,6 +131,7 @@ interface ConnectBotPageProps {
 }
 
 export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPack, onOpenRun }) => {
+  usePacks(); // re-render with the backend's pack names once they load
   const [form, setForm] = useState<BotForm>(loadForm);
   const [testing, setTesting] = useState(false);
   const [test, setTest] = useState<BotTestResult | null>(null);
@@ -403,7 +405,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
 
       <Panel raised title="Run a test pack against this bot" note="the same questions, traps and replay as our own bot">
         <div className="flex flex-wrap items-center gap-3">
-          <PackSwitcher value={packId} onChange={choosePack} packs={ALL_PACKS} />
+          <PackSwitcher value={packId} onChange={choosePack} />
           <div className="flex items-center gap-0.5 rounded-[10px] border border-[var(--panel-2)] p-[3px] text-[13px]">
             {[true, false].map((q) => (
               <button
@@ -421,7 +423,7 @@ export const ConnectBotPage: React.FC<ConnectBotPageProps> = ({ token, initialPa
           </div>
           <PrimaryButton onClick={runPack} busy={starting} disabled={!canRun} className="ml-auto">
             {!starting && <Play className="h-3 w-3 fill-current" />}
-            Run {PACK_LABEL[packId]} questions
+            Run {PACK_LABEL[packId] ?? packId} questions
           </PrimaryButton>
         </div>
         {!test?.ok && form.url.trim() && !progress && !summary && (
