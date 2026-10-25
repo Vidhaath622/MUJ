@@ -39,7 +39,8 @@ TABLES = {
         pass_rate {real},
         json TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'done',
-        error TEXT{seq}""",
+        error TEXT,
+        summary TEXT{seq}""",
     "evaluations": """
         evaluation_id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id),
@@ -126,6 +127,12 @@ class Dialect:
         return self.sql(f"INSERT INTO {table} ({names}) VALUES ({marks}) ON CONFLICT ({', '.join(keys)}) {action}")
 
 
+def _summary(batch: dict) -> str:
+    """The few fields run lists need, kept beside the full JSON so listing never parses it (a hosted
+    Postgres would parse every run's JSON, 100-300 KB each, on every list)."""
+    return json.dumps({k: batch.get(k) for k in ("overall_score", "timing", "profile", "kind", "answer_source")})
+
+
 def utc_now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
@@ -154,6 +161,7 @@ class Database:
             for index in INDEXES:
                 conn.execute(index)
             self._migrate(conn)
+        self._backfill_summaries()
 
     _pools: dict[str, object] = {}
     _last_used: dict[int, float] = {}
@@ -202,12 +210,15 @@ class Database:
             conn.execute("ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL")
             conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub TEXT")
             conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub ON users(google_sub)")
+            conn.execute("ALTER TABLE runs ADD COLUMN IF NOT EXISTS summary TEXT")
             return
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(runs)")}
         if "status" not in columns:
             conn.execute("ALTER TABLE runs ADD COLUMN status TEXT NOT NULL DEFAULT 'done'")
         if "error" not in columns:
             conn.execute("ALTER TABLE runs ADD COLUMN error TEXT")
+        if "summary" not in columns:
+            conn.execute("ALTER TABLE runs ADD COLUMN summary TEXT")
         users = {row["name"]: row for row in conn.execute("PRAGMA table_info(users)")}
         if "google_sub" not in users or users["password_hash"]["notnull"]:
             # SQLite cannot drop NOT NULL in place, so rebuild the users table with the same rows.
@@ -218,6 +229,14 @@ class Database:
             conn.execute(f"INSERT INTO users_new ({keep}) SELECT {keep} FROM users")
             conn.execute("DROP TABLE users")
             conn.execute("ALTER TABLE users_new RENAME TO users")
+
+    def _backfill_summaries(self) -> None:
+        """Finished runs saved before the summary column: compute it once (reads their JSON once)."""
+        with self._connect() as conn:
+            rows = conn.execute("SELECT batch_id, json FROM runs WHERE summary IS NULL AND status = 'done'").fetchall()
+        for row in rows:
+            with self._connect() as conn:
+                conn.execute("UPDATE runs SET summary = ? WHERE batch_id = ?", (_summary(json.loads(row["json"] or "{}")), row["batch_id"]))
 
     @contextmanager
     def _connect(self):
@@ -377,7 +396,7 @@ class Database:
         self._forget_run(batch["batch_id"])
         with self._connect() as conn:
             conn.execute(
-                self.d.upsert("runs", ["batch_id", "user_id", "pack_id", "created_at", "total_evaluated", "pass_rate", "json", "status", "error"]),
+                self.d.upsert("runs", ["batch_id", "user_id", "pack_id", "created_at", "total_evaluated", "pass_rate", "json", "status", "error", "summary"]),
                 (
                     batch["batch_id"],
                     user_id,
@@ -388,6 +407,7 @@ class Database:
                     json.dumps(batch),
                     "done",
                     None,
+                    _summary(batch),
                 ),
             )
         self._forget_run(batch["batch_id"])  # again: a reader may have cached the old version meanwhile
@@ -395,15 +415,16 @@ class Database:
     def list_runs(self, user_id: str) -> list[dict]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate, status,"
-                f" {self.d.json_number('overall_score')} AS overall_score, {self.d.json_text('timing')} AS timing"
+                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate, status, summary"
                 f" FROM runs WHERE user_id = ? ORDER BY created_at DESC, {self.d.tie} DESC",
                 (user_id,),
             ).fetchall()
         out = []
         for row in rows:
             item = dict(row)
-            item["timing"] = json.loads(item["timing"]) if item["timing"] else None
+            summary = json.loads(item.pop("summary") or "{}")
+            item["overall_score"] = summary.get("overall_score")
+            item["timing"] = summary.get("timing")
             out.append(item)
         return out
 
@@ -415,26 +436,21 @@ class Database:
         """
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate, status,"
-                f" {self.d.json_number('overall_score')} AS overall_score, {self.d.json_text('timing')} AS timing,"
-                f" {self.d.json_text('profile')} AS profile, {self.d.json_text('kind')} AS kind,"
-                f" {self.d.json_text('answer_source')} AS answer_source"
+                "SELECT batch_id, pack_id, created_at, total_evaluated, pass_rate, status, summary"
                 f" FROM runs WHERE user_id = ? AND status = 'done' AND pack_id IS NOT NULL"
                 f" ORDER BY created_at DESC, {self.d.tie} DESC",
                 (user_id,),
             ).fetchall()
 
-        def text(value):  # Postgres returns JSON text ('"v2"', 'null'); SQLite the plain value
-            return json.loads(value) if self.d.postgres and value is not None else value
-
         by_pack: dict[str, list[dict]] = {}
         for row in rows:
             item = dict(row)
-            if text(item.pop("profile")) not in (None, "v1") or text(item.pop("kind")) or text(item.pop("answer_source")) not in (None, "builtin"):
+            summary = json.loads(item.pop("summary") or "{}")
+            if summary.get("profile") not in (None, "v1") or summary.get("kind") or summary.get("answer_source") not in (None, "builtin"):
                 continue
-            if item["overall_score"] is None or item["pack_id"] == "injection":  # placeholders and injection runs
+            if summary.get("overall_score") is None or item["pack_id"] == "injection":  # placeholders and injection runs
                 continue
-            item["timing"] = json.loads(item["timing"]) if item["timing"] else None
+            item["overall_score"], item["timing"] = summary["overall_score"], summary.get("timing")
             by_pack.setdefault(item["pack_id"], []).append(item)
         out = []
         for items in by_pack.values():  # newest first within each pack

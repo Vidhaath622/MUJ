@@ -46,3 +46,15 @@ def test_runs_stay_private_and_status_changes_show(db):
     assert failed["status"] == "failed" and failed["error"] == "judge down"
     db.save_run(alice.id, _run("batch_c", 0.4))
     assert db.run_status(alice.id, "batch_c")["status"] == "done" and db.get_run(alice.id, "batch_c")["overall_score"] == 0.4
+
+
+def test_runs_saved_before_the_summary_column_are_backfilled(app, db):
+    user = db.create_user("old@example.com", "hash")
+    db.save_run(user.id, {**_run("batch_old", 0.6), "profile": "v2"})
+    with db._connect() as conn:
+        conn.execute("UPDATE runs SET summary = NULL WHERE batch_id = ?", ("batch_old",))  # as an older version left it
+    from app.db import Database
+
+    reopened = Database(db.path, url=db.url)
+    [item] = reopened.list_runs(user.id)
+    assert item["overall_score"] == 0.6 and reopened.baseline_runs(user.id) == []  # v2 profile: not a baseline
