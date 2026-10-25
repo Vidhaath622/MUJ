@@ -266,6 +266,29 @@ def _units(text: str) -> set[tuple[str, str]]:
     return pairs
 
 
+# A sentence ending on one of these words stopped before its point ("The limit is lowered to [1].").
+_DANGLING = {"to", "of", "at", "by", "the", "a", "an", "is", "are", "was", "were", "from", "with", "and", "or",
+             "for", "in", "on", "than", "as", "be", "into", "per", "about", "its", "their", "this", "that"}
+
+
+def looks_truncated(answer: str) -> bool:
+    """The answer is one sentence that breaks off mid-phrase ("... is lowered to [1]."). An answer with
+    a complete sentence before a cut-off tail is not truncated: the complete sentence stands."""
+    text = re.sub(r"\s*\[[\d,\s\-\u2013]+\]", "", answer).strip().rstrip(".!?:;,").strip()
+    if not text or re.search(r"[.!?]\s+\S", text):
+        return False
+    words = re.findall(r"[A-Za-z0-9₹$%]+", text)
+    return bool(words) and words[-1].lower() in _DANGLING
+
+
+def cut_off_without_answer(answer: str, ground_truth: str | None) -> bool:
+    """A truncated answer that does not even state the ground truth's figures: never correct."""
+    if not looks_truncated(answer):
+        return False
+    want = _numbers(ground_truth or "")
+    return not (want and want <= _numbers(answer))
+
+
 def accuracy_rule(answer: str, ground_truth: str | None, unanswerable: bool = False) -> MetricResult | None:
     """Accuracy when no model is needed; None otherwise.
 
@@ -283,6 +306,8 @@ def accuracy_rule(answer: str, ground_truth: str | None, unanswerable: bool = Fa
         return MetricResult("answer_accuracy", None, "No ground truth was given, so accuracy was not measured.", "rule")
     if abstained:
         return MetricResult("answer_accuracy", 0.0, "The model abstained, but the ground truth has an answer.", "rule")
+    if cut_off_without_answer(answer, ground_truth):
+        return MetricResult("answer_accuracy", 0.0, "The answer breaks off mid-sentence, so it does not state the answer.", "rule")
     clean = without_hedges(answer)
     want, got = _numbers(ground_truth), _numbers(clean)
     negated = re.search(r"\b(?:not|no|never|isn't|doesn't|don't|without|except)\b|n't\b", clean.lower())

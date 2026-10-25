@@ -173,7 +173,8 @@ def decide(f: Facts) -> Verdict:
                 "Replay with only the gold chunk fixed the answer, so the misleading retrieved chunk caused the failure.",
             )
         if f.replay_ran and f.replay_correct:
-            effect = "With only the gold chunk the answer was correct, so the extra retrieved chunks distracted the generator."
+            effect = ("The retriever found the right text. With only that passage the generator answered correctly, so the "
+                      "other retrieved chunks distracted it: the generator did not stick to the right passage.")
             action = "Retrieve fewer, better chunks (rerank or lower top-k) and use a stricter extraction prompt."
         elif f.replay_ran:
             effect = "Even with only the gold chunk the answer was still wrong, so the generator is at fault."
@@ -294,3 +295,11 @@ def classify_failure(f: Facts, category: str) -> tuple[str, str]:
             return "IGNORED_CONTEXT", "both"  # correct but unsupported: answered from memory
         return "REASONING_ERROR", "generator"
     return "UNRESOLVED", "unknown"
+
+
+# Which stage a replay's outcome points at, read from the verdict (so a replay never contradicts it).
+REPLAY_BLAME = {"RETRIEVAL_FAILURE": "retriever", "GENERATION_HALLUCINATION": "generator", "COMPOUND_FAILURE": "both"}
+
+
+def replay_blame(category: str) -> str | None:
+    return REPLAY_BLAME.get(category)
