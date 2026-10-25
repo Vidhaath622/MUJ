@@ -10,11 +10,18 @@ from __future__ import annotations
 import atexit
 import json
 import sqlite3
+import threading
 import time
 import uuid
-from contextlib import contextmanager
+from collections import OrderedDict
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+
+# Postgres only (a hosted database is a round trip away): finished runs and users are kept in memory.
+RUN_CACHE_SIZE = 24  # finished runs are 100-300 KB of JSON each
+USER_CACHE_TTL_S = 300.0
+IDLE_CHECK_S = 30.0  # ping a pooled connection before use only after this long idle
 
 TABLES = {
     "users": """
@@ -138,6 +145,9 @@ class Database:
         self.path = path
         self.url = url or None
         self.d = Dialect(postgres=bool(self.url))
+        self._runs: OrderedDict[str, tuple[str, dict, str]] = OrderedDict()  # batch_id -> (user_id, status row, json)
+        self._users: dict[str, tuple[float, User]] = {}
+        self._cache_lock = threading.Lock()
         with self._connect() as conn:
             for name in TABLES:
                 conn.execute(self.d.create_table(name))
@@ -146,6 +156,7 @@ class Database:
             self._migrate(conn)
 
     _pools: dict[str, object] = {}
+    _last_used: dict[int, float] = {}
 
     def _pool(self):
         """One small pool per database URL: a hosted Postgres (Neon) is too slow to connect per query."""
@@ -154,12 +165,17 @@ class Database:
             from psycopg.rows import dict_row
             from psycopg_pool import ConnectionPool
 
+            def check_if_idle(conn) -> None:
+                # Neon closes idle connections, but a ping on every checkout costs a round trip.
+                if time.monotonic() - Database._last_used.get(id(conn), 0.0) > IDLE_CHECK_S:
+                    ConnectionPool.check_connection(conn)
+
             pool = ConnectionPool(
                 self.url,
-                min_size=1,
+                min_size=4,  # a new connection to a hosted database takes seconds
                 max_size=8,
-                kwargs={"row_factory": dict_row, "connect_timeout": 10},
-                check=ConnectionPool.check_connection,  # Neon closes idle connections
+                kwargs={"row_factory": dict_row, "connect_timeout": 10, "autocommit": True},
+                check=check_if_idle,
                 open=True,
             )
             if not Database._pools:
@@ -207,8 +223,12 @@ class Database:
     def _connect(self):
         # One short-lived connection per operation: routes run on threadpool workers.
         if self.d.postgres:
-            with self._pool().connection() as conn, conn.transaction():
-                yield _PgConnection(conn, self.d)
+            with self._pool().connection() as conn:
+                try:
+                    with ExitStack() as transaction:
+                        yield _PgConnection(conn, self.d, transaction)
+                finally:
+                    Database._last_used[id(conn)] = time.monotonic()
             return
         conn = sqlite3.connect(self.path, timeout=10)
         conn.row_factory = sqlite3.Row
@@ -260,9 +280,16 @@ class Database:
             conn.execute("UPDATE users SET google_sub = ? WHERE id = ?", (sub, user_id))
 
     def user_by_id(self, user_id: str) -> User | None:
+        """Every request looks up its user; on Postgres the answer is kept for a few minutes (ids and emails never change)."""
+        hit = self._users.get(user_id) if self.d.postgres else None
+        if hit and time.monotonic() - hit[0] < USER_CACHE_TTL_S:
+            return hit[1]
         with self._connect() as conn:
             row = conn.execute("SELECT id, email FROM users WHERE id = ?", (user_id,)).fetchone()
-        return User(row["id"], row["email"]) if row else None
+        user = User(row["id"], row["email"]) if row else None
+        if user and self.d.postgres:
+            self._users[user_id] = (time.monotonic(), user)
+        return user
 
     # --------------------------------------------------------------- runs
 
@@ -278,6 +305,7 @@ class Database:
         return created_at
 
     def fail_run(self, batch_id: str, error: str) -> None:
+        self._forget_run(batch_id)
         with self._connect() as conn:
             conn.execute("UPDATE runs SET status = 'failed', error = ? WHERE batch_id = ?", (error, batch_id))
 
@@ -290,6 +318,9 @@ class Database:
             ).rowcount
 
     def run_status(self, user_id: str, batch_id: str) -> dict | None:
+        if self.d.postgres:
+            cached = self._cached_run(batch_id, user_id)
+            return dict(cached[1]) if cached else self._load_run(batch_id, user_id)
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT batch_id, pack_id, created_at, total_evaluated, status, error FROM runs WHERE user_id = ? AND batch_id = ?",
@@ -297,7 +328,53 @@ class Database:
             ).fetchone()
         return dict(row) if row else None
 
+    # Postgres: a finished run's status row and JSON come back in one query and stay in memory,
+    # so opening a run costs one round trip the first time and none after. save_run and fail_run
+    # drop the entry (re-judging and re-deriving rewrite a run through save_run).
+
+    def _cached_run(self, batch_id: str, user_id: str | None) -> tuple[str, dict, str] | None:
+        with self._cache_lock:
+            entry = self._runs.get(batch_id)
+            if entry is None or (user_id is not None and entry[0] != user_id):
+                return None
+            self._runs.move_to_end(batch_id)
+            return entry
+
+    def _load_run(self, batch_id: str, user_id: str | None) -> dict | None:
+        """The status row (Postgres); a finished run's JSON is fetched in the same query and cached."""
+        owner = "" if user_id is None else " AND user_id = ?"
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT batch_id, user_id, pack_id, created_at, total_evaluated, status, error,"
+                f" CASE WHEN status = 'done' THEN json END AS json FROM runs WHERE batch_id = ?{owner}",
+                (batch_id,) if user_id is None else (batch_id, user_id),
+            ).fetchone()
+        if row is None:
+            return None
+        row = dict(row)
+        text, owner_id = row.pop("json"), row.pop("user_id")
+        if text is not None:
+            with self._cache_lock:
+                self._runs[batch_id] = (owner_id, row, text)
+                self._runs.move_to_end(batch_id)
+                while len(self._runs) > RUN_CACHE_SIZE:
+                    self._runs.popitem(last=False)
+        return dict(row)
+
+    def _run_json(self, batch_id: str, user_id: str | None) -> dict | None:
+        """A finished run's JSON on Postgres, from memory when possible."""
+        cached = self._cached_run(batch_id, user_id)
+        if cached is None:
+            self._load_run(batch_id, user_id)
+            cached = self._cached_run(batch_id, user_id)
+        return json.loads(cached[2]) if cached else None
+
+    def _forget_run(self, batch_id: str) -> None:
+        with self._cache_lock:
+            self._runs.pop(batch_id, None)
+
     def save_run(self, user_id: str, batch: dict) -> None:
+        self._forget_run(batch["batch_id"])
         with self._connect() as conn:
             conn.execute(
                 self.d.upsert("runs", ["batch_id", "user_id", "pack_id", "created_at", "total_evaluated", "pass_rate", "json", "status", "error"]),
@@ -313,6 +390,7 @@ class Database:
                     None,
                 ),
             )
+        self._forget_run(batch["batch_id"])  # again: a reader may have cached the old version meanwhile
 
     def list_runs(self, user_id: str) -> list[dict]:
         with self._connect() as conn:
@@ -330,6 +408,8 @@ class Database:
         return out
 
     def get_run(self, user_id: str, batch_id: str) -> dict | None:
+        if self.d.postgres and (run := self._run_json(batch_id, user_id)) is not None:
+            return run
         with self._connect() as conn:
             row = conn.execute("SELECT json FROM runs WHERE user_id = ? AND batch_id = ?", (user_id, batch_id)).fetchone()
         return json.loads(row["json"]) if row else None
@@ -358,6 +438,8 @@ class Database:
 
     def run_by_id(self, batch_id: str) -> dict | None:
         """Any user's finished run: labels and agreement are shared across the labelling team."""
+        if self.d.postgres:
+            return self._run_json(batch_id, None)
         with self._connect() as conn:
             row = conn.execute("SELECT json FROM runs WHERE batch_id = ? AND status = 'done'", (batch_id,)).fetchone()
         return json.loads(row["json"]) if row else None
@@ -444,11 +526,21 @@ class Database:
 
 
 class _PgConnection:
-    """A psycopg connection that accepts this module's "?" statements, like sqlite3's conn.execute."""
+    """A psycopg connection that accepts this module's "?" statements, like sqlite3's conn.execute.
 
-    def __init__(self, conn, dialect: Dialect):
+    The connection is in autocommit mode, so a read is one round trip (no BEGIN/COMMIT). The
+    first write of an operation opens a transaction that commits when the operation ends, or
+    rolls back if it raises, like sqlite3's `with conn:`.
+    """
+
+    def __init__(self, conn, dialect: Dialect, transaction: ExitStack):
         self._conn = conn
         self._d = dialect
+        self._transaction = transaction
+        self._in_transaction = False
 
     def execute(self, statement: str, params: tuple = ()):
+        if not self._in_transaction and not statement.lstrip().upper().startswith("SELECT"):
+            self._transaction.enter_context(self._conn.transaction())
+            self._in_transaction = True
         return self._conn.execute(self._d.sql(statement), params)
