@@ -92,8 +92,11 @@ def _is_heading(paragraph: str) -> bool:
     return paragraph.startswith("#") or (len(paragraph) < 80 and "\n" not in paragraph and not paragraph.endswith("."))
 
 
-def chunk_pages(pages: list[tuple[int | None, str]], limit: int) -> list[tuple[int | None, str]]:
-    """Greedy paragraph packing. A heading starts a new chunk and stays with the text after it."""
+def chunk_pages(pages: list[tuple[int | None, str]], limit: int, overlap: int = 0) -> list[tuple[int | None, str]]:
+    """Greedy paragraph packing. A heading starts a new chunk and stays with the text after it.
+
+    With `overlap`, each chunk also starts with about that many characters from the end of the one
+    before it (from a word boundary), so a fact split across a boundary is whole in one chunk."""
     chunks: list[tuple[int | None, str]] = []
     for page, text in pages:
         current = ""
@@ -124,10 +127,22 @@ def chunk_pages(pages: list[tuple[int | None, str]], limit: int) -> list[tuple[i
             merged[-1] = (page, f"{text}\n\n{carry}")
         else:
             merged.append((None, carry))
+    if overlap > 0:
+        merged = [merged[0]] + [(page, f"{_tail(merged[i - 1][1], overlap)}\n\n{text}") for i, (page, text) in enumerate(merged[1:], start=1)] if merged else merged
     return merged
 
 
-def parse_document(filename: str, data: bytes, chunk_chars: int = 700) -> ParsedDocument:
+def _tail(text: str, chars: int) -> str:
+    """The last `chars` characters of `text`, starting at a word boundary."""
+    if len(text) <= chars:
+        return text
+    tail = text[-chars:]
+    space = tail.find(" ")
+    return tail[space + 1 :] if 0 <= space < len(tail) - 1 else tail
+
+
+def parse_document(filename: str, data: bytes, chunk_chars: int = 700, overlap: int = 0) -> ParsedDocument:
+    """Text and markdown are chunked by chunk_pages (with optional `overlap`); PDFs by their slide-aware chunker."""
     suffix = Path(filename).suffix.lower()
     if suffix not in SUPPORTED:
         raise UnsupportedFile(f"unsupported file type '{suffix}', use PDF, TXT or MD")
@@ -146,7 +161,7 @@ def parse_document(filename: str, data: bytes, chunk_chars: int = 700) -> Parsed
             text=text,
             page=page,
         )
-        for i, (page, text) in enumerate(chunk_pages(pages, chunk_chars))
+        for i, (page, text) in enumerate(chunk_pages(pages, chunk_chars, overlap))
     ]
     return ParsedDocument(document_id=document_id, filename=filename, content_hash=doc_hash, chunks=chunks)
 

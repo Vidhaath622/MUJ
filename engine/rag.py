@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from .ingest import Chunk
 from .llm import ChatModel, EmbedModel
+from .retrieval import BM25, RetrievalConfig, rerank, rrf
 from .store import ScoredChunk, VectorStore
 
 # Citation markers: [1], [2, 3], [1-4], [1–4].
@@ -86,11 +87,18 @@ def parse_citations(answer: str, chunks: list[Chunk]) -> list[str]:
 
 
 class RagSystem:
-    def __init__(self, store: VectorStore, generator: ChatModel, embedder: EmbedModel, top_k: int):
+    def __init__(
+        self, store: VectorStore, generator: ChatModel, embedder: EmbedModel, top_k: int,
+        retrieval: RetrievalConfig | None = None, reranker=None,
+    ):
+        """`retrieval` picks dense or hybrid search and the optional rerank step; `reranker` is the
+        judge pool that orders candidates when rerank is on."""
         self.store = store
         self.generator = generator
         self.embedder = embedder
         self.top_k = top_k
+        self.retrieval = retrieval or RetrievalConfig()
+        self.reranker = reranker
 
     @property
     def generator_model(self) -> str:
@@ -99,8 +107,28 @@ class RagSystem:
     def embed_query(self, query: str) -> list[float]:
         return self.embedder.embed([query], "query")[0]
 
-    def retrieve(self, owner_id: str, query: str, document_ids: list[str], k: int | None = None) -> list[ScoredChunk]:
-        return self.store.search(owner_id, document_ids, self.embed_query(query), k or self.top_k)
+    def retrieve(
+        self, owner_id: str, query: str, document_ids: list[str], k: int | None = None, config: RetrievalConfig | None = None
+    ) -> list[ScoredChunk]:
+        k = k or self.top_k
+        config = config or self.retrieval
+        if config.mode == "dense" and not config.rerank:
+            return self.store.search(owner_id, document_ids, self.embed_query(query), k)
+        pool = max(k, config.pool) if config.rerank else k
+        if config.mode == "hybrid":
+            # Rank every chunk both ways and fuse; scores become RRF scores.
+            ranked = self.store.search(owner_id, document_ids, self.embed_query(query), 10**6)
+            by_id = {s.chunk.chunk_id: s.chunk for s in ranked}
+            chunks = [s.chunk for s in ranked]
+            keyword = BM25([c.text for c in chunks]).scores(query)
+            keyword_rank = [c.chunk_id for c, score in sorted(zip(chunks, keyword), key=lambda cs: -cs[1]) if score > 0]
+            fused = rrf([[c.chunk_id for c in chunks], keyword_rank], config.rrf_k)
+            candidates = [ScoredChunk(by_id[cid], round(score, 5)) for cid, score in fused[:pool]]
+        else:
+            candidates = self.store.search(owner_id, document_ids, self.embed_query(query), pool)
+        if config.rerank and self.reranker is not None and len(candidates) > 1:
+            candidates = [candidates[i] for i in rerank(self.reranker, query, [s.chunk for s in candidates], k)]
+        return candidates[:k]
 
     def generate(self, query: str, chunks: list[Chunk]) -> tuple[str, list[str], int]:
         if not chunks:

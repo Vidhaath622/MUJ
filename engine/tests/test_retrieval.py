@@ -1,0 +1,70 @@
+from pathlib import Path
+
+import pytest
+
+from engine.config import Settings
+from engine.ingest import Chunk, chunk_pages
+from engine.retrieval import BM25, RetrievalConfig, rerank, rrf, tokenize
+from engine.service import Engine
+
+from .fakes import FakeEmbedder, FakeGenerator, FakeJudge
+
+
+def test_bm25_and_rrf():
+    assert tokenize("Up to ₹1,275,000 (FY 2025-26)") == ["up", "to", "1275000", "fy", "2025", "26"]
+    texts = ["The standard deduction is $32,200 for joint filers.", "Mileage is 72.5 cents per mile.", "Notice 2024-80 has the details."]
+    scores = BM25(texts).scores("Which notice: 2024-80?")
+    assert max(range(3), key=scores.__getitem__) == 2 and scores[1] == 0
+    assert [i for i, _ in rrf([["a", "b", "c"], ["c", "a"]])] == ["a", "c", "b"]
+    with pytest.raises(ValueError):
+        RetrievalConfig(mode="sparse")
+
+
+def test_rerank_order_and_fallback():
+    chunks = [Chunk(f"c{i}", "d", i, f"text {i}", None) for i in range(5)]
+
+    class Ranker:
+        def ask(self, system, user, schema):
+            return {"ranked": [3, 3, 9, 1]}  # a duplicate and an out-of-range number are ignored
+
+    class Broken:
+        def ask(self, system, user, schema):
+            raise RuntimeError("judge down")
+
+    assert rerank(Ranker(), "q", chunks, 4) == [2, 0, 1, 3]  # model's picks first, then original order
+    assert rerank(Broken(), "q", chunks, 4) == [0, 1, 2, 3]  # never fewer chunks, never an error
+
+
+def test_overlap_repeats_the_end_of_the_previous_chunk():
+    pages = [(None, "\n\n".join(f"Paragraph {i} says the fee is {i * 10} rupees per visit." for i in range(12)))]
+    plain = chunk_pages(pages, 200)
+    assert chunk_pages(pages, 200, 0) == plain
+    overlapped = chunk_pages(pages, 200, 60)
+    assert len(overlapped) == len(plain) and overlapped[0] == plain[0]
+    for (_, before), (_, after) in zip(plain, overlapped[1:]):
+        assert after.split("\n\n")[0] in before  # starts with the previous chunk's end
+
+
+@pytest.fixture
+def engine(tmp_path: Path):
+    return Engine(Settings(data_dir=tmp_path, top_k=2), generator=FakeGenerator(), embedder=FakeEmbedder(), judge=FakeJudge())
+
+
+def test_hybrid_and_rerank_retrieve_k_chunks(engine):
+    doc = engine.ingest("u", "fees.md", "\n\n".join(
+        [f"Section {i}. General terms about accounts, statements, branches, online banking, cards and customer service, "
+         f"as described in paragraph {i} of the account handbook for retail customers." for i in range(8)]
+        + ["Wire transfer fee: Notice 2024-80 sets it at 35 dollars."]).encode())
+    hybrid = engine.rag.retrieve("u", "What does Notice 2024-80 set?", [doc["document_id"]], 2, RetrievalConfig(mode="hybrid"))
+    assert len(hybrid) == 2 and "2024-80" in hybrid[0].chunk.text
+    reranked = engine.rag.retrieve("u", "What does Notice 2024-80 set?", [doc["document_id"]], 2, RetrievalConfig(mode="hybrid", rerank=True))
+    assert len(reranked) == 2  # FakeJudge cannot rerank: falls back to the hybrid order
+
+
+def test_chunking_lab_scores_every_config_without_touching_user_data(engine):
+    out = engine.chunking_lab("u", "ragseal", chunk_sizes=(300, 700), modes=("dense", "hybrid"), rerank_options=(False,), k=4)
+    assert out["metric"] == "context_recall_at_4" and len(out["rows"]) == 4
+    assert {(r["chunk_chars"], r["mode"]) for r in out["rows"]} == {(300, "dense"), (300, "hybrid"), (700, "dense"), (700, "hybrid")}
+    assert all(0 <= r["context_recall_at_4"] <= 1 and r["chunks"] > 0 for r in out["rows"])
+    assert out["best"] in out["rows"] and out["questions"] > 0
+    assert engine.list_documents("u") == []  # lab chunks live under their own owner
