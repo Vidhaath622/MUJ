@@ -247,6 +247,8 @@ export interface AgreementSnapshot {
   n?: number;
   human_human?: { agreement?: number | null; cohen_kappa?: number | null; n?: number };
   pipeline_vs_consensus?: { agreement?: number | null; kappa?: number | null; false_pass?: number; false_fail?: number; n?: number };
+  /** The same numbers per labelled pack. */
+  by_pack?: Record<string, Omit<AgreementSnapshot, 'by_pack'>>;
 }
 
 export interface Agreement {

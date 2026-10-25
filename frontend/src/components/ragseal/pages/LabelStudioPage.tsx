@@ -1,15 +1,34 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, Keyboard, SkipForward, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Eye, Keyboard, PenLine, SkipForward, X } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { PackId } from '../../../types/ragseal';
 import { TopBarControls } from '../shell/AppShell';
-import { PASS, RED, tint } from '../lab/verdict';
-import { DisagreementItem, errorText, getDisagreements, getLabelQueue, getProgress, LabelItem, listRuns, postLabel, RunProgress } from '../shared/apiExtra';
+import { PASS, RED, tint, verdictStyle } from '../lab/verdict';
+import {
+  Agreement,
+  DisagreementItem,
+  errorText,
+  getAgreement,
+  getDisagreements,
+  getLabelQueue,
+  getProgress,
+  getRun,
+  LabelItem,
+  listRuns,
+  postLabel,
+  RunProgress,
+} from '../shared/apiExtra';
+import { usePacks } from '../shared/packs';
 import { FAILURE_TYPES, FailureType, failureLabel, STAGE_COLOR } from '../shared/taxonomy';
-import { EmptyState, ErrorBanner, fmtDuration, LoadState, PackSwitcher } from '../shared/ui';
+import { EmptyState, ErrorBanner, fmtDuration, LoadState, PACKS, PackSwitcher } from '../shared/ui';
 
 const LABELERS = ['Sarthak', 'Vidhaath'];
 const LABELER_KEY = 'ragseal.labeler';
+
+/** Two teammates labelled these three packs; every other pack is scored by RAGSeal alone. */
+const LABELLED_PACKS = PACKS;
+
+const pct = (x: number | null | undefined) => (x == null ? '—' : `${(x * 100).toFixed(1)}%`);
 
 function readLabeler(): string | null {
   try {
@@ -57,12 +76,26 @@ interface LabelStudioPageProps {
  * Human labeling, built for speed: one answer per screen, 1 = correct, 2 = wrong then
  * a number for the failure type. The pipeline's own verdict is never shown, so it can't
  * anchor the labeler.
+ *
+ * Without a chosen labeller (anyone on the public site) the page is read-only: it shows what
+ * both teammates said and RAGSeal's verdict, and labelling as a teammate takes a confirm.
  */
 const PACK_NAME: Record<string, string> = { recruitment: 'Recruitment', banking: 'Banking', healthcare: 'Healthcare' };
 const NEXT_PACK: Record<string, string | undefined> = { recruitment: 'banking', banking: 'healthcare', healthcare: 'recruitment' };
 
+/** Read-only view of one answer: each teammate's label and RAGSeal's verdict. */
+interface TeamView {
+  labels: Record<string, string | undefined>;
+  verdict?: string;
+}
+
 export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId, onPackChange }) => {
   const [labeler, setLabeler] = useState<string | null>(readLabeler);
+  // Choosing (or switching) who labels; a teammate needs a confirm before any write.
+  const [choosing, setChoosing] = useState(false);
+  // Guest only: the summary first, then "Browse answers" steps through them read-only.
+  const [guestBrowsing, setGuestBrowsing] = useState(false);
+  const [team, setTeam] = useState<Record<string, TeamView>>({});
   const [items, setItems] = useState<LabelItem[] | null>(null);
   // Review mode: only the answers the two labellers disagreed on, for a second look.
   const [review, setReview] = useState(false);
@@ -87,16 +120,45 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    if (!token || !labeler) return;
+    if (!token) return;
     let cancelled = false;
     setItems(null);
     setLoadError(null);
     setDone({});
     setMine({});
+    setTeam({});
     setFlash(null);
     setPickingType(false);
     (async () => {
       try {
+        if (!labeler) {
+          // Guest: the same queue, read through each teammate's eyes, plus RAGSeal's verdicts.
+          const queues = await Promise.all(LABELERS.map((name) => getLabelQueue(packId, name, token)));
+          const batchId = queues[0].batch_id;
+          const run = batchId ? ((await getRun(batchId, token).catch(() => null)) as { results?: unknown[] } | null) : null;
+          if (cancelled) return;
+          const verdicts: Record<string, string> = {};
+          (run?.results ?? []).forEach((r) => {
+            const res = r as { test_id?: string; category?: string; root_cause?: { category?: string } };
+            if (res.test_id) verdicts[res.test_id] = res.root_cause?.category ?? res.category ?? 'UNRESOLVED';
+          });
+          const view: Record<string, TeamView> = {};
+          queues[0].items.forEach((it) => {
+            view[it.test_id] = { labels: {}, verdict: verdicts[it.test_id] };
+          });
+          queues.forEach((q, i) =>
+            q.items.forEach((it) => {
+              if (view[it.test_id]) view[it.test_id].labels[LABELERS[i]] = labelValue(it.my_label);
+            })
+          );
+          setTypes(typesFrom(queues[0].failure_types));
+          setWaitingFor(null);
+          setTeam(view);
+          // Pack order, not "unlabelled first": a guest browses, nothing is open.
+          setItems([...queues[0].items].sort((a, b) => a.test_id.localeCompare(b.test_id, undefined, { numeric: true })));
+          setIndex(0);
+          return;
+        }
         if (review) {
           const d = await getDisagreements(packId, token, labeler);
           if (cancelled) return;
@@ -172,6 +234,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
   const showComplete = allDone && !browsing && !review;
 
   useEffect(() => setBrowsing(false), [packId, labeler, review]);
+  useEffect(() => setGuestBrowsing(false), [packId, labeler]);
 
   const goTo = useCallback(
     (i: number) => {
@@ -250,6 +313,12 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey || !item) return;
+      if (!labeler) {
+        // Read-only: only ← → to step through answers.
+        if (e.key === 'ArrowLeft') goTo(index - 1);
+        else if (e.key === 'ArrowRight') goTo(index + 1);
+        return;
+      }
       if (pickingType) {
         const n = Number(e.key);
         if (e.key === '0' || e.key === 'Enter') {
@@ -279,7 +348,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [item, items, pickingType, submit, advance, types, goTo, index]);
+  }, [item, items, pickingType, submit, advance, types, goTo, index, labeler]);
 
   const knownAnswer = item?.ground_truth ?? item?.ground_truth_answer;
   // What this labeller currently has on the item: the backend's my_label, or what they just saved.
@@ -290,15 +359,19 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
   return (
     <div className="flex h-full min-h-0 flex-col">
       <TopBarControls>
-        {labeler && (
+        {labeler ? (
           <button
-            onClick={() => {
-              saveLabeler(null);
-              setLabeler(null);
-            }}
+            onClick={() => setChoosing(true)}
             className="shrink-0 whitespace-nowrap text-xs text-[var(--ink-2)] hover:text-[var(--ink)]"
           >
             Labelling as <span className="font-medium text-[var(--ink)]">{labeler}</span> · switch
+          </button>
+        ) : (
+          <button
+            onClick={() => setChoosing(true)}
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs text-[var(--ink-2)] hover:text-[var(--ink)]"
+          >
+            <Eye className="h-3.5 w-3.5" /> Read-only · <span className="font-medium text-[var(--ink)]">label as a teammate</span>
           </button>
         )}
         {labeler && (
@@ -314,15 +387,24 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
             {review ? 'Reviewing disagreements · back to labelling' : 'Review disagreements'}
           </button>
         )}
-        <PackSwitcher value={packId} onChange={onPackChange} />
+        {/* Only the human-labelled packs: picking any other pack here had nothing to label. */}
+        <PackSwitcher value={packId} onChange={onPackChange} packs={LABELLED_PACKS} />
       </TopBarControls>
 
-      {!labeler ? (
+      {choosing ? (
         <ChooseLabeler
+          current={labeler}
           onChoose={(name) => {
             saveLabeler(name);
             setLabeler(name);
+            setChoosing(false);
           }}
+          onGuest={() => {
+            saveLabeler(null);
+            setLabeler(null);
+            setChoosing(false);
+          }}
+          onCancel={() => setChoosing(false)}
         />
       ) : !items ? (
         <div className="p-6">
@@ -344,50 +426,47 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
             The queue fills from the pack's latest finished run. Run the pack first, then come back.
           </EmptyState>
         </div>
-      ) : showComplete ? (
-        <div className="flex h-full items-center justify-center p-6">
-          <div className="lab-panel lab-fade-up w-full max-w-lg rounded-2xl p-7 text-center">
-            <div className="text-[13px] font-medium text-[var(--ok)]">Pack complete</div>
-            <h2 className="mt-2 text-xl font-semibold tracking-[-0.01em] text-[var(--ink)]">
-              All {items.length} labelled in {PACK_NAME[packId] ?? packId}
-            </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-[var(--ink-2)]">
-              Thanks. You can go back over your labels, check the answers you and your teammate disagreed on, or move on.
-            </p>
-            <div className="mt-5 flex flex-wrap justify-center gap-2.5">
-              <button
-                onClick={() => {
-                  setBrowsing(true);
-                  goTo(0);
-                }}
-                className="rounded-[9px] border border-[var(--rule-2)] px-3.5 py-2 text-[13px] text-[var(--ink)] hover:bg-[var(--panel-2)]"
-              >
-                Review my labels
-              </button>
-              <button
-                onClick={() => setReview(true)}
-                className="rounded-[9px] border border-[var(--rule-2)] px-3.5 py-2 text-[13px] text-[var(--ink)] hover:bg-[var(--panel-2)]"
-              >
-                Review disagreements
-              </button>
-              {NEXT_PACK[packId] && (
-                <button
-                  onClick={() => onPackChange(NEXT_PACK[packId] as PackId)}
-                  className="rounded-[9px] bg-[var(--ink)] px-3.5 py-2 text-[13px] font-medium text-[var(--paper)] hover:opacity-90"
-                >
-                  Next pack: {PACK_NAME[NEXT_PACK[packId] as string]}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+      ) : !labeler && !guestBrowsing ? (
+        <PackSummary
+          token={token}
+          packId={packId}
+          labeler={null}
+          total={items.length}
+          onBrowse={() => {
+            setGuestBrowsing(true);
+            goTo(0);
+          }}
+          onLabel={() => setChoosing(true)}
+          onPackChange={onPackChange}
+        />
+      ) : showComplete && labeler ? (
+        <PackSummary
+          token={token}
+          packId={packId}
+          labeler={labeler}
+          labelled={labeledCount}
+          total={items.length}
+          onBrowse={() => {
+            setBrowsing(true);
+            goTo(0);
+          }}
+          onReview={() => setReview(true)}
+          onPackChange={onPackChange}
+        />
       ) : (
         item && (
-          <div className="mx-auto flex min-h-0 w-full max-w-[1320px] flex-1 flex-col gap-4 px-6 py-5">
-            {review ? (
+          <div className="mx-auto flex min-h-0 w-full max-w-[1480px] flex-1 flex-col gap-4 px-6 py-5">
+            {!labeler ? (
+              <GuestNote index={index} total={items.length} onBack={() => setGuestBrowsing(false)} onLabel={() => setChoosing(true)} />
+            ) : review ? (
               <ReviewNote item={item as DisagreementItem} labeler={labeler} left={items.length - labeledCount} />
             ) : (
-              <Progress labeled={labeledCount} total={items.length} index={index} />
+              <Progress
+                labeled={labeledCount}
+                total={items.length}
+                index={index}
+                onSummary={allDone && browsing ? () => setBrowsing(false) : undefined}
+              />
             )}
             <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
@@ -435,7 +514,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
                   </p>
                 </div>
 
-                <div className="shrink-0 border-t border-[var(--rule)] px-6 py-3">
+                <div className={cn('shrink-0 border-t border-[var(--rule)] px-6 py-3', !labeler && 'hidden')}>
                   <label className="flex h-9 items-center gap-2 rounded-[9px] border border-[var(--rule-2)] bg-[var(--paper)] px-3">
                     <span className="sr-only">Note</span>
                     <input
@@ -470,6 +549,15 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
               </section>
             </div>
 
+            {!labeler ? (
+              <GuestBar
+                view={team[item.test_id]}
+                onBack={() => goTo(index - 1)}
+                backDisabled={index === 0}
+                onNext={() => goTo(index + 1)}
+                nextDisabled={index >= items.length - 1}
+              />
+            ) : (
             <ActionBar
               types={types}
               picking={pickingType}
@@ -487,6 +575,7 @@ export const LabelStudioPage: React.FC<LabelStudioPageProps> = ({ token, packId,
               onNext={() => goTo(index + 1)}
               nextDisabled={index >= items.length - 1}
             />
+            )}
           </div>
         )
       )}
@@ -509,30 +598,86 @@ const ReviewNote: React.FC<{ item: DisagreementItem; labeler: string; left: numb
   );
 };
 
-const ChooseLabeler: React.FC<{ onChoose: (name: string) => void }> = ({ onChoose }) => (
-  <div className="flex h-full items-center justify-center p-6">
-    <div className="lab-panel lab-fade-up w-full max-w-md rounded-2xl p-7">
-      <h2 className="text-lg font-semibold tracking-[-0.01em]">Who is labeling?</h2>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--ink-2)]">
-        Two people label the same answers independently. Only answers you both agree on count as ground truth for
-        checking the pipeline.
-      </p>
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        {LABELERS.map((name) => (
-          <button
-            key={name}
-            onClick={() => onChoose(name)}
-            className="h-12 rounded-xl border border-[var(--rule-2)] text-[15px] font-medium text-[var(--ink)] transition-colors hover:border-[var(--rule-3)] hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]"
-          >
-            {name}
-          </button>
-        ))}
+/**
+ * Who labels. The labels are the team's ground truth, so a teammate's name takes a confirm,
+ * and "Just browse" keeps the page read-only.
+ */
+const ChooseLabeler: React.FC<{
+  current: string | null;
+  onChoose: (name: string) => void;
+  onGuest: () => void;
+  onCancel: () => void;
+}> = ({ current, onChoose, onGuest, onCancel }) => {
+  const [pending, setPending] = useState<string | null>(null);
+  return (
+    <div className="flex h-full items-center justify-center overflow-y-auto p-6">
+      <div className="lab-panel lab-fade-up w-full max-w-xl rounded-2xl p-7">
+        {pending ? (
+          <>
+            <div className="flex items-center gap-2 text-[13px] font-medium text-[var(--retr)]">
+              <PenLine className="h-4 w-4" /> Confirm
+            </div>
+            <h2 className="mt-2 text-lg font-semibold tracking-[-0.01em]">You're about to label as {pending}</h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-[var(--ink-2)]">
+              Every label you give replaces {pending}'s label on that answer, and changes the team's live agreement numbers.
+              The headline agreement on Checker trust comes from a stored snapshot of the first labels, so it won't move.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              <button
+                onClick={() => onChoose(pending)}
+                className="rounded-[9px] bg-[var(--ink)] px-4 py-2 text-[13px] font-medium text-[var(--paper)] hover:opacity-90"
+              >
+                Label as {pending}
+              </button>
+              <button
+                onClick={() => setPending(null)}
+                className="rounded-[9px] border border-[var(--rule-2)] px-4 py-2 text-[13px] text-[var(--ink)] hover:bg-[var(--panel-2)]"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className="text-lg font-semibold tracking-[-0.01em]">Who is labelling?</h2>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--ink-2)]">
+              Two teammates labelled the same answers independently. Only answers they both agree on count as ground truth for
+              checking RAGSeal. If you're not one of them, browse read-only.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              {LABELERS.map((name) => (
+                <button
+                  key={name}
+                  onClick={() => (name === current ? onCancel() : setPending(name))}
+                  className="h-12 rounded-xl border border-[var(--rule-2)] text-[15px] font-medium text-[var(--ink)] transition-colors hover:border-[var(--rule-3)] hover:bg-[color:color-mix(in_srgb,var(--ink)_2%,transparent)]"
+                >
+                  {name}
+                  {name === current && <span className="ml-1.5 text-xs font-normal text-[var(--ink-2)]">(current)</span>}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={onGuest}
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--rule-2)] text-[14px] text-[var(--ink-1)] transition-colors hover:border-[var(--rule-3)] hover:text-[var(--ink)]"
+            >
+              <Eye className="h-4 w-4" /> Just browse, read-only
+            </button>
+            <button onClick={onCancel} className="mt-4 text-xs text-[var(--ink-2)] hover:text-[var(--ink)]">
+              ← Back
+            </button>
+          </>
+        )}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const Progress: React.FC<{ labeled: number; total: number; index: number }> = ({ labeled, total, index }) => (
+const Progress: React.FC<{ labeled: number; total: number; index: number; onSummary?: () => void }> = ({
+  labeled,
+  total,
+  index,
+  onSummary,
+}) => (
   <div className="flex items-center gap-4">
     <div className="text-[13px] text-[var(--ink-1)]">
       <span className="font-semibold tabular-nums text-[var(--ink)]">{labeled}</span>
@@ -544,6 +689,315 @@ const Progress: React.FC<{ labeled: number; total: number; index: number }> = ({
     <div className="text-xs tabular-nums text-[var(--ink-2)]">
       item {index + 1} / {total}
     </div>
+    {onSummary && (
+      <button onClick={onSummary} className="shrink-0 text-xs text-[var(--ink-2)] hover:text-[var(--ink)]">
+        Pack summary
+      </button>
+    )}
+  </div>
+);
+
+/** Read-only header: where you are, and the way to label for real. */
+const GuestNote: React.FC<{ index: number; total: number; onBack: () => void; onLabel: () => void }> = ({ index, total, onBack, onLabel }) => (
+  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--rule)] bg-[var(--panel)] px-4 py-2.5 text-[13px]">
+    <span className="flex items-center gap-2 text-[var(--ink-1)]">
+      <Eye className="h-4 w-4 text-[var(--ink-2)]" /> Read-only. You see what both teammates said and RAGSeal's verdict.
+    </span>
+    <span className="flex items-center gap-4">
+      <span className="text-xs tabular-nums text-[var(--ink-2)]">
+        answer {index + 1} / {total}
+      </span>
+      <button onClick={onBack} className="text-xs text-[var(--ink-2)] hover:text-[var(--ink)]">
+        Pack summary
+      </button>
+      <button onClick={onLabel} className="text-xs font-medium text-[var(--ink)] hover:opacity-70">
+        Label as a teammate →
+      </button>
+    </span>
+  </div>
+);
+
+/** In place of the Correct/Wrong buttons for a guest: each teammate's call and RAGSeal's. */
+const GuestBar: React.FC<{
+  view?: TeamView;
+  onBack: () => void;
+  backDisabled?: boolean;
+  onNext: () => void;
+  nextDisabled?: boolean;
+}> = ({ view, onBack, backDisabled, onNext, nextDisabled }) => {
+  const verdict = view?.verdict ? verdictStyle(view.verdict) : null;
+  return (
+    <div className="flex shrink-0 items-stretch gap-3">
+      <NavButton onClick={onBack} disabled={backDisabled} label="Previous answer">
+        <ArrowLeft className="h-4 w-4" />
+      </NavButton>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2.5 rounded-xl border border-[var(--rule)] px-4 py-2">
+        {LABELERS.map((name) => {
+          const v = view?.labels[name];
+          const color = v == null ? 'var(--muted)' : v === 'correct' ? PASS : RED;
+          return (
+            <span key={name} className="rounded-full px-3 py-1 text-[13px]" style={{ color, background: tint(color, 0.1) }}>
+              <span className="text-[var(--ink-2)]">{name}: </span>
+              <span className="font-medium">{v ? describeLabel(v) : 'not labelled'}</span>
+            </span>
+          );
+        })}
+        <span className="mx-1 hidden h-5 w-px bg-[var(--rule)] sm:block" />
+        <span className="rounded-full px-3 py-1 text-[13px]" style={verdict ? { color: verdict.color, background: tint(verdict.color, 0.1) } : undefined}>
+          <span className="text-[var(--ink-2)]">RAGSeal: </span>
+          <span className="font-medium">{verdict ? verdict.label : '—'}</span>
+        </span>
+      </div>
+      <NavButton onClick={onNext} disabled={nextDisabled} label="Next answer">
+        <ArrowRight className="h-4 w-4" />
+      </NavButton>
+    </div>
+  );
+};
+
+/**
+ * One pack's labelling at a glance: progress, how often the two teammates agreed, how often
+ * RAGSeal agreed with them, where they split, and the other labelled packs. Shown when a
+ * labeller finishes a pack, and as the landing for anyone browsing read-only.
+ */
+const PackSummary: React.FC<{
+  token: string | null;
+  packId: PackId;
+  labeler: string | null;
+  labelled?: number;
+  total: number;
+  onBrowse: () => void;
+  onReview?: () => void;
+  onLabel?: () => void;
+  onPackChange: (p: PackId) => void;
+}> = ({ token, packId, labeler, labelled, total, onBrowse, onReview, onLabel, onPackChange }) => {
+  const packs = usePacks();
+  // Agreement per labelled pack (each call answers for its pack, from the first-labels snapshot when stored).
+  const [agreements, setAgreements] = useState<Record<string, Agreement> | null>(null);
+  const [openNow, setOpenNow] = useState<number | null>(null);
+  // This labeller's done/total in each labelled pack.
+  const [mineByPack, setMineByPack] = useState<Record<string, { done: number; total: number }>>({});
+  const [error, setError] = useState<unknown>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    setOpenNow(null);
+    (async () => {
+      try {
+        const [rows, d] = await Promise.all([
+          Promise.all(LABELLED_PACKS.map(async (p) => [p.id, await getAgreement(token, p.id)] as const)),
+          getDisagreements(packId, token),
+        ]);
+        if (cancelled) return;
+        setAgreements(Object.fromEntries(rows));
+        setOpenNow(d.total ?? d.items.length);
+      } catch (err) {
+        if (!cancelled) setError(err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [token, packId]);
+
+  useEffect(() => {
+    if (!token || !labeler) return;
+    let cancelled = false;
+    Promise.all(
+      LABELLED_PACKS.map(async (p) => {
+        const q = await getLabelQueue(p.id, labeler, token);
+        return [p.id, { done: q.labeled ?? q.items.filter((i) => i.labeled).length, total: q.total ?? q.items.length }] as const;
+      })
+    )
+      .then((rows) => !cancelled && setMineByPack(Object.fromEntries(rows)))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [token, labeler]);
+
+  const name = PACK_NAME[packId] ?? packId;
+  const next = NEXT_PACK[packId];
+  const agreement = agreements?.[packId] ?? null;
+  // The stored first-labels snapshot (what Checker trust headlines) when the server has it; live labels otherwise.
+  const first = (p: string) => agreements?.[p]?.original?.by_pack?.[p];
+  const snap = first(packId);
+  const hh = snap?.human_human ?? agreement?.human_human;
+  const pc = snap?.pipeline_vs_consensus ?? agreement?.pipeline_vs_consensus;
+  const hhN = snap?.n ?? agreement?.human_human?.n;
+  const splitAtFirst = snap?.n != null && snap.human_human?.agreement != null ? Math.round(snap.n * (1 - snap.human_human.agreement)) : null;
+  const when = snap ? 'first labels, before anyone reviewed a disagreement' : 'current labels';
+  const split = agreement?.disagreements ?? [];
+  const humanSplits = split.filter((d) => d.kind === 'human_vs_human');
+  const pipelineSplits = split.filter((d) => d.kind === 'pipeline_vs_consensus');
+  const otherPacks = Math.max(0, packs.length - LABELLED_PACKS.length);
+  const complete = labeler != null && labelled != null && labelled >= total;
+
+  const btn = 'rounded-[9px] border border-[var(--rule-2)] px-3.5 py-2 text-[13px] text-[var(--ink)] hover:bg-[var(--panel-2)]';
+  const primary = 'rounded-[9px] bg-[var(--ink)] px-3.5 py-2 text-[13px] font-medium text-[var(--paper)] hover:opacity-90';
+
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="lab-fade-up mx-auto flex w-full max-w-[1180px] flex-col gap-5 px-6 py-8 lg:py-12">
+        <div className="flex flex-wrap items-end justify-between gap-5">
+          <div className="max-w-2xl">
+            <div className={cn('text-[13px] font-medium', complete ? 'text-[var(--ok)]' : 'text-[var(--ink-2)]')}>
+              {complete ? 'Pack complete' : labeler ? `Labelling as ${labeler}` : 'Human labels · read-only'}
+            </div>
+            <h2 className="mt-1.5 text-[26px] font-semibold leading-tight tracking-[-0.02em] text-[var(--ink)]">
+              {complete ? `All ${total} labelled in ${name}` : `${name}: what two people said, and whether RAGSeal agreed`}
+            </h2>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--ink-2)]">
+              {complete
+                ? 'Thanks. Here is how your labels compare with your teammate’s and with RAGSeal’s verdicts.'
+                : `Two teammates marked each of the ${total} answers right or wrong without seeing RAGSeal’s verdict. Their agreed answers are the ground truth RAGSeal is checked against.`}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            <button onClick={onBrowse} className={labeler ? btn : primary}>
+              {labeler ? 'Review my labels' : 'Browse answers'}
+            </button>
+            {onReview && (
+              <button onClick={onReview} className={btn}>
+                Review disagreements
+              </button>
+            )}
+            {onLabel && (
+              <button onClick={onLabel} className={btn}>
+                Label as a teammate
+              </button>
+            )}
+            {labeler && next && (
+              <button onClick={() => onPackChange(next as PackId)} className={primary}>
+                Next pack: {PACK_NAME[next]}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {error && !agreement ? (
+          <LoadState loading={false} error={error} what="the agreement numbers" />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <SummaryStat
+                value={labeler && labelled != null ? `${labelled} / ${total}` : `${agreement?.n_double_labeled ?? '—'}`}
+                label={labeler ? 'answers you labelled' : 'answers labelled by both teammates'}
+                bar={labeler && labelled != null ? labelled / Math.max(1, total) : undefined}
+                note={labeler ? 'Every answer in the pack’s labelling run.' : 'Each one labelled twice, independently.'}
+              />
+              <SummaryStat
+                value={pct(hh?.agreement)}
+                label="teammates agree"
+                note={`On ${hhN ?? '—'} answers · ${when}.`}
+              />
+              <SummaryStat
+                value={pct(pc?.agreement)}
+                label="RAGSeal agrees with the humans"
+                tone={PASS}
+                note={`On the ${pc?.n ?? '—'} answers both teammates agreed on · ${pc?.false_pass ?? 0} false passes · ${pc?.false_fail ?? 0} false fails · ${when}.`}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_1fr]">
+              <section className="lab-panel rounded-2xl p-5">
+                <h3 className="text-[15px] font-semibold tracking-[-0.01em]">Where people split</h3>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <SplitCount
+                    n={openNow ?? humanSplits.length}
+                    label="teammates still split"
+                    hint={splitAtFirst != null ? `${splitAtFirst} at first labelling, before review` : 'after review'}
+                  />
+                  <SplitCount n={pipelineSplits.length} label="RAGSeal vs both teammates" hint="on answers both teammates agreed on" />
+                </div>
+                {split.length > 0 && (
+                  <ul className="mt-4 divide-y divide-[var(--rule)] border-t border-[var(--rule)]">
+                    {split.slice(0, 4).map((d) => (
+                      <li key={`${d.kind}-${d.test_id}`} className="flex items-start justify-between gap-3 py-2.5 text-[13px]">
+                        <span className="min-w-0">
+                          <span className="font-mono text-xs text-[var(--muted)]">{d.test_id}</span>{' '}
+                          <span className="text-[var(--ink-1)]">{d.question}</span>
+                          {d.humans && <span className="block text-xs text-[var(--ink-2)]">{d.humans}</span>}
+                        </span>
+                        <span className="shrink-0 rounded-full border border-[var(--rule)] px-2 py-0.5 text-[11px] text-[var(--ink-2)]">
+                          {d.kind === 'human_vs_human' ? 'humans split' : `RAGSeal: ${d.pipeline ? verdictStyle(d.pipeline).short : '—'}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section className="lab-panel rounded-2xl p-5">
+                <div className="flex items-baseline justify-between">
+                  <h3 className="text-[15px] font-semibold tracking-[-0.01em]">Labelled packs</h3>
+                  <span className="pr-[68px] text-[11px] text-[var(--muted)]">teammates agree</span>
+                </div>
+                <ul className="mt-3 space-y-2.5">
+                  {LABELLED_PACKS.map((p) => {
+                    const mine = mineByPack[p.id];
+                    const n = agreements?.[p.id]?.n_double_labeled;
+                    const packTotal = packs.find((x) => x.id === p.id)?.questions;
+                    const frac = mine ? mine.done / Math.max(1, mine.total) : n && packTotal ? Math.min(1, n / packTotal) : n ? 1 : 0;
+                    const here = p.id === packId;
+                    return (
+                      <li key={p.id} className="flex items-center gap-3">
+                        <span className="w-24 shrink-0 text-[13px] text-[var(--ink)]">{p.label}</span>
+                        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--panel-3)]">
+                          <span className="block h-full rounded-full bg-[var(--ok)]" style={{ width: `${frac * 100}%` }} />
+                        </span>
+                        <span className="w-28 shrink-0 text-right text-xs tabular-nums text-[var(--ink-2)]">
+                          {mine ? `you ${mine.done} / ${mine.total}` : n != null ? `${n} double-labelled` : '—'}
+                        </span>
+                        <span className="w-14 shrink-0 text-right text-xs tabular-nums text-[var(--ink-1)]" title="Teammates agree (first labels)">
+                          {pct(first(p.id)?.human_human?.agreement ?? agreements?.[p.id]?.human_human?.agreement)}
+                        </span>
+                        <button
+                          onClick={() => onPackChange(p.id)}
+                          disabled={here}
+                          className="w-14 shrink-0 rounded-md border border-[var(--rule)] py-1 text-xs text-[var(--ink-1)] hover:text-[var(--ink)] disabled:border-transparent disabled:text-[var(--muted)]"
+                        >
+                          {here ? 'Here' : 'Open'}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-4 border-t border-[var(--rule)] pt-3 text-xs leading-relaxed text-[var(--ink-2)]">
+                  Only these three packs have human labels: two teammates each labelled every answer in one run of each.
+                  {otherPacks > 0 && ` The other ${otherPacks} packs are scored by RAGSeal alone.`} The headline agreement on
+                  Checker trust is a stored snapshot of these first labels, so later edits here don’t change it.
+                </p>
+              </section>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const SummaryStat: React.FC<{ value: string; label: string; note?: string; bar?: number; tone?: string }> = ({ value, label, note, bar, tone }) => (
+  <div className="lab-panel rounded-2xl p-5">
+    <div className="text-[32px] font-semibold leading-none tracking-[-0.03em] tabular-nums" style={tone ? { color: tone } : undefined}>
+      {value}
+    </div>
+    <div className="mt-2 text-[13px] font-medium text-[var(--ink)]">{label}</div>
+    {bar != null && (
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--panel-3)]">
+        <div className="h-full rounded-full bg-[var(--ok)]" style={{ width: `${Math.min(1, bar) * 100}%` }} />
+      </div>
+    )}
+    {note && <p className="mt-2 text-xs leading-relaxed text-[var(--ink-2)]">{note}</p>}
+  </div>
+);
+
+const SplitCount: React.FC<{ n: number; label: string; hint: string }> = ({ n, label, hint }) => (
+  <div className="rounded-xl border border-[var(--rule)] px-4 py-3">
+    <div className="text-2xl font-semibold tabular-nums tracking-[-0.02em]">{n}</div>
+    <div className="mt-0.5 text-[13px] text-[var(--ink)]">{label}</div>
+    <div className="text-xs text-[var(--ink-2)]">{hint}</div>
   </div>
 );
 
