@@ -42,6 +42,7 @@ def evaluate_query(
         stale_chunk_ids=body.stale_chunk_ids or case.get("stale_chunk_ids"),
         test_id=body.test_id,
         distractor_document_ids=pack["distractor_document_ids"] if body.pack_id and "distractor_document_ids" in pack else None,
+        **({"bot": body.bot.model_dump(), "gold_snippet": case.get("context_snippet")} if body.bot else {}),
     )
     db.save_evaluation(user.id, result)
     return result
@@ -74,8 +75,9 @@ def evaluate_batch(
     if not test_cases:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "test_cases is empty")
 
+    bot = {"bot": body.bot.model_dump()} if body.bot else {}
     if not body.run_async:
-        result = engine.evaluate_batch(user.id, document_ids, test_cases, pack_id=body.pack_id, concurrency=body.concurrency)
+        result = engine.evaluate_batch(user.id, document_ids, test_cases, pack_id=body.pack_id, concurrency=body.concurrency, **bot)
         db.save_run(user.id, result)
         return result
 
@@ -86,7 +88,7 @@ def evaluate_batch(
         user.id,
         len(test_cases),
         work=lambda report: engine.evaluate_batch(
-            user.id, document_ids, test_cases, pack_id=body.pack_id, progress=report, batch_id=batch_id, concurrency=body.concurrency
+            user.id, document_ids, test_cases, pack_id=body.pack_id, progress=report, batch_id=batch_id, concurrency=body.concurrency, **bot
         ),
         on_done=lambda result: db.save_run(user.id, {**result, "created_at": created_at}),
         on_error=lambda error: db.fail_run(batch_id, error),

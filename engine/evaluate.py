@@ -13,6 +13,7 @@ from .ingest import Chunk
 from .llm import Judge, JudgeError, ModelUnavailable
 from .rag import RagSystem, is_abstention
 from .scoring import MetricResult, score_case
+from .connector import BotError, context_chunks, covers
 from .store import ScoredChunk, VectorStore
 from .verdict import FAILURE_TYPE_TEXT, Facts, classify_failure, decide, needs_replay
 
@@ -42,6 +43,7 @@ class TestCase:
     true_failure_type: str | None = None  # the injected fault, for the confusion matrix
     # Re-judging a finished result: reuse its retrieval, answer and replay answer; only the judge runs.
     stored: dict | None = None
+    gold_snippet: str | None = None  # the sentence that states the answer (pack and synthetic cases)
 
     @property
     def unanswerable(self) -> bool:
@@ -76,10 +78,13 @@ class Evaluator:
 
     # -------------------------------------------------------------- replay
 
-    def replay(self, case: TestCase, gold_chunks: list[Chunk], counter: dict | None = None) -> dict:
+    def replay(self, case: TestCase, gold_chunks: list[Chunk], counter: dict | None = None, bot=None) -> dict:
         stored = (case.stored or {}).get("replay")
         if stored and stored.get("context_chunk_ids") == [c.chunk_id for c in gold_chunks]:
             answer, citations, latency = stored["answer"], stored.get("citations", []), stored.get("latency_ms", 0)
+        elif bot is not None:
+            reply = bot.ask(case.question, contexts=[c.text for c in gold_chunks])
+            answer, citations, latency = reply.answer, [], reply.latency_ms
         else:
             answer, citations, latency = self.rag.generate(case.question, gold_chunks)
         scores = score_case(self.judge, case.question, answer, gold_chunks, case.ground_truth, case.unanswerable, with_relevance=False)
@@ -100,7 +105,8 @@ class Evaluator:
 
     # ------------------------------------------------------------ evaluate
 
-    def evaluate(self, owner_id: str, case: TestCase, document_ids: list[str], top_k: int | None = None) -> dict:
+    def evaluate(self, owner_id: str, case: TestCase, document_ids: list[str], top_k: int | None = None, bot=None) -> dict:
+        """One case end to end. With `bot` (an ExternalBot), the user's own RAG answers instead of ours."""
         started = time.perf_counter()
         self.judge.start_tracking()
         counter = {"judge_calls": 0, "rule_shortcuts": 0}
@@ -109,6 +115,10 @@ class Evaluator:
             chunk_ids = case.stored["retrieved_chunk_ids"]
             retrieved = [ScoredChunk(c, similarity.get(c.chunk_id, 0.0)) for c in self.store.get_chunks(owner_id, chunk_ids)]
             answer, citations, gen_ms = case.stored["generated_answer"], case.stored.get("citations", []), case.stored.get("generation_ms", 0)
+        elif bot is not None:
+            reply = bot.ask(case.question)
+            retrieved = [ScoredChunk(c, 0.0) for c in context_chunks(reply)]
+            answer, citations, gen_ms = reply.answer, [], reply.latency_ms
         elif case.forced_chunk_ids is not None:
             retrieved = [ScoredChunk(c, 0.0) for c in self.store.get_chunks(owner_id, case.forced_chunk_ids)]
             if case.manual_answer:
@@ -146,8 +156,24 @@ class Evaluator:
             gold_source = "inferred" if gold_ids else None
         gold_chunks = self.store.get_chunks(owner_id, gold_ids)
         gold_ids = [c.chunk_id for c in gold_chunks]
-        gold_retrieved = any(g in retrieved_ids for g in gold_ids)
-        stale_retrieved = [c for c in case.stale_chunk_ids if c in retrieved_ids]
+        present = set(retrieved_ids)
+        matched: dict[str, set[str]] = {}  # bot passage id -> roles ("gold", "stale") it was matched to
+        if bot is not None:
+            # The bot's passages are its own text, not our chunk IDs: match our gold and stale passages by content.
+            texts = [c.text for c in chunks]
+            for g in gold_chunks:
+                target = case.gold_snippet or g.text
+                for c, t in zip(chunks, texts):
+                    if covers(t, target) or (not case.gold_snippet and covers(g.text, t)):
+                        present.add(g.chunk_id)
+                        matched.setdefault(c.chunk_id, set()).add("gold")
+            for stale in self.store.get_chunks(owner_id, case.stale_chunk_ids):
+                for c, t in zip(chunks, texts):
+                    if covers(t, stale.text) or covers(stale.text, t):
+                        present.add(stale.chunk_id)
+                        matched.setdefault(c.chunk_id, set()).add("stale")
+        gold_retrieved = any(g in present for g in gold_ids)
+        stale_retrieved = [c for c in case.stale_chunk_ids if c in present]
         abstained = is_abstention(answer)
 
         facts = Facts(
@@ -165,14 +191,21 @@ class Evaluator:
         )
 
         replay = None
+        replay_status = "not_needed"
         if needs_replay(facts):
-            try:
-                replay = self.replay(case, gold_chunks, counter)
-                facts.replay_ran = True
-                facts.replay_correct = replay["passed"]
-                facts.replay_failed = replay["answer_accuracy"] is None
-            except JudgeError:
-                facts.replay_failed = True
+            if bot is not None and not bot.config.accepts_contexts:
+                facts.replay_unavailable = True
+                replay_status = "unavailable"
+            else:
+                try:
+                    replay = self.replay(case, gold_chunks, counter, bot)
+                    facts.replay_ran = True
+                    facts.replay_correct = replay["passed"]
+                    facts.replay_failed = replay["answer_accuracy"] is None
+                    replay_status = "ran"
+                except (JudgeError, BotError):
+                    facts.replay_failed = True
+                    replay_status = "failed"
         verdict = decide(facts)
         failure_type, stage = classify_failure(facts, verdict.category)
         if replay is not None:
@@ -198,12 +231,12 @@ class Evaluator:
                     "relevance_reason": graded.get("reason"),
                     "similarity": round(scored.similarity, 4),
                     "cited": scored.chunk.chunk_id in citations,
-                    "is_gold": scored.chunk.chunk_id in gold_ids,
-                    "is_stale": scored.chunk.chunk_id in case.stale_chunk_ids,
+                    "is_gold": scored.chunk.chunk_id in gold_ids or "gold" in matched.get(scored.chunk.chunk_id, ()),
+                    "is_stale": scored.chunk.chunk_id in case.stale_chunk_ids or "stale" in matched.get(scored.chunk.chunk_id, ()),
                 }
             )
 
-        evidence = self._evidence(gold_chunks, retrieved_ids, retrieved_out, faith, stale_retrieved, owner_id, gold_source)
+        evidence = self._evidence(gold_chunks, present, retrieved_out, faith, stale_retrieved, owner_id, gold_source)
 
         return {
             "evaluation_id": "eval_" + uuid.uuid4().hex[:10],
@@ -236,6 +269,9 @@ class Evaluator:
             "retrieved_chunk_ids": retrieved_ids,
             "gold_retrieved": gold_retrieved,
             "replay": replay,
+            "replay_status": replay_status,  # "ran" | "not_needed" | "unavailable" (bot takes no contexts) | "failed"
+            "answer_source": "external" if bot is not None else "builtin",
+            **({"bot": bot.config.public()} if bot is not None else {}),
             **self.judge.used(),
             "generator_model": self.rag.generator_model,
             "generation_ms": gen_ms,
