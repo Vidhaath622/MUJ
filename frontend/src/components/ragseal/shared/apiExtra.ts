@@ -674,6 +674,8 @@ export interface ChunkingLabRow {
   avg_chunk_chars?: number;
   ms_per_question?: number;
   rerank_calls?: number;
+  /** The setup the bot uses today; every sweep includes it, added as an extra row if not asked for. */
+  is_today?: boolean;
 }
 
 export interface ChunkingLabResult {
@@ -687,6 +689,16 @@ export interface ChunkingLabResult {
   metric?: string;
   rows?: ChunkingLabRow[];
   best?: ChunkingLabRow;
+  /** The cheapest setup as good as the best (within a point of recall, 0.02 of MRR). */
+  recommended?: ChunkingLabRow;
+  recommendation_reason?: string;
+  /** The why behind the pick, without restating it or today's delta. */
+  recommendation_notes?: string[];
+  today?: ChunkingLabRow | null;
+  /** E.g. too few chunks for top-k to tell setups apart. */
+  warnings?: string[];
+  /** A bigger pack to try when the warnings say this one is too small. */
+  suggested_pack?: string | null;
   note?: string;
   error?: string;
 }

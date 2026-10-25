@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Info, Play, SlidersHorizontal, Trophy } from 'lucide-react';
+import { AlertTriangle, Check, Copy, Info, Play, SlidersHorizontal, Trophy } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { AMBER, PASS, tint } from '../lab/verdict';
 import {
@@ -66,8 +66,10 @@ function rowLabel(r: ChunkingLabRow): string {
   return parts.join(' · ');
 }
 
+// Labs from before the backend flagged today's row fall back to matching the defaults.
 const isCurrent = (r: ChunkingLabRow) =>
-  r.chunk_chars === CURRENT.chunk_chars && r.mode === CURRENT.mode && r.rerank === CURRENT.rerank && (r.overlap ?? 0) === CURRENT.overlap;
+  r.is_today ??
+  (r.chunk_chars === CURRENT.chunk_chars && r.mode === CURRENT.mode && r.rerank === CURRENT.rerank && (r.overlap ?? 0) === CURRENT.overlap);
 
 const sameRow = (a?: ChunkingLabRow, b?: ChunkingLabRow) =>
   !!a && !!b && a.chunk_chars === b.chunk_chars && a.mode === b.mode && a.rerank === b.rerank && (a.overlap ?? 0) === (b.overlap ?? 0);
@@ -204,12 +206,19 @@ export const ChunkingLabPage: React.FC<ChunkingLabPageProps> = ({ token }) => {
             </select>
           </Field>
 
-          <Field label="Chunk sizes" hint={`Characters per chunk. Pick up to ${MAX_SIZES}; 700 is what the bot uses today.`}>
-            <div className="flex flex-wrap gap-1.5">
+          <Field label="Chunk sizes" hint={`Characters per chunk. Pick up to ${MAX_SIZES}. The dot marks 700, what the bot uses today; it is always scored for comparison.`}>
+            <div className="grid grid-cols-6 gap-1">
               {SIZE_CHOICES.map((s) => (
-                <Chip key={s} on={form.sizes.includes(s)} onClick={() => toggleSize(s)} disabled={!form.sizes.includes(s) && form.sizes.length >= MAX_SIZES}>
+                <Chip
+                  key={s}
+                  compact
+                  on={form.sizes.includes(s)}
+                  onClick={() => toggleSize(s)}
+                  disabled={!form.sizes.includes(s) && form.sizes.length >= MAX_SIZES}
+                  title={s === CURRENT.chunk_chars ? `${s} characters: what the bot uses today` : `${s} characters`}
+                >
                   {s}
-                  {s === CURRENT.chunk_chars && <span className="ml-1 text-[0.71875rem] opacity-70">today</span>}
+                  {s === CURRENT.chunk_chars && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full" style={{ background: AMBER }} />}
                 </Chip>
               ))}
             </div>
@@ -287,7 +296,12 @@ export const ChunkingLabPage: React.FC<ChunkingLabPageProps> = ({ token }) => {
           {running ? (
             <Running lab={lab!} packName={packName(packs, lab?.pack_id)} />
           ) : lab?.status === 'done' && lab.rows?.length ? (
-            <Results lab={lab} packName={packName(packs, lab.pack_id)} />
+            <Results
+              lab={lab}
+              packName={packName(packs, lab.pack_id)}
+              suggestedPack={lab.suggested_pack ? { id: lab.suggested_pack, name: packName(packs, lab.suggested_pack), info: packs?.find((p) => p.pack_id === lab.suggested_pack) } : null}
+              onSwitchPack={(id) => setForm((f) => ({ ...f, pack_id: id }))}
+            />
           ) : (
             <Example />
           )}
@@ -326,17 +340,28 @@ const Running: React.FC<{ lab: ChunkingLabResult; packName: string }> = ({ lab, 
   );
 };
 
-const Results: React.FC<{ lab: ChunkingLabResult; packName: string }> = ({ lab, packName }) => {
+const Results: React.FC<{
+  lab: ChunkingLabResult;
+  packName: string;
+  suggestedPack: { id: string; name: string; info?: PackInfo } | null;
+  onSwitchPack: (id: string) => void;
+}> = ({ lab, packName, suggestedPack, onSwitchPack }) => {
   const metric = lab.metric ?? `context_recall_at_${lab.k ?? 4}`;
   const recall = (r: ChunkingLabRow) => (typeof r[metric] === 'number' ? (r[metric] as number) : 0);
   const rows = useMemo(
-    () => [...(lab.rows ?? [])].sort((a, b) => recall(b) - recall(a) || b.mrr - a.mrr),
+    () => [...(lab.rows ?? [])].sort((a, b) => recall(b) - recall(a) || b.mrr - a.mrr || (a.rerank_calls ?? 0) - (b.rerank_calls ?? 0)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [lab]
   );
   const best = lab.best ?? rows[0];
+  const recommended = lab.recommended ?? best;
   const current = rows.find(isCurrent);
   const k = lab.k ?? 4;
+  // When every setup ties on recall the bars would all be equal; MRR (how high the right passage ranks) still separates them.
+  const recallTies = rows.length > 1 && rows.every((r) => recall(r) === recall(rows[0]));
+  const [chart, setChart] = useState<'recall' | 'mrr'>(recallTies ? 'mrr' : 'recall');
+  useEffect(() => setChart(recallTies ? 'mrr' : 'recall'), [lab.lab_id, recallTies]);
+  const chartRows = chart === 'mrr' ? [...rows].sort((a, b) => b.mrr - a.mrr || recall(b) - recall(a)) : rows;
 
   return (
     <>
@@ -349,8 +374,36 @@ const Results: React.FC<{ lab: ChunkingLabResult; packName: string }> = ({ lab, 
         note={`${lab.questions ?? '?'} questions · ${rows.length} setups${lab.created_at ? ` · ${fmtTime(lab.created_at)}` : ''}`}
         bodyClassName="flex flex-col gap-5 p-5"
       >
-        <Verdict best={best} current={current} recall={recall} />
-        <Bars rows={rows} best={best} recall={recall} k={k} />
+        {lab.warnings?.length ? <Warnings warnings={lab.warnings} suggested={suggestedPack} onSwitchPack={onSwitchPack} /> : null}
+        {lab.recommendation_reason ? (
+          <Recommendation recommended={recommended} current={current} notes={lab.recommendation_notes ?? [lab.recommendation_reason]} recall={recall} />
+        ) : (
+          <Verdict best={best} current={current} recall={recall} />
+        )}
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-[var(--ink-2)]">
+            {chart === 'mrr' ? 'MRR: how high the first right passage ranks (1.0 = always first)' : `Recall@${k}: right passages found in the top ${k}`}
+          </span>
+          <div className="inline-flex rounded-[9px] border border-[var(--rule-2)] p-0.5 text-[0.8125rem]" role="tablist" aria-label="Chart metric">
+            {(['recall', 'mrr'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={chart === m}
+                onClick={() => setChart(m)}
+                className={cn(
+                  'rounded-[7px] px-2.5 py-1 transition-colors',
+                  chart === m ? 'bg-[var(--ink)] text-[var(--paper)]' : 'text-[var(--ink-2)] hover:text-[var(--ink)]'
+                )}
+              >
+                {m === 'recall' ? `Recall@${k}` : 'MRR'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <Bars rows={chartRows} best={best} recommended={recommended} value={chart === 'mrr' ? (r) => r.mrr : recall} label={chart === 'mrr' ? 'MRR' : `recall@${k}`} />
+        <ApplySnippet row={recommended} />
       </Panel>
 
       <Panel title="Every setup" note={`recall@${k} = right passages found in the top ${k}`} bodyClassName="overflow-x-auto p-0">
@@ -371,7 +424,8 @@ const Results: React.FC<{ lab: ChunkingLabResult; packName: string }> = ({ lab, 
               <tr key={rowLabel(r)} className="border-b border-[var(--rule)] last:border-0">
                 <td className="px-5 py-2.5 text-[var(--ink)]">
                   {rowLabel(r)}
-                  {sameRow(r, best) && <Tag tone="best">best</Tag>}
+                  {sameRow(r, recommended) && <Tag tone="best">recommended</Tag>}
+                  {sameRow(r, best) && !sameRow(best, recommended) && <Tag tone="neutral">best</Tag>}
                   {isCurrent(r) && <Tag tone="current">today</Tag>}
                 </td>
                 <td className="px-3 py-2.5 text-right text-[var(--ink)]">{pct1(recall(r))}</td>
@@ -432,24 +486,26 @@ const Verdict: React.FC<{ best?: ChunkingLabRow; current?: ChunkingLabRow; recal
 };
 
 /**
- * Horizontal bars of recall, sorted. The scores usually cluster near the top, so the axis starts
- * just under the lowest one (and says so) instead of hiding every difference in a 0–100% scale.
+ * Horizontal bars, sorted. The scores usually cluster near the top, so the axis starts just under
+ * the lowest one (and says so) instead of hiding every difference in a 0–100% scale.
  */
-const Bars: React.FC<{ rows: ChunkingLabRow[]; best?: ChunkingLabRow; recall: (r: ChunkingLabRow) => number; k: number }> = ({
-  rows,
-  best,
-  recall,
-  k,
-}) => {
-  const lowest = Math.min(...rows.map(recall));
+const Bars: React.FC<{
+  rows: ChunkingLabRow[];
+  best?: ChunkingLabRow;
+  recommended?: ChunkingLabRow;
+  value: (r: ChunkingLabRow) => number;
+  label: string;
+}> = ({ rows, best, recommended, value, label }) => {
+  const lowest = Math.min(...rows.map(value));
   const floor = Math.max(0, Math.floor((lowest - 0.05) * 10) / 10);
   const scale = (v: number) => (1 - floor > 0 ? ((v - floor) / (1 - floor)) * 100 : 100);
+  const isMrr = label === 'MRR';
   return (
     <div className="flex flex-col gap-2">
       {rows.map((r) => {
-        const v = recall(r);
-        const isBest = sameRow(r, best);
-        const color = isBest ? PASS : isCurrent(r) ? AMBER : 'var(--ink-2)';
+        const v = value(r);
+        const isRecommended = sameRow(r, recommended);
+        const color = isRecommended ? PASS : isCurrent(r) ? AMBER : 'var(--ink-2)';
         return (
           <div key={rowLabel(r)} className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] items-center gap-3 text-[0.84375rem]">
             <span className="truncate text-[var(--ink-1)]" title={rowLabel(r)}>
@@ -458,25 +514,143 @@ const Bars: React.FC<{ rows: ChunkingLabRow[]; best?: ChunkingLabRow; recall: (r
             <div className="relative h-6 overflow-hidden rounded-md bg-[var(--panel)]">
               <div
                 className="absolute inset-y-0 left-0 rounded-md transition-[width] duration-700"
-                style={{ width: `${Math.max(2, scale(v))}%`, background: tint(color, isBest ? 0.55 : 0.32) }}
+                style={{ width: `${Math.max(2, scale(v))}%`, background: tint(color, isRecommended ? 0.55 : 0.32) }}
               />
               <span className="absolute inset-y-0 left-2 flex items-center gap-1.5 text-[0.75rem]">
-                {isBest && <Tag tone="best">best</Tag>}
+                {isRecommended && <Tag tone="best">recommended</Tag>}
+                {sameRow(r, best) && !sameRow(best, recommended) && <Tag tone="neutral">best</Tag>}
                 {isCurrent(r) && <Tag tone="current">today</Tag>}
               </span>
+              {r.rerank_calls ? (
+                <span className="absolute inset-y-0 right-2 flex items-center text-[0.75rem] text-[var(--ink-1)]">{r.rerank_calls} grading calls</span>
+              ) : null}
             </div>
-            <span className="text-right font-medium tabular-nums text-[var(--ink)]">{pct1(v)}</span>
+            <span className="text-right font-medium tabular-nums text-[var(--ink)]">{isMrr ? v.toFixed(3) : pct1(v)}</span>
           </div>
         );
       })}
       <div className="grid grid-cols-[minmax(150px,220px)_minmax(0,1fr)_56px] gap-3 text-[0.75rem] text-[var(--ink-2)]">
         <span />
         <span className="flex justify-between">
-          <span>{Math.round(floor * 100)}%</span>
-          <span>recall@{k}{floor > 0 ? ` · axis starts at ${Math.round(floor * 100)}%` : ''}</span>
-          <span>100%</span>
+          <span>{isMrr ? floor.toFixed(1) : `${Math.round(floor * 100)}%`}</span>
+          <span>
+            {label}
+            {floor > 0 ? ` · axis starts at ${isMrr ? floor.toFixed(1) : `${Math.round(floor * 100)}%`}` : ''}
+          </span>
+          <span>{isMrr ? '1.0' : '100%'}</span>
         </span>
         <span />
+      </div>
+    </div>
+  );
+};
+
+/** The backend's plain-words recommendation, led by the setup to use and its gain over today. */
+const Recommendation: React.FC<{
+  recommended: ChunkingLabRow;
+  current?: ChunkingLabRow;
+  notes: string[];
+  recall: (r: ChunkingLabRow) => number;
+}> = ({ recommended, current, notes, recall }) => {
+  const gain = current ? (recall(recommended) - recall(current)) * 100 : null;
+  const isToday = current && sameRow(recommended, current);
+  return (
+    <div className="flex items-start gap-3">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: tint(PASS, 0.14), color: PASS }}>
+        <Trophy className="h-4 w-4" />
+      </span>
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <p className="text-[1.125rem] leading-snug text-[var(--ink)]">
+          Use <span className="font-medium">{rowLabel(recommended)}</span>
+          {isToday ? (
+            <span className="text-[var(--ink-2)]">: today's setup is already the right one.</span>
+          ) : gain != null && Math.abs(gain) < 0.05 ? (
+            // Same recall as today: the only difference is how high the right passage ranks.
+            <span className="text-[var(--ink-2)]">
+              : the same {pct1(recall(recommended))} as today, ranked {recommended.mrr > current!.mrr ? 'slightly higher' : 'the same'} (MRR{' '}
+              {recommended.mrr.toFixed(3)} vs {current!.mrr.toFixed(3)})
+            </span>
+          ) : gain != null ? (
+            <>
+              {': '}
+              {pct1(recall(recommended))} vs {pct1(recall(current!))} today{' '}
+              <span className="font-medium" style={{ color: gain > 0 ? PASS : 'var(--ink-2)' }}>
+                ({gain >= 0 ? '+' : ''}
+                {gain.toFixed(1)} pts)
+              </span>
+            </>
+          ) : null}
+        </p>
+        {notes.length > 0 && <p className="text-[0.875rem] leading-relaxed text-[var(--ink-1)]">{notes.join(' ')}</p>}
+      </div>
+    </div>
+  );
+};
+
+/** Amber note when the pack is too small to tell setups apart, with a one-click switch to a bigger pack. */
+const Warnings: React.FC<{
+  warnings: string[];
+  suggested: { id: string; name: string; info?: PackInfo } | null;
+  onSwitchPack: (id: string) => void;
+}> = ({ warnings, suggested, onSwitchPack }) => (
+  <div className="flex items-start gap-3 rounded-xl border px-4 py-3" style={{ borderColor: tint(AMBER, 0.4), background: tint(AMBER, 0.08) }}>
+    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: AMBER }} />
+    <div className="flex min-w-0 flex-1 flex-col gap-2 text-[0.875rem] leading-relaxed text-[var(--ink)]">
+      {warnings.map((w) => (
+        <p key={w}>{w}</p>
+      ))}
+      {suggested && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onSwitchPack(suggested.id)}
+            className="rounded-[9px] border border-[var(--rule-3)] px-3 py-1.5 text-[0.84375rem] text-[var(--ink)] transition-colors hover:bg-[var(--panel-2)]"
+          >
+            Try {suggested.name}
+            {suggested.info?.test_case_count
+              ? ` (${suggested.info.test_case_count} questions${suggested.info.document_count ? `, ${suggested.info.document_count} documents` : ''})`
+              : ''}{' '}
+            →
+          </button>
+          <span className="text-xs text-[var(--ink-2)]">picks it on the left; then run the lab</span>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+/** Copyable backend settings for the recommended setup. */
+const ApplySnippet: React.FC<{ row: ChunkingLabRow }> = ({ row }) => {
+  const [copied, setCopied] = useState(false);
+  const lines = [`RAGSEAL_RETRIEVAL=${row.mode}`, `RAGSEAL_CHUNK_CHARS=${row.chunk_chars}`];
+  if (row.overlap) lines.push(`RAGSEAL_CHUNK_OVERLAP=${row.overlap}`);
+  if (row.rerank) lines.push('RAGSEAL_RERANK=1');
+  const text = lines.join('\n');
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard blocked: the text is still selectable
+    }
+  };
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs font-medium text-[var(--ink-1)]">Apply it</span>
+        <span className="text-xs text-[var(--ink-2)]">set in backend/.env and restart; new uploads use it</span>
+      </div>
+      <div className="flex items-start justify-between gap-3 rounded-[10px] border border-[var(--rule)] bg-[var(--panel)] px-3.5 py-2.5">
+        <pre className="select-all whitespace-pre-wrap font-mono text-[0.84375rem] leading-relaxed text-[var(--ink)]">{text}</pre>
+        <button
+          type="button"
+          onClick={copy}
+          className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-[var(--ink-2)] transition-colors hover:text-[var(--ink)]"
+        >
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
       </div>
     </div>
   );
@@ -537,8 +711,8 @@ const MetricHelp: React.FC<{ k: number }> = ({ k }) => (
   </div>
 );
 
-const Tag: React.FC<{ tone: 'best' | 'current'; children: React.ReactNode }> = ({ tone, children }) => {
-  const color = tone === 'best' ? PASS : AMBER;
+const Tag: React.FC<{ tone: 'best' | 'current' | 'neutral'; children: React.ReactNode }> = ({ tone, children }) => {
+  const color = tone === 'best' ? PASS : tone === 'current' ? AMBER : 'var(--ink-2)';
   return (
     <span
       className="ml-1.5 inline-flex items-center rounded-full px-1.5 py-px text-[0.71875rem] font-medium"
@@ -549,14 +723,23 @@ const Tag: React.FC<{ tone: 'best' | 'current'; children: React.ReactNode }> = (
   );
 };
 
-const Chip: React.FC<{ on: boolean; onClick: () => void; disabled?: boolean; children: React.ReactNode }> = ({ on, onClick, disabled, children }) => (
+const Chip: React.FC<{ on: boolean; onClick: () => void; disabled?: boolean; compact?: boolean; title?: string; children: React.ReactNode }> = ({
+  on,
+  onClick,
+  disabled,
+  compact,
+  title,
+  children,
+}) => (
   <button
     type="button"
     onClick={onClick}
     disabled={disabled}
     aria-pressed={on}
+    title={title}
     className={cn(
-      'inline-flex h-8 items-center rounded-[9px] border px-3 text-[0.84375rem] tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+      'relative inline-flex h-8 items-center rounded-[9px] border text-[0.84375rem] tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+      compact ? 'justify-center px-0' : 'px-3',
       on
         ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]'
         : 'border-[var(--rule-2)] text-[var(--ink-1)] hover:border-[var(--rule-3)] hover:text-[var(--ink)]'
