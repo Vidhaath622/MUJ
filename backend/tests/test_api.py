@@ -233,3 +233,10 @@ def test_query_with_pack_case_restores_trap_metadata(client, alice, fake_engine)
 
     missing = client.post("/api/evaluate/query", headers=alice, json={"query": "x", "pack_id": "banking", "test_id": "nope"})
     assert missing.status_code == 404
+
+
+def test_health_reports_database_backend(client):
+    import os
+
+    expected = "postgres" if os.environ.get("RAGSEAL_TEST_DATABASE_URL") else "sqlite"
+    assert client.get("/api/health").json()["database"] == expected

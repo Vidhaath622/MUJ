@@ -9,3 +9,5 @@ httpx
 numpy
 pypdf
 pytest
+psycopg[binary]>=3.2
+psycopg-pool>=3.2

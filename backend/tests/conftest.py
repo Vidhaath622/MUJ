@@ -9,6 +9,8 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 # Importing app.main builds a module-level app; keep its data out of backend/data.
 os.environ["RAGSEAL_BACKEND_DATA"] = tempfile.mkdtemp(prefix="ragseal-test-")
+# Tests never reach a real database: set before backend/.env is loaded (dotenv does not override it).
+os.environ["DATABASE_URL"] = os.environ.get("RAGSEAL_TEST_DATABASE_URL", "")
 
 # During development the engine lives in a sibling worktree; after the merge it is at the repo root.
 if not os.environ.get("RAGSEAL_ENGINE_PATH") and not (BACKEND_DIR.parent / "engine").is_dir():
@@ -31,10 +33,27 @@ def fake_engine():
     return FakeEngine()
 
 
+# Set RAGSEAL_TEST_DATABASE_URL to run the whole suite against Postgres instead of SQLite.
+TEST_DATABASE_URL = os.environ.get("RAGSEAL_TEST_DATABASE_URL")
+
+
+def _reset_postgres(url: str) -> None:
+    import psycopg
+
+    with psycopg.connect(url, autocommit=True) as conn:
+        conn.execute("DROP SCHEMA public CASCADE")
+        conn.execute("CREATE SCHEMA public")
+
+
 @pytest.fixture
 def app(tmp_path, monkeypatch, fake_engine):
     monkeypatch.setenv("RAGSEAL_BACKEND_DATA", str(tmp_path))
     monkeypatch.delenv("JWT_SECRET", raising=False)
+    if TEST_DATABASE_URL:
+        _reset_postgres(TEST_DATABASE_URL)  # every test starts from an empty database
+        monkeypatch.setenv("DATABASE_URL", TEST_DATABASE_URL)
+    else:
+        monkeypatch.delenv("DATABASE_URL", raising=False)
     application = create_app()
     application.dependency_overrides[get_engine] = lambda: fake_engine
     return application
