@@ -176,6 +176,22 @@
   .typing-dot, .xray-in, .stamp-land { animation: none; }
 }
 
+/* Start-here scroll cue: the mouse bobs and its wheel rolls down. */
+@keyframes story-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(2px); }
+}
+@keyframes story-wheel {
+  0% { transform: translateY(0); opacity: 1; }
+  70% { transform: translateY(6px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 0; }
+}
+.story-bob { animation: story-bob 1.6s ease-in-out infinite; }
+.story-wheel { animation: story-wheel 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .story-bob, .story-wheel { animation: none; }
+}
+
 /* Verdict rubber stamp: outlined, double ruled, uppercase, slightly rotated. */
 .stamp {
   display: inline-block;
