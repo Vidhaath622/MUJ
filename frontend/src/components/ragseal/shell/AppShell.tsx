@@ -14,6 +14,7 @@ import {
   Radar,
   ScanSearch,
   ShieldCheck,
+  SlidersHorizontal,
   Stamp,
   Tags,
   User,
@@ -24,7 +25,7 @@ import { cn } from '../../../lib/utils';
 import { AuthUser } from '../../../types/ragseal';
 import { HealthResponse } from '../../../lib/api';
 
-export type Route = 'bots' | 'connect' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'impact' | 'label' | 'trust' | 'compare' | 'seal' | 'learn';
+export type Route = 'bots' | 'connect' | 'overview' | 'diagnose' | 'runs' | 'testsets' | 'impact' | 'label' | 'trust' | 'compare' | 'chunking' | 'seal' | 'learn';
 
 interface NavItem {
   id: Route;
@@ -53,6 +54,7 @@ const NAV: { group: string; step?: number; items: NavItem[] }[] = [
       { id: 'diagnose', label: 'Diagnose answers', hint: 'See why a single answer went wrong', icon: ScanSearch },
       { id: 'impact', label: 'Change impact', hint: 'What a document update breaks for users today', icon: Radar },
       { id: 'compare', label: 'Compare versions', hint: 'Did a change make the bot better or worse?', icon: GitCompareArrows },
+      { id: 'chunking', label: 'Chunking lab', hint: 'Which chunk size and search finds the right text?', icon: SlidersHorizontal },
     ],
   },
   {
@@ -78,6 +80,7 @@ export const ROUTE_TITLE: Record<Route, string> = {
   label: 'Label answers',
   trust: 'Checker trust',
   compare: 'Compare versions',
+  chunking: 'Chunking lab',
   seal: 'The Seal',
   learn: 'How it works',
 };
@@ -94,6 +97,7 @@ export const ROUTE_BLURB: Record<Route, string> = {
   label: 'Mark the bot\u2019s answers right or wrong yourself. We compare your labels with RAGSeal\u2019s.',
   trust: 'Evidence that RAGSeal\u2019s verdicts can be trusted: agreement with humans, planted failures, and stability.',
   compare: 'Run two versions of the bot on the same questions and see whether the change helped or hurt.',
+  chunking: 'Try chunk sizes and search modes on the same questions and see which finds the right text most often.',
   seal: 'A certificate for one bot, from its latest full test, with a badge you can paste anywhere.',
   learn: 'The full pipeline, explained step by step.',
 };

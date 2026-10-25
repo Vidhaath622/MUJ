@@ -16,6 +16,7 @@ import { TrustPage } from './components/ragseal/pages/TrustPage';
 import { ComparePage } from './components/ragseal/pages/ComparePage';
 import { BotsPage } from './components/ragseal/pages/BotsPage';
 import { ConnectBotPage } from './components/ragseal/pages/ConnectBotPage';
+import { ChunkingLabPage } from './components/ragseal/pages/ChunkingLabPage';
 import { TestSetsPage } from './components/ragseal/pages/TestSetsPage';
 import { SealPage } from './components/ragseal/pages/SealPage';
 
@@ -325,6 +326,8 @@ export const App: React.FC = () => {
         {route === 'trust' && <TrustPage token={authToken} health={backendHealth} />}
 
         {route === 'compare' && <ComparePage token={authToken} />}
+
+        {route === 'chunking' && <ChunkingLabPage token={authToken} />}
 
         {route === 'seal' && <SealPage token={authToken} />}
 
