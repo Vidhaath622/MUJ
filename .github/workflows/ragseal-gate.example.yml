@@ -1,0 +1,38 @@
+# Example: block a release when your RAG bot fails RAGSeal's test pack.
+# Copy into your bot's repository, add the secrets RAGSEAL_URL and RAGSEAL_TOKEN (Settings >
+# Secrets; create the token in RAGSeal under API tokens), and turn on the push trigger below.
+# In this repository it only runs by hand, so it never fails a build for want of secrets.
+name: RAGSeal release gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      pack:
+        description: RAGSeal test pack
+        default: banking
+  # push:
+  #   branches: [main]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Your bot's connector settings; header values come from repository secrets.
+      - name: Bot config
+        run: |
+          cat > bot.json <<EOF
+          {"url": "https://your-bot.example.com/ask", "headers": {"Authorization": "Bearer ${{ secrets.BOT_TOKEN }}"},
+           "answer_path": "answer", "contexts_path": "contexts", "accepts_contexts": true}
+          EOF
+      - name: RAGSeal gate
+        env:
+          RAGSEAL_URL: ${{ secrets.RAGSEAL_URL }}
+          RAGSEAL_TOKEN: ${{ secrets.RAGSEAL_TOKEN }}
+        run: |
+          curl -fsSL -o ragseal_gate.py https://raw.githubusercontent.com/Vidhaath622/MUJ/main/backend/scripts/ragseal_gate.py
+          python ragseal_gate.py --pack "${{ inputs.pack || 'banking' }}" --min-pass-rate 0.8 --max-new-failures 0 --bot-config bot.json
