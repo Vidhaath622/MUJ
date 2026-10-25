@@ -1,0 +1,297 @@
+{
+  "pack_id": "rishihood_rules",
+  "name": "University rules (Rishihood)",
+  "description": "Academic regulations 2023-24 vs 2025-26, with hostel rules as a distractor.",
+  "demo_data": true,
+  "data_note": "Documents written by a teammate (Anuvesha) in the style of the cited sources and kept as given (bold markers removed); figures were not re-checked against the live sources. Questions with origin 'hand' were written by her; 'synthetic' ones by RAGSeal's builder from exact quotes.",
+  "sources": [
+    "rishihood_academic_rules_2023.md | Rishihood University Academic Handbook 2023–24 | Dated: 01-Aug-2023",
+    "rishihood_academic_rules_2025.md | Rishihood University Academic Registrar Notice (RU/Acad/2025/02) | Dated: 15-Jul-2025",
+    "distractor_rishihood_hostel_rules.md | Rishihood Campus Student Life Guidelines | Dated: 01-Aug-2024"
+  ],
+  "documents": [
+    {
+      "file": "rishihood_rules_2025.md"
+    },
+    {
+      "file": "rishihood_rules_2023.md",
+      "superseded_by": "rishihood_rules_2025.md"
+    },
+    {
+      "file": "rishihood_hostel_distractor.md"
+    }
+  ],
+  "risk_rules": [
+    "Never quote the 2023 attendance or fee rules as current."
+  ],
+  "test_cases": [
+    {
+      "test_id": "rsh_01",
+      "question": "What is the minimum attendance requirement at Rishihood University according to 2025 rules?",
+      "ground_truth_answer": "Students must maintain a minimum of 80% attendance in each course to be eligible to sit for the end-term examinations.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Students must maintain a minimum of 80% attendance in each course to be eligible to sit for the end-term examinations."
+        }
+      ],
+      "stale": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Students must maintain a minimum of 75% attendance in each course to be eligible to sit for the end-term examinations."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_02",
+      "question": "What is the medical condonation threshold for attendance under the 2025 policy?",
+      "ground_truth_answer": "Shortfall between 70% and 79% may be condoned by the Dean on valid medical grounds upon submitting medical certificates.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Shortfall between 70% and 79% may be condoned by the Dean on valid medical grounds upon submitting medical certificates."
+        }
+      ],
+      "stale": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Shortfall between 65% and 74% may be condoned by the Dean on valid medical grounds upon submitting medical certificates."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_03",
+      "question": "How many days of casual leave per semester are permitted for official activities under 2025 rules?",
+      "ground_truth_answer": "Students are permitted a maximum of 8 days of casual leave per semester for official university extra-curricular activities.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Students are permitted a maximum of 8 days of casual leave per semester for official university extra-curricular activities."
+        }
+      ],
+      "stale": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Students are permitted a maximum of 5 days of casual leave per semester for official university extra-curricular activities."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_04",
+      "question": "What is the weightage assigned to end-term examinations under the 2025 policy?",
+      "ground_truth_answer": "The continuous evaluation scheme assigns 60% weightage to continuous assessments and mid-terms, and 40% weightage to end-term final examinations.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "The continuous evaluation scheme assigns 60% weightage to continuous assessments and mid-terms, and 40% weightage to end-term final examinations."
+        }
+      ],
+      "stale": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "The continuous evaluation scheme assigns 50% weightage to continuous assessments and mid-terms, and 50% weightage to end-term final examinations."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_05",
+      "question": "How much is the re-examination fee per paper for grade improvement under 2025 rules?",
+      "ground_truth_answer": "Re-examination fee for grade improvement is ₹1,500 per paper.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Re-examination fee for grade improvement is ₹1,500 per paper."
+        }
+      ],
+      "stale": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Re-examination fee for grade improvement is ₹1,000 per paper."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_06",
+      "question": "What was the minimum attendance percentage required at Rishihood University in 2023?",
+      "ground_truth_answer": "Students must maintain a minimum of 75% attendance in each course to be eligible to sit for the end-term examinations.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Students must maintain a minimum of 75% attendance in each course to be eligible to sit for the end-term examinations."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_07",
+      "question": "What is the hostel in-time deadline for resident students on weekdays?",
+      "ground_truth_answer": "All resident students must return to the campus hostel premises by 9:30 PM on weekdays.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "rishihood_hostel_distractor.md",
+          "quote": "All resident students must return to the campus hostel premises by 9:30 PM on weekdays."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_08",
+      "question": "What permissions are required for overnight leave from the Rishihood hostel?",
+      "ground_truth_answer": "Students require warden approval and parental confirmation via the official portal for overnight leave requests.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "rishihood_hostel_distractor.md",
+          "quote": "Students require warden approval and parental confirmation via the official portal for overnight leave requests."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_09",
+      "question": "How much did the grade improvement exam fee per paper increase from 2023 to 2025?",
+      "ground_truth_answer": "The fee increased by ₹500 (from ₹1,000 in 2023 to ₹1,500 in 2025).",
+      "type": "factoid",
+      "origin": "hand",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Re-examination fee for grade improvement is ₹1,500 per paper."
+        },
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Re-examination fee for grade improvement is ₹1,000 per paper."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_10",
+      "question": "By how many percentage points did the minimum required attendance increase under the 2025 policy?",
+      "ground_truth_answer": "The minimum attendance requirement increased by 5 percentage points (from 75% in 2023 to 80% in 2025).",
+      "type": "factoid",
+      "origin": "hand",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Students must maintain a minimum of 80% attendance in each course to be eligible to sit for the end-term examinations."
+        },
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Students must maintain a minimum of 75% attendance in each course to be eligible to sit for the end-term examinations."
+        }
+      ]
+    },
+    {
+      "test_id": "rsh_11",
+      "question": "What is the late fee penalty for tuition payment past the deadline?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "hand"
+    },
+    {
+      "test_id": "rsh_12",
+      "question": "What is the minimum CGPA requirement to qualify for campus placement drives?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "hand"
+    },
+    {
+      "test_id": "rsh_s01",
+      "question": "In the 2025–26 session, what is the minimum attendance requirement for students?",
+      "ground_truth_answer": "80% attendance",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Minimum Attendance Requirement: Students must maintain a minimum of 80% attendance in each course to be eligible to sit for the end-term examinations."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s02",
+      "question": "In the 2025–26 session, how many days of casual leave are students permitted per semester?",
+      "ground_truth_answer": "8 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Causal Leave Allowance: Students are permitted a maximum of 8 days of casual leave per semester for official university extra-curricular activities."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s03",
+      "question": "In the 2025–26 session, what is the re‑examination fee for grade improvement per paper?",
+      "ground_truth_answer": "₹1,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2025.md",
+          "quote": "Grade Improvement Exam Fee: Re-examination fee for grade improvement is ₹1,500 per paper."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s04",
+      "question": "In the 2023 attendance policy, what is the minimum attendance requirement for students?",
+      "ground_truth_answer": "75%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Minimum Attendance Requirement: Students must maintain a minimum of 75% attendance in each course to be eligible to sit for the end-term examinations."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s05",
+      "question": "In the 2023 attendance policy, how many days of casual leave are students permitted per semester?",
+      "ground_truth_answer": "5 days",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Causal Leave Allowance: Students are permitted a maximum of 5 days of casual leave per semester for official university extra-curricular activities."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "rsh_s06",
+      "question": "In the 2023 attendance policy, what is the re‑examination fee for grade improvement per paper?",
+      "ground_truth_answer": "₹1,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "rishihood_rules_2023.md",
+          "quote": "Grade Improvement Exam Fee: Re-examination fee for grade improvement is ₹1,000 per paper."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    }
+  ]
+}

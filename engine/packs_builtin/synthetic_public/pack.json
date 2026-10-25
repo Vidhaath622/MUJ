@@ -1,0 +1,1851 @@
+{
+  "pack_id": "synthetic_public",
+  "name": "Public documents (synthetic questions)",
+  "description": "IRS 2025 and 2026 releases (tax inflation adjustments, retirement limits, mileage rates) and the RAGSeal guide; nine documents searched together.",
+  "demo_data": false,
+  "data_note": "Every question here is synthetic: written by the judge model from an exact quote and kept only after automatic validation (quote verbatim, answer inside the quote). None is human-labelled; a held-back sample is listed in ../SYNTHETIC_SPOT_CHECK.md for people to check.",
+  "license": "IRS newsroom releases are U.S. government works (public domain). RAGSeal documents are this project's own.",
+  "documents": [
+    {
+      "file": "irs_mileage_rates_2025_IR-2024-312.md",
+      "superseded_by": "irs_mileage_rates_2026_IR-2025-128.md"
+    },
+    {
+      "file": "irs_mileage_rates_2026_IR-2025-128.md"
+    },
+    {
+      "file": "irs_retirement_limits_2025_IR-2024-285.md",
+      "superseded_by": "irs_retirement_limits_2026_IR-2025-111.md"
+    },
+    {
+      "file": "irs_retirement_limits_2026_IR-2025-111.md"
+    },
+    {
+      "file": "irs_tax_inflation_2025_IR-2024-273.md",
+      "superseded_by": "irs_tax_inflation_2026_IR-2025-103.md"
+    },
+    {
+      "file": "irs_tax_inflation_2026_IR-2025-103.md"
+    },
+    {
+      "file": "ragseal_how_it_works.md"
+    },
+    {
+      "file": "ragseal_metrics_contract.md"
+    },
+    {
+      "file": "ragseal_overview.md"
+    }
+  ],
+  "risk_rules": [
+    "Never quote a 2025 figure when the question asks about 2026."
+  ],
+  "test_cases": [
+    {
+      "test_id": "syn_001",
+      "question": "What is the IRS document identifier and release date for the tax inflation adjustments for tax year 2026?",
+      "ground_truth_answer": "IR-2025-103, Oct. 9, 2025",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "IR-2025-103, Oct. 9, 2025"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_002",
+      "question": "Which Revenue Procedure provides details about the tax year 2026 annual inflation adjustments?",
+      "ground_truth_answer": "Revenue Procedure 2025-32",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "Revenue Procedure 2025-32 PDF provides details about these annual adjustments."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_003",
+      "question": "For tax year 2026, in which filing year do the adjustments generally apply?",
+      "ground_truth_answer": "2027",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "The tax year 2026 adjustments described below generally apply to tax returns filed in 2027."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_004",
+      "question": "What is the standard deduction for married couples filing jointly in tax year 2026?",
+      "ground_truth_answer": "$32,200",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For tax year 2026, the standard deduction increases to $32,200 for married couples filing jointly."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_005",
+      "question": "What is the standard deduction for heads of households in tax year 2026?",
+      "ground_truth_answer": "$24,150",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "for heads of households, the standard deduction will be $24,150."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_006",
+      "question": "What is the top marginal tax rate for individual single taxpayers in tax year 2026?",
+      "ground_truth_answer": "37%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "the top tax rate remains 37% for individual single taxpayers with incomes greater than $640,600"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_007",
+      "question": "In tax year 2026, what is the lowest tax rate for single individuals?",
+      "ground_truth_answer": "10%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "The lowest rate is 10% for incomes of single individuals with incomes of $12,400 or less ($24,800 for married couples filing jointly)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_008",
+      "question": "In tax year 2026, what is the basic exclusion amount for estates of decedents who die during 2026?",
+      "ground_truth_answer": "$15,000,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "Estates of decedents who die during 2026 have a basic exclusion amount of $15,000,000, up from a total of $13,990,000 for estates of decedents who died in 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_009",
+      "question": "What is the maximum adoption credit amount for tax year 2026?",
+      "ground_truth_answer": "$17,670",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "The maximum credit allowed for adoptions for tax year 2026 is the amount of qualified adoption expenses up to $17,670, up from $17,280 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_010",
+      "question": "What is the refundable portion of the adoption credit for tax year 2026?",
+      "ground_truth_answer": "$5,120",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For tax year 2026, the amount of credit that may be refundable is $5,120."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_011",
+      "question": "What is the maximum employer-provided childcare tax credit amount for tax year 2026 for large employers?",
+      "ground_truth_answer": "$500,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "it increases the maximum amount of employer-provided childcare tax credit from $150,000 to $500,000 ($600,000 if the employer is an eligible small business)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_012",
+      "question": "What is the maximum Earned Income Tax Credit for taxpayers with three or more qualifying children in tax year 2026?",
+      "ground_truth_answer": "$8,231",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "The tax year 2026 maximum Earned Income Tax Credit (EITC) amount is $8,231 for qualifying taxpayers who have three or more qualifying children, up from $8,046 for tax year 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_013",
+      "question": "For tax years beginning in 2026, what is the dollar limitation for voluntary employee salary reductions for contributions to health flexible spending arrangements?",
+      "ground_truth_answer": "$3,400",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For tax years beginning in 2026, the dollar limitation for voluntary employee salary reductions for contributions to health flexible spending arrangements increases to $3,400, up $100 from prior year."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_014",
+      "question": "For cafeteria plans that permit the carryover of unused amounts, what is the maximum carryover amount for tax years beginning in 2026?",
+      "ground_truth_answer": "$680",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For cafeteria plans that permit the carryover of unused amounts, the maximum carryover amount is $680, an increase of $20 from tax years beginning in 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_015",
+      "question": "What is the minimum annual deductible for self‑only coverage in a Medical Savings Account for tax year 2026?",
+      "ground_truth_answer": "$2,900",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For tax year 2026, participants who have self-only coverage in a Medical Savings Account, the plan must have an annual deductible that is not less than $2,900, up $50 from tax year 2025"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_016",
+      "question": "What is the maximum out‑of‑pocket expense amount for self‑only coverage in a Medical Savings Account for tax year 2026?",
+      "ground_truth_answer": "$5,850",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For self-only coverage, the maximum out-of-pocket expense amount is $5,850, up $150 from 2025"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_017",
+      "question": "What is the foreign earned income exclusion amount for tax year 2026?",
+      "ground_truth_answer": "$132,900",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For tax year 2026, the foreign earned income exclusion is $132,900 up from $130,000 for tax year 2025"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_018",
+      "question": "What is the annual exclusion for gifts in tax year 2026?",
+      "ground_truth_answer": "$19,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For tax year 2026, the annual exclusion for gifts remains at $19,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_019",
+      "question": "What is the annual exclusion for gifts to a non‑citizen spouse in calendar year 2026?",
+      "ground_truth_answer": "$194,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "the annual exclusion for gifts to a spouse who is not a citizen of the United States increases to $194,000 for calendar year 2026"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_020",
+      "question": "What is the amount of personal exemptions for tax year 2026?",
+      "ground_truth_answer": "0",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "For tax year 2026, personal exemptions remain at 0"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_021",
+      "question": "During which tax years was the limitation on itemized deductions eliminated?",
+      "ground_truth_answer": "2018 - 2025",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "The limitation on itemized deductions was previously eliminated for tax years 2018 - 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_022",
+      "question": "For tax year 2026, what is the MAGI range for phase-out of the Lifetime Learning Credit for joint returns?",
+      "ground_truth_answer": "$160,000 and $180,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "The Lifetime Learning Credit is phased out for taxpayers with MAGI between $80,000 and $90,000 ($160,000 and $180,000 for joint returns)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_023",
+      "question": "For tax year 2026, what is the status of inflation adjustment for the MAGI amount used to phase out the Lifetime Learning Credit?",
+      "ground_truth_answer": "has not been adjusted for inflation",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2026_IR-2025-103.md",
+          "quote": "The modified adjusted gross income (MAGI) amount used to phase out the Lifetime Learning Credit has not been adjusted for inflation for tax years beginning after Dec. 31, 2020."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_024",
+      "question": "What is the IRS document identifier and release date for the tax inflation adjustments for tax year 2025?",
+      "ground_truth_answer": "IR-2024-273, Oct. 22, 2024",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "IR-2024-273, Oct. 22, 2024"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_025",
+      "question": "Which Revenue Procedure contains detailed information on the adjustments for tax year 2025?",
+      "ground_truth_answer": "Revenue Procedure 2024-40 PDF",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "Revenue Procedure 2024-40 PDF provides detailed information on adjustments and changes to more than 60 tax provisions"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_026",
+      "question": "How many tax provisions are affected by the adjustments for tax year 2025?",
+      "ground_truth_answer": "more than 60",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "adjustments and changes to more than 60 tax provisions"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_027",
+      "question": "In which tax season will the tax year 2025 adjustments be applied to income tax returns?",
+      "ground_truth_answer": "tax season 2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "tax year 2025 adjustments described below generally apply to income tax returns to be filed starting tax season 2026"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_028",
+      "question": "For tax year 2025, what is the standard deduction for married couples filing jointly?",
+      "ground_truth_answer": "$30,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For married couples filing jointly, the standard deduction rises to $30,000, an increase of $800 from tax year 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_029",
+      "question": "For tax year 2025, what is the standard deduction for heads of households?",
+      "ground_truth_answer": "$22,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For heads of households, the standard deduction will be $22,500 for tax year 2025, an increase of $600 from the amount for tax year 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_030",
+      "question": "For tax year 2025, what is the top marginal tax rate for individual single taxpayers with incomes greater than $626,350?",
+      "ground_truth_answer": "37%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For tax year 2025, the top tax rate remains 37% for individual single taxpayers with incomes greater than $626,350 ($751,600 for married couples filing jointly)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_031",
+      "question": "What is the Alternative Minimum Tax exemption amount for unmarried individuals for tax year 2025?",
+      "ground_truth_answer": "$88,100",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For tax year 2025, the exemption amount for unmarried individuals increases to $88,100 ($68,650 for married individuals filing separately) and begins to phase out at $626,350."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_032",
+      "question": "What is the maximum Earned Income Tax Credit amount for qualifying taxpayers with three or more qualifying children for tax year 2025?",
+      "ground_truth_answer": "$8,046",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For qualifying taxpayers who have three or more qualifying children, the tax year 2025 maximum Earned Income Tax Credit amount is $8,046, an increase from $7,830 for tax year 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_033",
+      "question": "What is the monthly limitation for the qualified transportation fringe benefit for tax year 2025?",
+      "ground_truth_answer": "$325",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For tax year 2025, the monthly limitation for the qualified transportation fringe benefit and the monthly limitation for qualified parking rises to $325, increasing from $315 in tax year 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_034",
+      "question": "What is the income threshold for the 10% tax rate for married couples filing jointly for tax year 2025?",
+      "ground_truth_answer": "$23,850",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "10% for incomes $11,925 or less ($23,850 or less for married couples filing jointly)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_035",
+      "question": "What is the maximum out‑of‑pocket expense amount for tax year 2025?",
+      "ground_truth_answer": "$5,700",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "The maximum out-of-pocket expense amount rises to $5,700, increasing from $5,550 in tax year 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_036",
+      "question": "What is the annual deductible for family coverage in tax year 2025?",
+      "ground_truth_answer": "$5,700",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For family coverage in tax year 2025, the annual deductible is not less than $5,700, increasing from $5,550 in tax year 2024;"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_037",
+      "question": "What is the out-of-pocket expense limit for family coverage in tax year 2025?",
+      "ground_truth_answer": "$10,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For family coverage, the out-of-pocket expense limit is $10,500 for tax year 2025, rising from $10,200 in tax year 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_038",
+      "question": "What is the foreign earned income exclusion amount for tax year 2025?",
+      "ground_truth_answer": "$130,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "For tax year 2025, the foreign earned income exclusion increases to $130,000, from $126,500 in tax year 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_039",
+      "question": "What is the basic estate tax exclusion amount for decedents who die during 2025?",
+      "ground_truth_answer": "$13,990,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "Estates of decedents who die during 2025 have a basic exclusion amount of $13,990,000, increased from $13,610,000 for estates of decedents who died in 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_040",
+      "question": "What is the personal exemption amount for tax year 2025?",
+      "ground_truth_answer": "0",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "Personal exemptions for tax year 2025 remain at 0, as in tax year 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_041",
+      "question": "What is the modified adjusted gross income threshold for the Lifetime Learning Credit phase‑out for single filers in tax year 2025?",
+      "ground_truth_answer": "$80,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "The Lifetime Learning Credit is phased out for taxpayers with modified adjusted gross income in excess of $80,000 ($160,000 for joint returns)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_042",
+      "question": "What is the modified adjusted gross income threshold for the Lifetime Learning Credit phase‑out for joint returns in tax year 2025?",
+      "ground_truth_answer": "$160,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_tax_inflation_2025_IR-2024-273.md",
+          "quote": "The Lifetime Learning Credit is phased out for taxpayers with modified adjusted gross income in excess of $80,000 ($160,000 for joint returns)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_043",
+      "question": "What is the 401(k) contribution limit for tax year 2026?",
+      "ground_truth_answer": "$24,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "the amount individuals can contribute to their 401(k) plans in 2026 has increased to $24,500"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_044",
+      "question": "What is the IRA contribution limit for tax year 2026?",
+      "ground_truth_answer": "$7,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The limit on annual contributions to an IRA is increased to $7,500"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_045",
+      "question": "On what date was IR-2025-111 released?",
+      "ground_truth_answer": "Nov. 13, 2025",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "IR-2025-111, Nov. 13, 2025"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_046",
+      "question": "How much can participants aged 50 and older contribute each year to most 401(k) plans starting in 2026?",
+      "ground_truth_answer": "$32,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "participants in most 401(k), 403(b), governmental 457 plans and the federal government’s Thrift Savings Plan who are 50 and older generally can contribute up to $32,500 each year, starting in 2026."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_047",
+      "question": "What is the higher catch-up contribution limit for employees aged 60 to 63 in 2026?",
+      "ground_truth_answer": "$11,250",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "For 2026, this higher catch-up contribution limit remains $11,250 instead of the $8,000 noted above."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_048",
+      "question": "In which year did the income ranges for IRA eligibility increase?",
+      "ground_truth_answer": "2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The income ranges for determining eligibility to make deductible contributions to traditional Individual Retirement Arrangements (IRAs), to contribute to Roth IRAs and to claim the Saver’s Credit all increased for 2026."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_049",
+      "question": "What is the phase‑out range for married couples filing jointly where the contributing spouse is covered by a workplace retirement plan in 2026?",
+      "ground_truth_answer": "$129,000 to $149,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "For married couples filing jointly, if the spouse making the IRA contribution is covered by a workplace retirement plan, the phase-out range is increased to between $129,000 and $149,000, up from between $126,000 and $146,000 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_050",
+      "question": "What is the phase-out range for an IRA contributor not covered by a workplace plan but married to someone who is covered, for tax year 2026?",
+      "ground_truth_answer": "$242,000 to $252,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "the phase-out range is increased to between $242,000 and $252,000, up from between $236,000 and $246,000 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_051",
+      "question": "What was the phase-out range for the same IRA contributor category in tax year 2025?",
+      "ground_truth_answer": "$236,000 to $246,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "up from between $236,000 and $246,000 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_052",
+      "question": "What is the phase-out range for a married individual filing a separate return who is covered by a workplace retirement plan, for tax year 2026?",
+      "ground_truth_answer": "$0 to $10,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "the phase-out range is not subject to an annual cost-of-living adjustment and remains between $0 and $10,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_053",
+      "question": "Which retirement account types have limitations provided for 2026 besides traditional IRAs?",
+      "ground_truth_answer": "Roth IRAs, the Saver’s Credit and SIMPLE retirement accounts",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The notice also provides limitations for 2026 for Roth IRAs, the Saver’s Credit and SIMPLE retirement accounts."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_054",
+      "question": "What is the Roth IRA income phase-out range for singles in 2026?",
+      "ground_truth_answer": "$153,000 to $168,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The income phase-out range for taxpayers making contributions to a Roth IRA is increased to between $153,000 and $168,000 for singles and heads of household, up from between $150,000 and $165,000 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_055",
+      "question": "What is the Roth IRA income phase-out range for married couples filing jointly in 2026?",
+      "ground_truth_answer": "$242,000 to $252,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "For married couples filing jointly, the income phase-out range is increased to between $242,000 and $252,000, up from between $236,000 and $246,000 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_056",
+      "question": "What is the increased contribution limit for applicable SIMPLE retirement accounts in 2026?",
+      "ground_truth_answer": "$18,100",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "For 2026, this higher amount is increased to $18,100, up from $17,600 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_057",
+      "question": "What is the catch-up contribution limit for employees aged 50 and over in most SIMPLE plans for 2026?",
+      "ground_truth_answer": "$4,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "The catch-up contribution limit that generally applies for employees aged 50 and over who participate in most SIMPLE plans is increased to $4,000, up from $3,500 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_058",
+      "question": "What is the catch-up contribution limit for employees aged 50 and over in certain applicable SIMPLE plans for 2026?",
+      "ground_truth_answer": "$3,850",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2026_IR-2025-111.md",
+          "quote": "a different catch-up limit applies for employees aged 50 and over who participate in certain applicable SIMPLE plans, which remains $3,850."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_059",
+      "question": "What is the 401(k) contribution limit for tax year 2025?",
+      "ground_truth_answer": "$23,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The Internal Revenue Service announced today that the amount individuals can contribute to their 401(k) plans in 2025 has increased to $23,500, up from $23,000 for 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_060",
+      "question": "What is the IRA contribution limit for tax year 2025?",
+      "ground_truth_answer": "$7,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The limit on annual contributions to an IRA remains $7,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_061",
+      "question": "What is the IRS notice number that issued technical guidance for tax year 2025?",
+      "ground_truth_answer": "Notice 2024-80",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The IRS today also issued technical guidance regarding all cost‑of‑living adjustments affecting dollar limitations for pension plans and other retirement-related items for tax year 2025 in Notice 2024-80 PDF, posted today on IRS.gov."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_062",
+      "question": "What is the catch-up contribution limit for employees aged 50 and over in 2025?",
+      "ground_truth_answer": "$7,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The catch-up contribution limit that generally applies for employees aged 50 and over who participate in most 401(k), 403(b), governmental 457 plans, and the federal government’s Thrift Savings Plan remains $7,500 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_063",
+      "question": "What is the total contribution amount participants aged 50 and older can contribute each year starting in 2025?",
+      "ground_truth_answer": "$31,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "participants in most 401(k), 403(b), governmental 457 plans and the federal government’s Thrift Savings Plan who are 50 and older generally can contribute up to $31,000 each year, starting in 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_064",
+      "question": "What is the higher catch-up contribution limit for employees aged 60 to 63 in 2025?",
+      "ground_truth_answer": "$11,250",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "For 2025, this higher catch-up contribution limit is $11,250 instead of $7,500."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_065",
+      "question": "How did the income ranges for IRA eligibility change for 2025?",
+      "ground_truth_answer": "increased",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The income ranges for determining eligibility to make deductible contributions to traditional Individual Retirement Arrangements (IRAs), to contribute to Roth IRAs and to claim the Saver’s Credit all increased for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_066",
+      "question": "What is the phase‑out range for single taxpayers covered by a workplace retirement plan for tax year 2025?",
+      "ground_truth_answer": "$79,000 to $89,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "For single taxpayers covered by a workplace retirement plan, the phase-out range is increased to between $79,000 and $89,000, up from between $77,000 and $87,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_067",
+      "question": "What is the phase‑out range for married couples filing jointly when the spouse making the IRA contribution is covered by a workplace retirement plan for tax year 2025?",
+      "ground_truth_answer": "$126,000 to $146,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "For married couples filing jointly, if the spouse making the IRA contribution is covered by a workplace retirement plan, the phase-out range is increased to between $126,000 and $146,000, up from between $123,000 and $143,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_068",
+      "question": "What is the phase‑out range for an IRA contributor who is not covered by a workplace retirement plan but is married to someone who is covered for tax year 2025?",
+      "ground_truth_answer": "$236,000 to $246,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "For an IRA contributor who is not covered by a workplace retirement plan and is married to someone who is covered, the phase-out range is increased to between $236,000 and $246,000, up from between $230,000 and $240,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_069",
+      "question": "What is the Roth IRA income phase-out range for singles in 2025?",
+      "ground_truth_answer": "$150,000 to $165,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The income phase-out range for taxpayers making contributions to a Roth IRA is increased to between $150,000 and $165,000 for singles and heads of household, up from between $146,000 and $161,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_070",
+      "question": "What is the Roth IRA income phase-out range for married couples filing jointly in 2025?",
+      "ground_truth_answer": "$236,000 to $246,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "For married couples filing jointly, the income phase-out range is increased to between $236,000 and $246,000, up from between $230,000 and $240,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_071",
+      "question": "What is the increased contribution limit for SIMPLE retirement accounts in 2025?",
+      "ground_truth_answer": "$16,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The amount individuals can generally contribute to their SIMPLE retirement accounts is increased to $16,500, up from $16,000."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_072",
+      "question": "What is the higher contribution amount for certain applicable SIMPLE retirement accounts in 2025?",
+      "ground_truth_answer": "$17,600",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "For 2025, this higher amount remains $17,600."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_073",
+      "question": "What is the catch‑up contribution limit for employees aged 50 and over in most SIMPLE plans for 2025?",
+      "ground_truth_answer": "$3,500",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "The catch-up contribution limit that generally applies for employees aged 50 and over who participate in most SIMPLE plans remains $3,500 for 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_074",
+      "question": "What is the higher catch‑up contribution limit for employees aged 60 to 63 in SIMPLE plans for 2025?",
+      "ground_truth_answer": "$5,250",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_retirement_limits_2025_IR-2024-285.md",
+          "quote": "For 2025, this higher catch-up contribution limit is $5,250."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_075",
+      "question": "What is the business standard mileage rate for 2026?",
+      "ground_truth_answer": "72.5 cents per mile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "- 72.5 cents per mile driven for business use, up 2.5 cents from 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_076",
+      "question": "By how many cents does the business mileage rate increase for 2026?",
+      "ground_truth_answer": "2.5 cents",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "the optional standard mileage rate for business use of automobiles will increase by 2.5 cents in 2026"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_077",
+      "question": "What change occurs to the medical mileage rate for 2026?",
+      "ground_truth_answer": "decrease by half a cent",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "the mileage rate for vehicles used for medical purposes will decrease by half a cent"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_078",
+      "question": "When does the new standard mileage rate become effective in 2026?",
+      "ground_truth_answer": "Jan. 1, 2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "Beginning Jan. 1, 2026, the standard mileage rates for the use of a car, van, pickup or panel truck will be:"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_079",
+      "question": "What is the 2026 mileage rate for medical purposes?",
+      "ground_truth_answer": "20.5 cents per mile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "- 20.5 cents per mile driven for medical purposes, down a half cent from 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_080",
+      "question": "What is the 2026 mileage rate for moving purposes for certain active‑duty members of the Armed Forces?",
+      "ground_truth_answer": "20.5 cents per mile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "- 20.5 cents per mile driven for moving purposes for certain active-duty members of the Armed Forces (and now certain members of the intelligence community), reduced by a half cent from last year."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_081",
+      "question": "What is the 2026 mileage rate for charitable organizations?",
+      "ground_truth_answer": "14 cents per mile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "- 14 cents per mile driven in service of charitable organizations, equal to the rate in 2025."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_082",
+      "question": "For tax year 2026, which taxpayers are exempt from the rule that they cannot claim a miscellaneous itemized deduction for unreimbursed employee travel expenses?",
+      "ground_truth_answer": "certain educator expenses",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "taxpayers cannot claim a miscellaneous itemized deduction for unreimbursed employee travel expenses, except for certain educator expenses."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_083",
+      "question": "For tax year 2026, which group may claim an itemized deduction for moving expenses incurred while relocating under orders to a permanent change of station?",
+      "ground_truth_answer": "taxpayers who are members of the military on active duty or certain members of the intelligence community",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "only taxpayers who are members of the military on active duty or certain members of the intelligence community may claim a deduction for moving expenses incurred while relocating under orders to a permanent change of station."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_084",
+      "question": "For tax year 2026, what option do taxpayers have regarding the standard mileage rates?",
+      "ground_truth_answer": "Use of the standard mileage rates is optional",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "Use of the standard mileage rates is optional."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_085",
+      "question": "For tax year 2026, which types of expenses remain allowable as deductions in determining adjusted gross income?",
+      "ground_truth_answer": "expenses for certain reserve component members, state and local officials, performing artists, and eligible educators",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "deductions for expenses that are deductible in determining adjusted gross income remain allowable, such as for certain members of a reserve component of the Armed Forces, certain state and local government officials, certain performing artists, and eligible educators."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_086",
+      "question": "For tax year 2026, when must taxpayers using the standard mileage rate for a vehicle they own choose to use the rate?",
+      "ground_truth_answer": "in the first year the automobile is available for business use",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "Taxpayers using the standard mileage rate for a vehicle they own and use for business must choose to use the rate in the first year the automobile is available for business use."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_087",
+      "question": "For tax year 2026, what must taxpayers using the standard mileage rate for a leased vehicle do for the lease period?",
+      "ground_truth_answer": "employ that method for the entire lease period, including renewals",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "For a leased vehicle, taxpayers using the standard mileage rate must employ that method for the entire lease period, including renewals."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_088",
+      "question": "In the 2026 edition, what maximum value does the notice provide for employer-provided automobiles first made available to employees for personal use?",
+      "ground_truth_answer": "the maximum fair market value of employer-provided automobiles first made available to employees for personal use in 2026",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2026_IR-2025-128.md",
+          "quote": "The notice also provides the maximum fair market value of employer-provided automobiles first made available to employees for personal use in 2026 for which employers may calculate mileage allowances using a cents-per-mile valuation rule or the fleet-average-valuation rule."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_089",
+      "question": "What is the standard mileage rate for business use in 2025?",
+      "ground_truth_answer": "70 cents per mile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "70 cents per mile driven for business use, up 3 cents from 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_090",
+      "question": "By how many cents does the business mileage rate increase for 2025?",
+      "ground_truth_answer": "3 cents",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "the optional standard mileage rate for automobiles driven for business will increase by 3 cents in 2025"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_091",
+      "question": "What is the standard mileage rate for medical purposes in 2025?",
+      "ground_truth_answer": "21 cents per mile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "21 cents per mile driven for medical purposes, the same as in 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_092",
+      "question": "What is the standard mileage rate for charitable organizations in 2025?",
+      "ground_truth_answer": "14 cents per mile",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "14 cents per mile driven in service of charitable organizations, equal to the rate in 2024."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_093",
+      "question": "In the 2025 standard mileage rate document, which types of vehicles does the rate apply to?",
+      "ground_truth_answer": "fully-electric and hybrid automobiles, as well as gasoline and diesel-powered vehicles",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "The rates apply to fully-electric and hybrid automobiles, as well as gasoline and diesel-powered vehicles."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_094",
+      "question": "In the 2025 standard mileage rate document, what determines the mileage rate for charitable use?",
+      "ground_truth_answer": "set by statute",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "While the mileage rate for charitable use is set by statute, the mileage rate for business use is based on an annual study of the fixed and variable costs of operating an automobile."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_095",
+      "question": "In the 2025 standard mileage rate document, who may claim a deduction for moving expenses?",
+      "ground_truth_answer": "taxpayers who are members of the military on active duty",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "And only taxpayers who are members of the military on active duty may claim a deduction for moving expenses incurred while relocating under orders to a permanent change of station."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_096",
+      "question": "In the 2025 standard mileage rate document, what option do taxpayers have instead of using the standard mileage rates?",
+      "ground_truth_answer": "calculate the actual costs of using their vehicle",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "Use of the standard mileage rates is optional. Taxpayers may instead choose to calculate the actual costs of using their vehicle."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_097",
+      "question": "In 2025, what must taxpayers using the standard mileage rate for a vehicle they own do in the first year the automobile is available for business use?",
+      "ground_truth_answer": "choose to use the rate",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "Taxpayers using the standard mileage rate for a vehicle they own and use for business must choose to use the rate in the first year the automobile is available for business use."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_098",
+      "question": "In 2025, what must taxpayers using the standard mileage rate for a leased vehicle do for the lease period?",
+      "ground_truth_answer": "employ that method for the entire lease period",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "irs_mileage_rates_2025_IR-2024-312.md",
+          "quote": "For a leased vehicle, taxpayers using the standard mileage rate must employ that method for the entire lease period, including renewals."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_099",
+      "question": "In version v2, what does RAGSeal prove?",
+      "ground_truth_answer": "why a RAG answer failed",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "RAGSeal is a lab that **proves** why a RAG answer failed: it tests the retriever and the generator apart, then re-runs the generator with the correct evidence to confirm the cause."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_100",
+      "question": "In version v2, where does RAGSeal run?",
+      "ground_truth_answer": "fully on a laptop",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "It ships with industry test packs and runs fully on a laptop."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_101",
+      "question": "In version v2, what are the two halves of RAGSeal?",
+      "ground_truth_answer": "A working RAG app and the evaluation lab",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "It has two halves:\n1. **A working RAG app**: log in, upload or pick documents, ask questions, get cited answers.\n2. **The evaluation lab** around it: synthetic questions with known answers, three scores, a causal verdict per failure, and a dashboard."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_102",
+      "question": "In version v2, what does the evaluation lab provide?",
+      "ground_truth_answer": "synthetic questions with known answers, three scores, a causal verdict per failure, and a dashboard",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "**The evaluation lab** around it: synthetic questions with known answers, three scores, a causal verdict per failure, and a dashboard."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_103",
+      "question": "In the RAGSeal product overview, how many answers are labelled by hand for judge checking?",
+      "ground_truth_answer": "30-50",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "30-50 answers labelled by hand; the dashboard shows how often the judge agrees with humans, with counts."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_104",
+      "question": "In the RAGSeal product overview, which tool runs the judge by default for speed and quality?",
+      "ground_truth_answer": "Groq",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "The judge runs on Groq by default for speed and quality, and can be switched to fully local."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_105",
+      "question": "In the RAGSeal product overview, what are the three industry packs offered?",
+      "ground_truth_answer": "Recruitment, Banking, Healthcare",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Packs: Recruitment, Banking, Healthcare (fictional documents)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_106",
+      "question": "In the RAGSeal product overview, which platform is used to run the generator and embeddings locally?",
+      "ground_truth_answer": "Ollama",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "The RAG under test (generator and embeddings) runs on the laptop through Ollama, so documents are indexed and answered locally."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_107",
+      "question": "In the RAGSeal product overview, which prior art tools are listed?",
+      "ground_truth_answer": "Ragas, RAGChecker, TruLens, DeepEval, ARES",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Prior art exists: Ragas, RAGChecker, TruLens, DeepEval, ARES."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_108",
+      "question": "In the RAGSeal product overview, what is the claimed combination of features?",
+      "ground_truth_answer": "one automated, evidence-backed verdict per failure, judge-vs-human agreement, and industry packs",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Our claim is the **combination**: one automated, evidence-backed verdict per failure, judge-vs-human agreement, and industry packs, in one product."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_109",
+      "question": "In the RAGSeal product overview, what must every number on screen be sourced from?",
+      "ground_truth_answer": "the backend",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Every number on screen must come from the backend."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_110",
+      "question": "In the RAGSeal product overview, how should demo data be labeled?",
+      "ground_truth_answer": "as demo data",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Label demo data as demo data, and model-judged scores as model-judged."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_111",
+      "question": "In the verdict logic, what label is used when the gold chunk is retrieved, answer is faithful, but answer is wrong?",
+      "ground_truth_answer": "`NEEDS_REVIEW`",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "| Yes | Yes, but answer wrong | n/a | `NEEDS_REVIEW` (bad label or reasoning error) |"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_112",
+      "question": "In the Industry packs, which pack includes resumes and hiring policy versions?",
+      "ground_truth_answer": "Recruitment",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Recruitment | Resumes, two job descriptions, hiring policy v1 and v2, recruiter guide"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_113",
+      "question": "In the Industry packs, which pack lists an account terms document and fee schedule versions?",
+      "ground_truth_answer": "Banking",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Banking | Account terms, fee schedule v1 and v2, internal procedure"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_114",
+      "question": "In the Industry packs, which pack provides fictional hospital protocols and a discharge guide?",
+      "ground_truth_answer": "Healthcare",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Healthcare | Fictional hospital protocols, discharge guide"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_115",
+      "question": "In the Recruitment pack, what does the old job description say about experience length?",
+      "ground_truth_answer": "5 years",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_overview.md",
+          "quote": "Old JD says 5 years"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_116",
+      "question": "In the RAGSeal system, what is the maximum size of document chunks?",
+      "ground_truth_answer": "about 700 characters",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "Documents are split into chunks of up to about 700 characters, and each new markdown heading starts a new chunk."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_117",
+      "question": "In the RAGSeal system, how many top chunks are retrieved for each question?",
+      "ground_truth_answer": "top 4 chunks",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "For each question RAGSeal retrieves the top 4 chunks by cosine similarity."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_118",
+      "question": "In the RAGSeal system, which model is used to embed chunks?",
+      "ground_truth_answer": "nomic-embed-text model",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "Chunks are embedded with the nomic-embed-text model, which runs locally through Ollama."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_119",
+      "question": "In the RAGSeal system, what temperature and seed are used for the generator model?",
+      "ground_truth_answer": "temperature 0 with a fixed seed of 42",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "The generator under test is llama3.2:3b, a small local model that runs through Ollama at temperature 0 with a fixed seed of 42."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_120",
+      "question": "In the RAGSeal system, what is the pass threshold for faithfulness?",
+      "ground_truth_answer": "0.75",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "The pass thresholds are 0.70 for context relevance, 0.75 for faithfulness and 0.70 for answer accuracy."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_121",
+      "question": "In the RAGSeal system, how many judge calls does a replay add?",
+      "ground_truth_answer": "one more judge call",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "A replay adds one more judge call."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_122",
+      "question": "In the RAGSeal system, what rule applies to an answer that abstains?",
+      "ground_truth_answer": "has no claims to check",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "an answer that abstains has no claims to check"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_123",
+      "question": "In RAGSeal, what verdict is given when the gold chunk was not retrieved and the replay answers correctly?",
+      "ground_truth_answer": "RETRIEVAL_FAILURE",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "If the gold chunk was not retrieved and the replay answers correctly, the verdict is RETRIEVAL_FAILURE."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_124",
+      "question": "In RAGSeal, what verdict is assigned when the gold chunk was retrieved but the answer makes unsupported claims and the replay is still wrong?",
+      "ground_truth_answer": "GENERATION_HALLUCINATION",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "If the gold chunk was retrieved, the answer makes unsupported claims and the replay is still wrong, the verdict is GENERATION_HALLUCINATION."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_125",
+      "question": "In RAGSeal, what are the failure types listed?",
+      "ground_truth_answer": "wrong chunk, stale source, distractor confusion, ignored context, hallucination, reasoning error, unanswerable answered and false abstention",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "The failure types are wrong chunk, stale source, distractor confusion, ignored context, hallucination, reasoning error, unanswerable answered and false abstention."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_126",
+      "question": "In RAGSeal, which judge model is used as a fallback when all hosted judges have used up their rate limit?",
+      "ground_truth_answer": "local qwen3:8b judge",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "If every hosted judge has used up its rate limit, a live question falls back to the local qwen3:8b judge, and the result says so."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_127",
+      "question": "In the description, how many fictional industry packs does RAGSeal ship with?",
+      "ground_truth_answer": "three",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "RAGSeal ships with three fictional industry packs, Recruitment, Banking and Healthcare, with 71 test cases each."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_128",
+      "question": "In the description, how many test cases are included in each fictional industry pack?",
+      "ground_truth_answer": "71",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "RAGSeal ships with three fictional industry packs, Recruitment, Banking and Healthcare, with 71 test cases each."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "syn_129",
+      "question": "In the description, how many test cases are in the real public IRS releases pack?",
+      "ground_truth_answer": "22",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "ragseal_how_it_works.md",
+          "quote": "It also ships a pack of real public IRS releases with 22 test cases."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    }
+  ]
+}

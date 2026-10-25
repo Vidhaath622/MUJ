@@ -1,0 +1,268 @@
+[
+ {
+  "pack_id": "synthetic_public",
+  "question": "How many tax provisions received annual inflation adjustments for tax year 2026?",
+  "ground_truth_answer": "more than 60",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_tax_inflation_2026_IR-2025-103.md",
+    "quote": "the tax year 2026 annual inflation adjustments for more than 60 tax provisions"
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "In tax year 2026, what is the Alternative Minimum Tax exemption amount for unmarried individuals?",
+  "ground_truth_answer": "$90,100",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_tax_inflation_2026_IR-2025-103.md",
+    "quote": "For tax year 2026, the exemption amount for unmarried individuals is $90,100 and begins to phase out at $500,000 ($140,200 for married couples filing jointly for whom the exemption begins to phase out at $1,000,000)."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "In tax year 2026, what is the income threshold for the 35% tax bracket for single individuals?",
+  "ground_truth_answer": "$256,225",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_tax_inflation_2026_IR-2025-103.md",
+    "quote": "35% for incomes over $256,225 ($512,450 for married couples filing jointly);"
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "For tax year 2026, what is the MAGI range for phase-out of the Lifetime Learning Credit for single filers?",
+  "ground_truth_answer": "$80,000 and $90,000",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_tax_inflation_2026_IR-2025-103.md",
+    "quote": "The Lifetime Learning Credit is phased out for taxpayers with MAGI between $80,000 and $90,000 ($160,000 and $180,000 for joint returns)."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "For tax year 2025, what is the standard deduction for single taxpayers?",
+  "ground_truth_answer": "$15,000",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_tax_inflation_2025_IR-2024-273.md",
+    "quote": "For single taxpayers and married individuals filing separately for tax year 2025, the standard deduction rises to $15,000 for 2025, an increase of $400 from 2024."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "What is the catch-up contribution limit for employees aged 50 and over in 2026?",
+  "ground_truth_answer": "$8,000",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_retirement_limits_2026_IR-2025-111.md",
+    "quote": "The catch-up contribution limit that generally applies for employees aged 50 and over who participate in most 401(k), 403(b), governmental 457 plans, and the federal government’s Thrift Savings Plan is increased to $8,000, up from $7,500 for 2025."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "What is the phase‑out range for single taxpayers covered by a workplace retirement plan in 2026?",
+  "ground_truth_answer": "$81,000 to $91,000",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_retirement_limits_2026_IR-2025-111.md",
+    "quote": "For single taxpayers covered by a workplace retirement plan, the phase-out range is increased to between $81,000 and $91,000, up from between $79,000 and $89,000 for 2025."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "What is the higher catch-up contribution limit for employees aged 60 to 63 in SIMPLE plans for 2026?",
+  "ground_truth_answer": "$5,250",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_retirement_limits_2026_IR-2025-111.md",
+    "quote": "a higher catch-up contribution limit applies for employees aged 60, 61, 62 and 63 who participate in SIMPLE plans, which remains $5,250."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "What is the income phase-out range for a married individual filing a separate return who contributes to a Roth IRA in 2025?",
+  "ground_truth_answer": "$0 to $10,000",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_retirement_limits_2025_IR-2024-285.md",
+    "quote": "The phase-out range for a married individual filing a separate return who makes contributions to a Roth IRA is not subject to an annual cost-of-living adjustment and remains between $0 and $10,000."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "In the 2026 edition, what does Notice-2026-10 PDF contain regarding mileage rates?",
+  "ground_truth_answer": "the optional 2026 standard mileage rates",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_mileage_rates_2026_IR-2025-128.md",
+    "quote": "Notice-2026-10 PDF contains the optional 2026 standard mileage rates, as well as the maximum automobile cost used to calculate mileage reimbursement allowances under a fixed-and variable rate plan."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "In 2025, what does Notice 2025-5 PDF contain regarding standard mileage rates?",
+  "ground_truth_answer": "the optional 2025 standard mileage rates",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "irs_mileage_rates_2025_IR-2024-312.md",
+    "quote": "Notice 2025-5 PDF contains the optional 2025 standard mileage rates, as well as the maximum automobile cost used to calculate mileage reimbursement allowances under a fixed-and variable rate (FAVR) plan."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "In the verdict logic table, when the gold chunk is retrieved and the answer is faithful to context, what verdict is assigned?",
+  "ground_truth_answer": "`CLEAN_PASS`",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "ragseal_overview.md",
+    "quote": "| Yes | Yes, and correct | not needed | `CLEAN_PASS` |"
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "synthetic_public",
+  "question": "In the RAGSeal system, what is the pass threshold for context relevance?",
+  "ground_truth_answer": "0.70",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "ragseal_how_it_works.md",
+    "quote": "The pass thresholds are 0.70 for context relevance, 0.75 for faithfulness and 0.70 for answer accuracy."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "income_tax_india",
+  "question": "What is the standard deduction amount available for salaried individuals under the new tax regime for financial year 2025–26?",
+  "ground_truth_answer": "₹75,000",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "income_tax_fy_2025_26.md",
+    "quote": "A standard deduction of ₹75,000 is available for salaried individuals and pensioners under the new tax regime."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "income_tax_india",
+  "question": "In the 2024–25 financial year, up to what taxable income does the rebate under Section 87A eliminate income tax?",
+  "ground_truth_answer": "₹700,000",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "income_tax_fy_2024_25.md",
+    "quote": "Rebate under Section 87A: Taxpayers with taxable income up to ₹700,000 pay zero income tax due to a full rebate."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "income_tax_india",
+  "question": "What is the maximum deduction allowed under Section 80C for EPF, PPF, ELSS, tuition fees, and principal repayment on home loans in financial year 2024–25?",
+  "ground_truth_answer": "₹150,000",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "old_tax_regime_distractor.md",
+    "quote": "Section 80C: Deduction up to ₹150,000 for EPF, PPF, ELSS, tuition fees, and principal repayment on home loans."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "gst_india",
+  "question": "What was the highest GST tax slab under the standard rate structure in India prior to September 2025?",
+  "ground_truth_answer": "28%",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "gst_rates_pre_sept_2025.md",
+    "quote": "goods and services were broadly categorized into four primary tax slabs: 5%, 12%, 18%, and 28%."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "telecom_india",
+  "question": "What is the daily data allowance of the 365-Day Annual Plan in the Indian Telecom Standard Prepaid Tariff Schedule (Pre-July 2024)?",
+  "ground_truth_answer": "2.5GB",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "telecom_tariffs_pre_july_2024.md",
+    "quote": "365-Day Annual Plan: Priced at ₹2,999, providing 365 days validity with 2.5GB daily data."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ },
+ {
+  "pack_id": "travel_jaipur_goa",
+  "question": "How much does the Pilar Monastery Museum entry ticket cost per visitor in the Current Edition?",
+  "ground_truth_answer": "₹50",
+  "type": "factoid",
+  "gold": [
+   {
+    "file": "travel_jaipur_goa_current.md",
+    "quote": "Pilar Monastery Museum Entry: The entry ticket for the historical artifact collection is ₹50 per visitor."
+   }
+  ],
+  "origin": "synthetic",
+  "generated_by": "groq:openai/gpt-oss-120b"
+ }
+]

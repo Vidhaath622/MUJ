@@ -1,0 +1,453 @@
+{
+  "pack_id": "income_tax_india",
+  "name": "Income tax (India)",
+  "description": "New-regime income tax slabs FY 2024-25 vs FY 2025-26 (Budget 2025), with the old regime as a distractor.",
+  "demo_data": true,
+  "data_note": "Documents written by a teammate (Anuvesha) in the style of the cited sources and kept as given (bold markers removed); figures were not re-checked against the live sources. Questions with origin 'hand' were written by her; 'synthetic' ones by RAGSeal's builder from exact quotes.",
+  "sources": [
+    "income_tax_slabs_fy2024_25.md | Income Tax Department Portal / Union Budget 2024 Press Release | Dated: 23-Jul-2024",
+    "income_tax_slabs_fy2025_26.md | Press Information Bureau (PIB) Delhi, Ministry of Finance (PRID: 2098406) | Dated: 01-Feb-2025",
+    "distractor_old_regime.md | Income Tax India Official Guidance Notes | Dated: 01-Apr-2024"
+  ],
+  "documents": [
+    {
+      "file": "income_tax_fy_2025_26.md"
+    },
+    {
+      "file": "income_tax_fy_2024_25.md",
+      "superseded_by": "income_tax_fy_2025_26.md"
+    },
+    {
+      "file": "old_tax_regime_distractor.md"
+    }
+  ],
+  "risk_rules": [
+    "Never quote FY 2024-25 slabs or rebate limits as current.",
+    "Do not mix old-regime deductions into new-regime answers."
+  ],
+  "test_cases": [
+    {
+      "test_id": "tax_01",
+      "question": "What is the tax rebate limit under the new regime for FY 2025-26?",
+      "ground_truth_answer": "Taxpayers with taxable income up to ₹1,200,000 pay zero tax due to a full tax rebate.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Taxpayers with taxable income up to ₹1,200,000 pay zero tax due to a full tax rebate."
+        }
+      ],
+      "stale": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Taxpayers with taxable income up to ₹700,000 pay zero income tax due to a full rebate."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_02",
+      "question": "What is the income threshold for zero tax for salaried taxpayers in FY 2025-26?",
+      "ground_truth_answer": "Salaried employees pay no income tax up to ₹1,275,000 after accounting for the standard deduction.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Salaried employees pay no income tax up to ₹1,275,000 after accounting for the standard deduction."
+        }
+      ],
+      "stale": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Salaried employees pay no income tax up to ₹775,000 after accounting for the standard deduction."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_03",
+      "question": "What is the tax rate on income above ₹2,400,000 in FY 2025-26?",
+      "ground_truth_answer": "Income above ₹2,400,000 is taxed at 30%.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income above ₹2,400,000: 30%"
+        }
+      ],
+      "stale": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Income above ₹1,500,000: 30%"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_04",
+      "question": "What is the tax rate for income between ₹400,000 and ₹800,000 in FY 2025-26?",
+      "ground_truth_answer": "The tax rate is 5%.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income from ₹400,001 to ₹800,000: 5%"
+        }
+      ],
+      "stale": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Income from ₹300,001 to ₹600,000: 5%"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_05",
+      "question": "What is the tax rate on income between ₹800,001 and ₹1,200,000 in FY 2025-26?",
+      "ground_truth_answer": "The tax rate is 10%.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income from ₹800,001 to ₹1,200,000: 10%"
+        }
+      ],
+      "stale": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Income from ₹600,001 to ₹900,000: 10%"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_06",
+      "question": "What is the basic exemption limit under the new tax regime in FY 2025-26?",
+      "ground_truth_answer": "The basic exemption limit is ₹400,000.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income up to ₹400,000: Nil"
+        }
+      ],
+      "stale": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Income up to ₹300,000: Nil"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_07",
+      "question": "What is the tax rate for income between ₹1,600,001 and ₹2,000,000 in FY 2025-26?",
+      "ground_truth_answer": "The tax rate is 20%.",
+      "type": "stale",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income from ₹1,600,001 to ₹2,000,000: 20%"
+        }
+      ],
+      "stale": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Income from ₹1,200,001 to ₹1,500,000: 20%"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_08",
+      "question": "What is the tax rate for income between ₹2,000,001 and ₹2,400,000 in FY 2025-26?",
+      "ground_truth_answer": "The tax rate is 25%.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income from ₹2,000,001 to ₹2,400,000: 25%"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_09",
+      "question": "What is the Health and Education Cess under FY 2025-26 new regime?",
+      "ground_truth_answer": "Health and Education Cess remains at 4% on the total income tax amount.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Health and Education Cess remains at 4% on the total income tax amount."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_10",
+      "question": "What is the maximum deduction allowed under Section 80C in the old tax regime?",
+      "ground_truth_answer": "Deduction up to ₹150,000 is allowed for EPF, PPF, ELSS, tuition fees, and home loan principal.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "old_tax_regime_distractor.md",
+          "quote": "Section 80C: Deduction up to ₹150,000 for EPF, PPF, ELSS, tuition fees, and principal repayment on home loans."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_11",
+      "question": "What is the Section 80D deduction limit for senior citizens under the old regime?",
+      "ground_truth_answer": "The limit is ₹50,000 for senior citizens.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "old_tax_regime_distractor.md",
+          "quote": "Section 80D: Deduction up to ₹25,000 for health insurance premiums paid for self and family (₹50,000 for senior citizens)."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_12",
+      "question": "What is the basic tax exemption limit under the old tax regime for taxpayers below 60 years?",
+      "ground_truth_answer": "The basic exemption limit is ₹250,000.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "old_tax_regime_distractor.md",
+          "quote": "Income up to ₹250,000: Nil"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_13",
+      "question": "What is the tax rate on income above ₹1,000,000 in the old tax regime?",
+      "ground_truth_answer": "The tax rate is 30%.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "old_tax_regime_distractor.md",
+          "quote": "Income above ₹1,000,000: 30%"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_14",
+      "question": "What is the standard deduction amount for salaried individuals in FY 2025-26?",
+      "ground_truth_answer": "A standard deduction of ₹75,000 is available.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "A standard deduction of ₹75,000 is available for salaried individuals and pensioners under the new tax regime."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_15",
+      "question": "Under which section of the Income Tax Act are the new tax regime slabs defined in FY 2024-25?",
+      "ground_truth_answer": "Section 115BAC of the Income Tax Act, 1961.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Under Section 115BAC of the Income Tax Act, 1961, the revised new tax regime slabs for FY 2024–25 apply as follows:"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_16",
+      "question": "What was the maximum surcharge rate under the new tax regime in FY 2024-25?",
+      "ground_truth_answer": "Surcharge under the new regime was capped at 25%.",
+      "type": "factoid",
+      "origin": "hand",
+      "gold": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Surcharge under the new regime is capped at 25% for taxable income exceeding ₹2,000,000."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_17",
+      "question": "How much higher is the zero-tax rebate threshold in FY 2025-26 compared to FY 2024-25 for non-salaried individuals?",
+      "ground_truth_answer": "The zero-tax rebate threshold increased by ₹500,000 (from ₹700,000 in FY 2024-25 to ₹1,200,000 in FY 2025-26).",
+      "type": "factoid",
+      "origin": "hand",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Taxpayers with taxable income up to ₹1,200,000 pay zero tax due to a full tax rebate."
+        },
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Taxpayers with taxable income up to ₹700,000 pay zero income tax due to a full rebate."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_18",
+      "question": "What was the difference in the effective zero-tax threshold for salaried individuals between FY 2024-25 and FY 2025-26?",
+      "ground_truth_answer": "The effective zero-tax threshold for salaried individuals increased by ₹500,000 (from ₹775,000 to ₹1,275,000).",
+      "type": "factoid",
+      "origin": "hand",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Salaried employees pay no income tax up to ₹1,275,000 after accounting for the standard deduction."
+        },
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Salaried employees pay no income tax up to ₹775,000 after accounting for the standard deduction."
+        }
+      ]
+    },
+    {
+      "test_id": "tax_19",
+      "question": "By how much did the basic exemption limit increase under the new regime from FY 2024-25 to FY 2025-26?",
+      "ground_truth_answer": "The basic exemption limit increased by ₹100,000 (from ₹300,000 to ₹400,000).",
+      "type": "factoid",
+      "origin": "hand",
+      "note": "multi-hop: needs both the current and the older figure",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income up to ₹400,000: Nil"
+        },
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Income up to ₹300,000: Nil"
+        }
+      ]
+    },
+    {
+      "test_id": "tax_20",
+      "question": "What is the Capital Gains Tax rate for equity shares in FY 2025-26?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "hand"
+    },
+    {
+      "test_id": "tax_21",
+      "question": "What is the penalty rate for late filing of Income Tax Returns for FY 2025-26?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "hand"
+    },
+    {
+      "test_id": "tax_22",
+      "question": "What is the deduction limit for preventive health check-ups under Section 80D?",
+      "ground_truth_answer": "Not stated in the documents.",
+      "type": "unanswerable",
+      "origin": "hand"
+    },
+    {
+      "test_id": "tax_s01",
+      "question": "What is the tax rate for income from ₹800,001 to ₹1,200,000 in the new tax regime for financial year 2025–26?",
+      "ground_truth_answer": "10%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Income from ₹800,001 to ₹1,200,000: 10%"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s02",
+      "question": "What is the income threshold for a full tax rebate under Section 87A in the new tax regime for financial year 2025–26?",
+      "ground_truth_answer": "₹1,200,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Taxpayers with taxable income up to ₹1,200,000 pay zero tax due to a full tax rebate."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s03",
+      "question": "What is the Health and Education Cess rate on total income tax in the new tax regime for financial year 2025–26?",
+      "ground_truth_answer": "4%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2025_26.md",
+          "quote": "Health and Education Cess remains at 4% on the total income tax amount."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s04",
+      "question": "For financial year 2024–25, what tax rate applies to income from ₹600,001 to ₹900,000?",
+      "ground_truth_answer": "10%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "- Income from ₹600,001 to ₹900,000: 10%"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s05",
+      "question": "For assessment year 2025–26, what is the standard deduction amount available to salaried individuals under the new tax regime?",
+      "ground_truth_answer": "₹75,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "income_tax_fy_2024_25.md",
+          "quote": "Standard Deduction: A standard deduction of ₹75,000 is available for salaried individuals and pensioners under the new tax regime."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s06",
+      "question": "What is the tax rate for income from ₹500,001 to ₹1,000,000 for individual taxpayers below 60 years in financial year 2024–25?",
+      "ground_truth_answer": "20%",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "old_tax_regime_distractor.md",
+          "quote": "Income from ₹500,001 to ₹1,000,000: 20%"
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    },
+    {
+      "test_id": "tax_s07",
+      "question": "What is the deduction limit for health insurance premiums paid for self and family under Section 80D in financial year 2024–25?",
+      "ground_truth_answer": "₹25,000",
+      "type": "factoid",
+      "gold": [
+        {
+          "file": "old_tax_regime_distractor.md",
+          "quote": "Section 80D: Deduction up to ₹25,000 for health insurance premiums paid for self and family (₹50,000 for senior citizens)."
+        }
+      ],
+      "origin": "synthetic",
+      "generated_by": "groq:openai/gpt-oss-120b"
+    }
+  ]
+}
