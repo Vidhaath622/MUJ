@@ -120,6 +120,20 @@ export async function loginUser(
   return await res.json();
 }
 
+/** Exchanges a Google Identity Services credential (an ID token) for a RAGSeal session. */
+export async function loginWithGoogle(credential: string): Promise<{ access_token: string; user: AuthUser }> {
+  const res = await fetch(`${API_BASE_URL}/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential }),
+  });
+  if (!res.ok) {
+    const detail = await extractErrorDetail(res);
+    throw new ApiError(res.status, detail);
+  }
+  return await res.json();
+}
+
 export async function registerUser(
   email: string,
   password: string

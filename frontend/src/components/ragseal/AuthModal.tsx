@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { AuthUser } from '../../types/ragseal';
 import { loginUser, registerUser, ApiError } from '../../lib/api';
+import { GoogleSignInButton } from './shell/GoogleSignInButton';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -157,6 +158,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <span>Use Demo</span>
                 </Button>
               </div>
+
+              <GoogleSignInButton
+                width={400}
+                onSignedIn={(user, token) => {
+                  onLogin(user, token);
+                  onClose();
+                }}
+                onError={setError}
+              />
 
               {error && (
                 <div className="p-2.5 rounded-lg bg-[var(--gen-tint)] border border-[color:color-mix(in_srgb,var(--gen)_40%,transparent)] text-xs text-[var(--gen)] flex items-center gap-1.5">

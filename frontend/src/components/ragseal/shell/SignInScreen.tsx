@@ -3,6 +3,7 @@ import { ArrowRight, Loader2 } from 'lucide-react';
 import { ApiError, loginUser, registerUser } from '../../../lib/api';
 import { AuthUser } from '../../../types/ragseal';
 import { ThemeToggle } from './ThemeToggle';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 interface SignInScreenProps {
   onSignedIn: (user: AuthUser, token: string) => void;
@@ -99,6 +100,10 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({ onSignedIn, backendD
               Use the demo account
               {busy !== 'demo' && <ArrowRight className="h-4 w-4" />}
             </button>
+
+            <div className="mt-3">
+              <GoogleSignInButton onSignedIn={onSignedIn} onError={setError} />
+            </div>
 
             <div className="my-6 flex items-center gap-3 text-xs text-[var(--muted)]">
               <span className="h-px flex-1 bg-[var(--rule)]" />
