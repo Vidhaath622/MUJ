@@ -24,7 +24,7 @@ def _seed_demo_user(db: Database) -> None:
 
 def create_app() -> FastAPI:
     settings = load_settings()
-    db = Database(settings.db_path)
+    db = Database(settings.db_path, url=settings.database_url)
     _seed_demo_user(db)
     db.fail_interrupted_runs()
 

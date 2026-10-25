@@ -47,10 +47,26 @@ Every endpoint except health and auth needs `Authorization: Bearer <token>`.
 Errors are `{"detail": "..."}`: 404 not found, 400 bad file/input, 413 too large, 422 validation or
 invalid pack, 503 model unavailable, 502 judge failure.
 
+## Database
+
+SQLite at `backend/data/app.sqlite` by default. Set `DATABASE_URL` (for example a Neon Postgres
+connection string) in `backend/.env` to use Postgres instead; tables are created on startup and
+`GET /api/health` reports `"database": "postgres"`. To copy existing SQLite data once:
+
+```bash
+DATABASE_URL=postgresql://... python backend/scripts/migrate_sqlite_to_postgres.py backend/data/app.sqlite --dry-run
+DATABASE_URL=postgresql://... python backend/scripts/migrate_sqlite_to_postgres.py backend/data/app.sqlite
+```
+
+It is safe to re-run (existing rows are skipped) and checks the row counts at the end.
+The engine's judge cache and vector store stay in local SQLite files.
+
 ## Tests
 
 ```bash
 cd backend && python -m pytest -q
+# the same suite against Postgres (each test starts from an empty schema):
+RAGSEAL_TEST_DATABASE_URL=postgresql://user@localhost:5432/ragseal_test python -m pytest -q
 ```
 
-Tests use a fake engine (no Ollama needed) and a temp data dir.
+Tests use a fake engine (no Ollama needed) and a temp data dir; they never use `DATABASE_URL`.

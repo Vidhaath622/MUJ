@@ -20,6 +20,8 @@ class AppSettings:
     jwt_secret: str
     cors_origins: tuple[str, ...]
     token_ttl_hours: int = 72
+    # Postgres connection string (for example a Neon database); empty means the local SQLite file.
+    database_url: str | None = None
 
     @property
     def db_path(self) -> Path:
@@ -48,4 +50,9 @@ def load_settings() -> AppSettings:
     data_dir.mkdir(parents=True, exist_ok=True)
     extra = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
     origins = tuple(dict.fromkeys([*DEFAULT_CORS_ORIGINS, *extra]))
-    return AppSettings(data_dir=data_dir, jwt_secret=_jwt_secret(data_dir), cors_origins=origins)
+    return AppSettings(
+        data_dir=data_dir,
+        jwt_secret=_jwt_secret(data_dir),
+        cors_origins=origins,
+        database_url=(os.environ.get("DATABASE_URL") or "").strip() or None,
+    )
