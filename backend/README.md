@@ -30,6 +30,7 @@ Every endpoint except health and auth needs `Authorization: Bearer <token>`.
 | GET | `/health` | Always 200; `engine_ready` false when Ollama or a model is missing |
 | POST | `/auth/register` | `{email, password}` (password >= 6 chars); 409 if taken |
 | POST | `/auth/login` | `{email, password}`; 401 on bad credentials |
+| POST | `/auth/google` | `{credential}` (the ID token from Google Sign-In): verified against `GOOGLE_CLIENT_ID`; signs in, links an existing account with the same email, or creates one; same response as login. 503 if not configured |
 | GET | `/auth/me` | Current user |
 | POST | `/documents/upload` | multipart field `file` (PDF/TXT/MD, max 20 MB) |
 | GET | `/documents` | This user's documents |

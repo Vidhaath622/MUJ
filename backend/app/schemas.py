@@ -29,6 +29,10 @@ class RegisterRequest(BaseModel):
         return value
 
 
+class GoogleLoginRequest(BaseModel):
+    credential: str = Field(min_length=10, max_length=8192)
+
+
 class LoginRequest(BaseModel):
     email: str
     password: str
