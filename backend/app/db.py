@@ -7,6 +7,7 @@ row-order tie-breaker (SQLite's implicit rowid becomes an explicit seq column).
 
 from __future__ import annotations
 
+import atexit
 import json
 import sqlite3
 import time
@@ -160,8 +161,17 @@ class Database:
                 check=ConnectionPool.check_connection,  # Neon closes idle connections
                 open=True,
             )
+            if not Database._pools:
+                atexit.register(Database.close_pools)
             Database._pools[self.url] = pool
         return pool
+
+    @staticmethod
+    def close_pools() -> None:
+        """Close pooled connections before the interpreter tears its threads down."""
+        for pool in Database._pools.values():
+            pool.close()
+        Database._pools.clear()
 
     @property
     def backend(self) -> str:
