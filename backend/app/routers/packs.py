@@ -12,6 +12,13 @@ def list_packs(_: User = Depends(get_current_user), engine: Engine = Depends(get
     return engine.list_packs()
 
 
+@router.get("/{pack_id}")
+def pack_overview(pack_id: str, _: User = Depends(get_current_user), engine: Engine = Depends(get_engine)) -> dict:
+    """The pack's documents (current / superseded / distractor, chunk counts) and one example trick
+    question of each kind (stale, distractor, unanswerable; null when the pack has none). Nothing is ingested."""
+    return engine.pack_overview(pack_id)
+
+
 @router.post("/{pack_id}/load")
 def load_pack(pack_id: str, user: User = Depends(get_current_user), engine: Engine = Depends(get_engine)) -> dict:
     return engine.load_pack(user.id, pack_id)

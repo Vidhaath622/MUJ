@@ -85,9 +85,9 @@ class FakeEngine:
 
     def evaluate_query(self, owner_id, query, document_ids, ground_truth=None, manual_answer=None, gold_chunk_ids=None,
                        case_type="factoid", stale_chunk_ids=None, test_id=None, distractor_document_ids=None, bot=None, gold_snippet=None,
-                       self_hosts=()):
+                       self_hosts=(), top_k=None):
         self.last_query = {"ground_truth": ground_truth, "gold_chunk_ids": gold_chunk_ids, "case_type": case_type,
-                           "stale_chunk_ids": stale_chunk_ids, "test_id": test_id, "document_ids": list(document_ids)}
+                           "stale_chunk_ids": stale_chunk_ids, "test_id": test_id, "document_ids": list(document_ids), "top_k": top_k}
         self.calls.append(("evaluate_query", owner_id, query, tuple(document_ids), case_type))
         if self.raise_on_eval:
             raise self.raise_on_eval
@@ -143,7 +143,16 @@ class FakeEngine:
             raise NotFound(f"pack {pack_id} not found")
         doc = self.ingest(owner_id, "fees_v2.md", b"Monthly fee is 5 USD.", pack_id)
         cases = [{"test_id": "bk_01", "question": "What is the monthly fee?", "ground_truth_answer": "5 USD", "type": "factoid"}]
-        return {"pack_id": pack_id, "document_ids": [doc["document_id"]], "test_cases": cases}
+        ids = [doc["document_id"]]
+        if getattr(self, "with_old_version", False):  # an older, superseded version of the fee schedule
+            ids.append(self.ingest(owner_id, "fees_v1.md", b"Monthly fee was 4 USD.", pack_id)["document_id"])
+        return {"pack_id": pack_id, "document_ids": ids, "test_cases": cases, "superseded_document_ids": ids[1:]}
+
+    def pack_overview(self, pack_id):
+        if pack_id != "banking":
+            raise NotFound(f"pack {pack_id} not found")
+        return {"pack_id": pack_id, "documents": [{"file": "fees_v2.md", "role": "current", "superseded_by": None, "chunks": 1}],
+                "examples": {"stale": None, "distractor": None, "unanswerable": None}}
 
     def injection_run(self, owner_id, pack_ids=None, n_per_type=5, progress=None, batch_id=None):
         results = []
@@ -167,7 +176,8 @@ class FakeEngine:
                 "shuffle": {"runs": shuffles, "max_delta": 0.0, "stable": True}, "stable": True}
 
     def profiles(self):
-        return [{"id": "v1", "name": "v1", "params": {"top_k": 4}}, {"id": "v2", "name": "v2", "params": {"top_k": 2}}]
+        return [{"id": "v1", "name": "v1", "params": {"top_k": 4, "newest_versions_only": False}},
+                {"id": "v2", "name": "v2", "params": {"top_k": 2, "newest_versions_only": True}}]
 
     def run_profile(self, owner_id, pack_id, profile_id, progress=None, batch_id=None):
         pack = self.load_pack(owner_id, pack_id)
