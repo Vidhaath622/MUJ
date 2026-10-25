@@ -68,3 +68,52 @@ def test_chunking_lab_scores_every_config_without_touching_user_data(engine):
     assert all(0 <= r["context_recall_at_4"] <= 1 and r["chunks"] > 0 for r in out["rows"])
     assert out["best"] in out["rows"] and out["questions"] > 0
     assert engine.list_documents("u") == []  # lab chunks live under their own owner
+
+
+def test_chunking_lab_always_scores_todays_setup(engine):
+    out = engine.chunking_lab("u", "ragseal", chunk_sizes=(300,), modes=("hybrid",), rerank_options=(False,), k=4)
+    today = [r for r in out["rows"] if r["is_today"]]
+    assert len(out["rows"]) == 2 and len(today) == 1  # 700 dense was not asked for, so it is added
+    assert (today[0]["chunk_chars"], today[0]["mode"], today[0]["rerank"]) == (700, "dense", False)
+    assert out["today"] == today[0] and out["recommended"] in out["rows"] and out["recommendation_reason"]
+    joined = engine.chunking_lab("u", "ragseal", chunk_sizes=(700,), modes=("dense",), rerank_options=(False,), k=4)
+    assert len(joined["rows"]) == 1 and joined["rows"][0]["is_today"]  # already in the grid: not added twice
+
+
+def _row(size, mode, rerank, recall, mrr, chunks=40, ms=10, today=False):
+    return {"chunk_chars": size, "overlap": 0, "mode": mode, "rerank": rerank, "context_recall_at_4": recall, "mrr": mrr,
+            "chunks": chunks, "ms_per_question": ms, "rerank_calls": 26 if rerank else 0, "is_today": today}
+
+
+def test_lab_summary_recommends_the_cheapest_setup_that_is_as_good():
+    from engine.lab_summary import summarize
+
+    rows = [_row(2000, "dense", True, 1.0, 1.0, chunks=5, ms=947), _row(2000, "hybrid", True, 1.0, 1.0, chunks=5, ms=304),
+            _row(2000, "hybrid", False, 1.0, 0.942, chunks=5), _row(2000, "dense", False, 1.0, 0.936, chunks=5),
+            _row(700, "dense", False, 1.0, 0.9, chunks=9, today=True)]
+    out = summarize(rows, "context_recall_at_4", 4, "travel_jaipur_goa", "synthetic_public")
+    assert out["best"]["rerank"] and out["best"]["ms_per_question"] == 304  # ties on quality go to the cheaper one
+    # Rerank ranks clearly higher (MRR 1.000 vs 0.942, past the 0.02 slack), so it stays recommended, and the
+    # reason names the free alternative and what it gives up.
+    assert out["recommended"] is out["best"]
+    assert out["recommendation_reason"].startswith("Recommended: Hybrid · 2000 chars · rerank. All 5 setups find 100.0%")
+    assert out["recommendation_notes"][0].startswith("All 5 setups find 100.0%")
+    assert "Without reranking, Hybrid · 2000 chars finds the same right passages with no grading calls (MRR 0.942 vs 1.000)" in out["recommendation_reason"]
+    near = [dict(r, mrr=0.99) if r["mode"] == "hybrid" and not r["rerank"] else r for r in rows]
+    cheap = summarize(near, "context_recall_at_4", 4, "travel_jaipur_goa", "synthetic_public")
+    assert cheap["recommended"]["mode"] == "hybrid" and not cheap["recommended"]["rerank"]  # within slack: no calls wins
+    assert "Reranking puts the right passage first more often (MRR 1.000 vs 0.990) but costs 26 grading calls." in cheap["recommendation_reason"]
+    assert len(out["warnings"]) == 2 and "Only 5 chunks at 2000 chars" in out["warnings"][0]  # 700 still has 9
+    tiny = summarize([dict(r, chunks=5) for r in rows], "context_recall_at_4", 4, "travel_jaipur_goa", "synthetic_public")
+    assert tiny["warnings"][0].startswith("This pack has only 5 chunks even at 700 chars")
+    assert out["suggested_pack"] == "synthetic_public"
+
+
+def test_lab_summary_keeps_rerank_when_it_clearly_finds_more():
+    from engine.lab_summary import summarize
+
+    rows = [_row(700, "dense", False, 0.93, 0.748, today=True), _row(1200, "hybrid", False, 0.984, 0.775),
+            _row(1200, "hybrid", True, 1.0, 0.891, ms=5000)]
+    out = summarize(rows, "context_recall_at_4", 4, "synthetic_public", "synthetic_public")
+    assert out["recommended"] is out["best"] and out["best"]["rerank"]
+    assert "+7.0 pts" in out["recommendation_reason"] and out["warnings"] == [] and out["suggested_pack"] is None

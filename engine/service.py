@@ -868,28 +868,40 @@ class Engine:
           MRR               1 / rank of the first chunk that holds a gold quote (0 if none)
 
         Each chunk size is ingested under its own lab owner, so real documents are never touched.
-        Returns one row per config and the best one (highest recall, then MRR, then the cheaper config).
+        Returns one row per config (plus today's setup, flagged is_today), the best one, the recommended one
+        (the cheapest as good as the best) with a plain-words reason, and warnings when the pack is too small to tell.
         """
         from .connector import covers
+
+        from .lab_summary import summarize
 
         spec = self._pack(pack_id)
         cases = [c for c in spec.test_cases if c.get("gold") and c.get("type", "factoid") != "unanswerable"]
         if not cases:
             raise ValueError(f"pack {pack_id} has no questions with gold quotes")
-        configs = [RetrievalConfig(mode=m, rerank=r) for m in modes for r in rerank_options]
-        total, done = len(chunk_sizes) * len(configs) * len(cases), 0
-        rows = []
+        # Every sweep also scores the setup the bot uses today, so the result always says how much a
+        # change would gain. It joins the grid when the grid already has it, else it is added as a row.
+        today = (self.settings.chunk_chars, self.settings.chunk_overlap, self.rag.retrieval.mode, self.rag.retrieval.rerank)
+        groups: dict[tuple[int, int], list[tuple[RetrievalConfig, bool]]] = {}
         for size in chunk_sizes:
-            lab_owner = f"lab:{owner_id}:{size}:{overlap}"
+            groups[(size, overlap)] = [
+                (RetrievalConfig(mode=m, rerank=r), (size, overlap, m, r) == today) for m in modes for r in rerank_options
+            ]
+        if not any(is_today for configs in groups.values() for _, is_today in configs):
+            groups.setdefault(today[:2], []).append((RetrievalConfig(mode=today[2], rerank=today[3]), True))
+        total, done = sum(len(configs) for configs in groups.values()) * len(cases), 0
+        rows = []
+        for (size, size_overlap), configs in groups.items():
+            lab_owner = f"lab:{owner_id}:{size}:{size_overlap}"
             document_ids, lengths = [], []
             for entry in spec.documents:
                 filename, data = read_document_bytes(spec, entry)
-                doc = parse_document(filename, data, size, overlap)
+                doc = parse_document(filename, data, size, size_overlap)
                 document_ids.append(doc.document_id)
                 lengths += [len(c.text) for c in doc.chunks]
                 if not self.store.has_document(lab_owner, doc.document_id):
                     self._embed_and_store(lab_owner, doc, pack_id)
-            for config in configs:
+            for config, is_today in configs:
                 recalls, ranks = [], []
                 started = time.perf_counter()
                 for case in cases:
@@ -904,7 +916,7 @@ class Engine:
                         progress(done, total, 0)
                 rows.append({
                     "chunk_chars": size,
-                    "overlap": overlap,
+                    "overlap": size_overlap,
                     "mode": config.mode,
                     "rerank": config.rerank,
                     "label": f"{size} chars, {config.label}",
@@ -915,16 +927,19 @@ class Engine:
                     "avg_chunk_chars": round(sum(lengths) / len(lengths)) if lengths else 0,
                     "ms_per_question": round((time.perf_counter() - started) * 1000 / len(cases)),
                     "rerank_calls": len(cases) if config.rerank else 0,
+                    "is_today": is_today,
                 })
         recall_key = f"context_recall_at_{k}"
-        best = max(rows, key=lambda r: (r[recall_key], r["mrr"], not r["rerank"], r["mode"] == "dense", -r["chunk_chars"]))
+        # The biggest pack with real documents is where setups actually differ.
+        suggested = "synthetic_public" if "synthetic_public" in discover(self.settings.packs_dirs) else None
+        summary = summarize(rows, recall_key, k, pack_id, suggested)
         return {
             "pack_id": pack_id,
             "k": k,
             "questions": len(cases),
             "metric": recall_key,
             "rows": rows,
-            "best": best,
+            **summary,
             "note": "Retrieval only: no answers are generated or judged. Recall counts a gold quote as found when the "
                     "top-k text covers it (all its figures and most of its words).",
         }

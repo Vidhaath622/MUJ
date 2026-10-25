@@ -214,7 +214,9 @@ class FakeEngine:
         rows = [{"chunk_chars": s, "mode": m, "rerank": r, f"context_recall_at_{k}": 0.5 + s / 10000} for s in chunk_sizes for m in modes for r in rerank_options]
         if progress:
             progress(len(rows), len(rows), 0)
-        return {"pack_id": pack_id, "k": k, "rows": rows, "best": max(rows, key=lambda r: r[f"context_recall_at_{k}"]), "metric": f"context_recall_at_{k}"}
+        best = max(rows, key=lambda r: r[f"context_recall_at_{k}"])
+        return {"pack_id": pack_id, "k": k, "rows": rows, "best": best, "recommended": best, "recommendation_reason": "fake",
+                "today": None, "warnings": [], "suggested_pack": None, "metric": f"context_recall_at_{k}"}
 
     def impact(self, owner_id, old_document_id, new_document_id, max_tests=10, progress=None):
         if progress:

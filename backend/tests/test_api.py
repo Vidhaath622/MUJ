@@ -289,6 +289,7 @@ def test_chunking_lab_runs_in_the_background(client, alice, fake_engine):
             break
     assert body["status"] == "done" and len(body["rows"]) == 4 and body["best"]["chunk_chars"] == 1200
     assert fake_engine.last_lab[1] == (300, 1200)  # duplicates dropped
+    assert {"best", "recommended", "recommendation_reason", "warnings"} <= body.keys()  # passed through unchanged
     assert client.get("/api/lab/chunking/latest", headers=alice).json()["lab_id"] == lab_id
     assert client.post("/api/lab/chunking", headers=alice, json={"pack_id": "banking", "modes": ["sparse"]}).status_code == 422
 
