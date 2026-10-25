@@ -62,7 +62,8 @@ flowchart TD
         Gate -- "Yes" --> PassVerdict["Verdict: Accurate"]
         Gate -- "No (Failure)" --> Replay["Replay Generator with ONLY Gold Passage<br/>(Isolate retriever from generator)"]
         Replay --> ReplayOutcome{"Replay Output Fixed?"}
-        ReplayOutcome -- "Yes (Answer Correct)" --> RetFault["Verdict: Retrieval Failure<br/>(Generator succeeds when fed gold evidence)"]
+        ReplayOutcome -- "Yes, and the gold chunk was NOT retrieved" --> RetFault["Verdict: Retrieval Failure<br/>(Generator succeeds when fed gold evidence)"]
+        ReplayOutcome -- "Yes, but the gold chunk WAS retrieved" --> Distracted["Verdict: Generator failure<br/>(the right text was found; other chunks distracted it)<br/>Compound if an outdated or look-alike chunk was also retrieved"]
         ReplayOutcome -- "No (Still Wrong)" --> GenFault["Verdict: Generator Hallucination / Reasoning Error<br/>(Failed despite having exact gold evidence)"]
     end
 ```
@@ -95,7 +96,7 @@ flowchart TD
     Q4 -- "Yes" --> Accurate["Verdict: Accurate"]
     Q4 -- "No" --> ReasonErr["Generator Reasoning Error<br/>(Gold context misread or unhandled)"]
     
-    Replay3 -- "Yes" --> RetConf["Retrieval Failure / Distractor Confusion"]
+    Replay3 -- "Yes" --> RetConf["Generator distracted by other chunks<br/>(Compound if an outdated or look-alike chunk was retrieved)"]
     Replay3 -- "No" --> PureHallucination["Verdict: Hallucination<br/>(Generator hallucinates even on gold passage)"]
 ```
 
@@ -174,8 +175,24 @@ flowchart TB
 
 ## Features
 
-| Feature / Page | Description |
-|---|---|
+| Feature / Page | Description | Screenshot |
+|---|---|---|
+| **Bots Under Test (Live X-Ray)** | Real-time inspection of bot prompts, retrieval chunks, token citations, and answer generation. | `docs/assets/bots.png` |
+| **Diagnose** | Deep-dive root-cause explorer showing context relevance, faithfulness, accuracy, and counterfactual replay proofs. | `docs/assets/diagnose.png` |
+| **Documents & Question Generator** | Ingest markdown/text documents and automatically generate synthetic ground-truth test Q&A pairs. | `docs/assets/testsets.png` |
+| **Change Impact Radar** | Diff two document revisions (e.g. v1 vs v2 policy) and instantly identify stale answers and at-risk questions. | `docs/assets/impact.png` |
+| **Full Test Run with Live Progress** | Run batch evaluation suites across packs with live progress streaming, pass rates, and failure tracking. | `docs/assets/runs.png` |
+| **Label Studio** | Blind two-person human annotation interface to establish gold standards and measure pipeline vs human agreement. | `docs/assets/labels.png` |
+| **Evaluator Trust** | Full statistical transparency: pipeline-vs-human agreement, confusion matrices, and judge-swap stability. | `docs/assets/trust.png` |
+| **Compare Versions** | Rigorous version comparison using McNemar paired tests and bootstrap confidence intervals to prove improvements. | `docs/assets/compare.png` |
+| **The Seal** | Verifiable trust certificate and embeddable SVG/Markdown badge confirming production RAG reliability. | `docs/assets/seal.png` |
+| **Light & Dark Themes** | Seamless theme switching built natively into the application shell for optimal contrast. | *Integrated in UI* |
+| **Connect your bot** | Point RAGSeal at your own chatbot's HTTP endpoint (JSON paths for the answer and passages); test the connection, then run any pack through it. Replay needs the bot to accept a contexts override; without it the verdict says so instead of faking a replay. | |
+| **Release gate (CI)** | `POST /api/gate` and the stdlib-only `ragseal-gate` CLI fail a build when the pass rate is below a bar or questions that passed before now fail. API tokens for CI; example GitHub workflow in `.github/workflows/`. | |
+| **Chunking lab** | Retrieval-only comparison of chunk sizes x dense/hybrid (BM25 + embeddings) x rerank on a pack's gold quotes: context recall@4 and MRR, no generator cost. | |
+| **Sample results** | New users see the demo account's latest baseline run of each pack, read-only, until they run their own. | |
+| **PDF ingest** | Slides and notes: repeated headers and footers removed, short slides merged, OCR for image-only pages, and a quality report (notes vs warnings). | |
+| **Accounts and storage** | Email or Google sign-in; SQLite by default, Postgres (Neon) with `DATABASE_URL`. | |
 
 ### Screenshots
 
@@ -201,17 +218,6 @@ flowchart TB
 </tr>
 </table>
 
----|---|---|
-| **Bots Under Test (Live X-Ray)** | Real-time inspection of bot prompts, retrieval chunks, token citations, and answer generation. | `docs/assets/bots.png` |
-| **Diagnose** | Deep-dive root-cause explorer showing context relevance, faithfulness, accuracy, and counterfactual replay proofs. | `docs/assets/diagnose.png` |
-| **Documents & Question Generator** | Ingest markdown/text documents and automatically generate synthetic ground-truth test Q&A pairs. | `docs/assets/testsets.png` |
-| **Change Impact Radar** | Diff two document revisions (e.g. v1 vs v2 policy) and instantly identify stale answers and at-risk questions. | `docs/assets/impact.png` |
-| **Full Test Run with Live Progress** | Run batch evaluation suites across packs with live progress streaming, pass rates, and failure tracking. | `docs/assets/runs.png` |
-| **Label Studio** | Blind two-person human annotation interface to establish gold standards and measure pipeline vs human agreement. | `docs/assets/labels.png` |
-| **Evaluator Trust** | Full statistical transparency: pipeline-vs-human agreement, confusion matrices, and judge-swap stability. | `docs/assets/trust.png` |
-| **Compare Versions** | Rigorous version comparison using McNemar paired tests and bootstrap confidence intervals to prove improvements. | `docs/assets/compare.png` |
-| **The Seal** | Verifiable trust certificate and embeddable SVG/Markdown badge confirming production RAG reliability. | `docs/assets/seal.png` |
-| **Light & Dark Themes** | Seamless theme switching built natively into the application shell for optimal contrast. | *Integrated in UI* |
 
 ---
 
@@ -243,19 +249,33 @@ All benchmark metrics reflect verified experimental results:
   * Detected **5 changed facts** between versions.
   * Flagged **2 answers at immediate risk** of delivering stale information.
 
-### 3. Built-In Industry Packs
-| Benchmark Pack | Questions | Pass Rate | Primary Failure Modes Tested |
+### 3. Test Packs: 524 questions in 12 packs (162 hand-written, 362 synthetic)
+Synthetic questions are model-written from an exact quote and kept only when the quote is verbatim and the answer is inside it; each question is marked `hand` or `synthetic`. Pass rates are the latest baseline run of the RAG under test (`llama3.2:3b`, top-4); full table and run ids in [RESULTS.md](RESULTS.md).
+
+| Pack | Questions | Pass Rate | What it tests |
 |---|---|---|---|
-| **Banking** | 71 | **86%** | Fee schedule v1 → v2 (outdated fees), savings terms, dispute procedure, look-alike card promotion |
-| **Recruitment** | 71 | **89%** | Hiring policy v1 → v2, job description, recruiter guide, look-alike benefits overview |
-| **Healthcare** | 71 | **93%** | Discharge protocol v1 → v2, ED operations, patient records policy, look-alike visitor guide |
+| **Banking** | 71 | **85.9%** | Fee schedule v1 → v2 (outdated fees), savings terms, dispute procedure, look-alike card promotion |
+| **Recruitment** | 71 | **88.7%** | Hiring policy v1 → v2, job description, recruiter guide, look-alike benefits overview |
+| **Healthcare** | 71 | **90.1%** | Discharge protocol v1 → v2, ED operations, patient records policy, look-alike visitor guide |
+| **Public documents** | 129 | **76.0%** | 9 real documents searched together: IRS 2025/2026 releases and the RAGSeal guide (all synthetic questions) |
 | **Real IRS Documents** | 22 | **72.7%** | Mileage rates & retirement limits across 2025/2026 revisions |
+| **Income tax (India)** | 29 | **65.5%** | FY 2024-25 vs FY 2025-26 slabs, old regime as distractor |
+| **GST rates (India)** | 15 | **100%** | Rates before vs after the September 2025 revision, compliance deadlines as distractor |
+| **GST reform overview** | 33 | **75.8%** | A second, separate summary of the reform (synthetic questions) |
+| **Travel (Jaipur & Goa)** | 29 | **96.6%** | 2022 vs current entry fees, visitor rules as distractor |
+| **Telecom tariffs (India)** | 22 | **81.8%** | Prepaid prices before vs after July 2024, postpaid terms as distractor |
+| **University rules** | 18 | **94.4%** | 2023 vs 2025 academic rules, hostel rules as distractor |
 | **RAGSeal Guide** | 14 | **78.6%** | Architecture self-test, taxonomy boundaries, replay mechanics |
 
 ### 4. Throughput & Latency
-* **Cold Free-Tier API Throughput**: ~8–10 questions/minute on standard free API rate limits.
+* **Measured cold run**: **509 questions in 13.7 minutes (37.1 / minute)**, 0 failed, on 10 Groq API keys (free tier) with a fresh judge cache: 570 judge calls, about 1,279 tokens each. At that rate 200 questions take about 5.4 minutes.
+* **What limits it**: each key's per-minute token budget. The judge paces every key to its budget (read from the rate-limit headers) and spreads calls across keys; throughput grows with the number of keys.
 * **Cached Evaluation Latency**: **0.65 seconds / question** with SQLite judge caching enabled.
-* *Honesty Note*: Evaluating 200 questions cold within 15 minutes requires multiple API keys or a dedicated paid tier.
+
+### 5. Retrieval, Release Gate, Hosting
+* **Chunking lab** (9 real documents, 129 questions): context recall@4 **93.0%** (700-char dense, the default) → **96.1%** (700-char hybrid) → **98.4%** (1200-char hybrid) → **100%** (1200-char hybrid + rerank). Larger chunks also mean more text for the generator; the live default stays dense, the setting the agreement numbers were measured with.
+* **Release gate**: banking with the "v2" profile passes the 80% bar (88.7%) but has **4 regressions** against the v1 baseline, so the gate fails it (exit 1).
+* **Hosting**: `Dockerfile` + `render.yaml` run the backend without Ollama (generator `gpt-oss-20b` and judge `gpt-oss-120b` on Groq, embeddings on NVIDIA), next to a Neon Postgres in Singapore. Prepared and tested outside Docker; not deployed.
 
 ---
 
@@ -314,7 +334,7 @@ Log in to the dashboard using the pre-configured demo account:
 ├── backend/                       # FastAPI web service & persistence layer
 │   ├── app/
 │   │   ├── routers/               # Endpoints (/evaluate, /bots, /impact, /trust, /labels)
-│   │   ├── database.py            # SQLite database schema & connection management
+│   │   ├── db.py                  # SQLite / Postgres storage (DATABASE_URL)
 │   │   └── main.py                # FastAPI application entrypoint
 │   └── tests/                     # Backend API & router test suite
 ├── docs/                          # Architecture guides & specifications
@@ -330,7 +350,8 @@ Log in to the dashboard using the pre-configured demo account:
 │   ├── inject.py                  # Fault injection & synthetic error harness
 │   ├── stability.py               # Judge swap & evaluator consistency testing
 │   ├── external_validation.py     # RAGTruth benchmark validation harness
-│   ├── packs_builtin/             # Built-in packs (Banking, Recruitment, Healthcare, IRS)
+│   ├── packs_builtin/             # 12 test packs (pack.json + documents), SYNTHETIC_SPOT_CHECK.md
+│   ├── scripts/                   # Pack conversion and synthetic question generation
 │   └── tests/                     # Unit & regression tests for core evaluation engine
 ├── frontend/                      # React 18 + Vite web application
 │   ├── src/
@@ -353,7 +374,7 @@ Log in to the dashboard using the pre-configured demo account:
   2. **Inter-Annotator Agreement Grounding**: Transparently benchmarked against double-blind human annotations ($95.0\%$ agreement, 0 false passes).
   3. **Fault-Injection Confusion Matrix**: Rigorously validated with 54 planted failure cases to verify diagnostic accuracy.
   4. **Document Change Impact Radar**: Directly calculates semantic diffs between document versions to prevent regressions before deployment.
-* **Benchmark Transparency**: Industry packs (Banking, Recruitment, Healthcare) feature synthetic documents and fictional organizations designed to probe edge cases; the IRS pack uses real, unedited public-domain IRS releases.
+* **Benchmark Transparency**: Industry packs (Banking, Recruitment, Healthcare) feature synthetic documents and fictional organizations designed to probe edge cases; the IRS packs use real, unedited public-domain IRS releases. The India packs (income tax, GST, telecom, travel, university rules) were written by a teammate in the style of their sources; quotes were checked verbatim, figures were not re-checked against live sources. 362 of the 524 questions are synthetic and marked as such.
 
 ---
 
