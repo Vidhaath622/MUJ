@@ -240,16 +240,23 @@
     {
       "test_id": "hc_16",
       "question": "What is the new visitor limit at the bedside according to Version 2?",
-      "ground_truth_answer": "The visitor limit at the bedside has been lowered.",
-      "type": "factoid",
+      "ground_truth_answer": "A maximum of 2 visitors (lowered from 4 in Version 1).",
+      "type": "stale",
       "gold": [
         {
           "file": "discharge_protocol_v2.md",
-          "quote": "Version 2 shortens the follow-up call window, speeds up discharge summaries, lowers the visitor limit at the bedside and widens the pharmacy review requirement."
+          "quote": "A maximum of 2 visitors may be present at the bedside while discharge paperwork is being completed."
         }
       ],
       "origin": "synthetic",
-      "generated_by": "qwen3:8b"
+      "generated_by": "qwen3:8b",
+      "stale": [
+        {
+          "file": "discharge_protocol_v1.md",
+          "quote": "A maximum of 4 visitors may be present at the bedside while discharge paperwork is being completed."
+        }
+      ],
+      "note": "Corrected 25 Oct: the generated label said only 'has been lowered' (no number) and pointed at the summary sentence."
     },
     {
       "test_id": "hc_17",

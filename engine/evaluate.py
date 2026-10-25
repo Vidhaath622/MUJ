@@ -15,7 +15,7 @@ from .rag import RagSystem, is_abstention
 from .scoring import MetricResult, score_case
 from .connector import BotError, context_chunks, covers
 from .store import ScoredChunk, VectorStore
-from .verdict import FAILURE_TYPE_TEXT, Facts, classify_failure, decide, needs_replay
+from .verdict import FAILURE_TYPE_TEXT, Facts, classify_failure, decide, needs_replay, replay_blame
 
 SUPPORT_SYSTEM = (
     "Decide whether the passage states the ground-truth answer to the question. "
@@ -212,6 +212,7 @@ class Evaluator:
             replay["verdict_effect"] = verdict.verdict_effect or (
                 "Replay with the gold chunk answered correctly." if replay["passed"] else "Replay with the gold chunk was still wrong."
             )
+            replay["blames"] = replay_blame(verdict.category)
             replay.pop("passed")
 
         relevance_by_id = {c["chunk_id"]: c for c in per_chunk}
@@ -398,7 +399,18 @@ def rederive(result: dict, distractor_document_ids: list[str] | None = None) -> 
 
     if result.get("error"):
         return result
-    metrics = result["metrics"]
+    from .scoring import cut_off_without_answer
+
+    metrics = {name: dict(metric) for name, metric in result["metrics"].items()}
+    unanswerable_case = bool(result.get("expected_abstain"))
+    cut_off = "The answer breaks off mid-sentence, so it does not state the answer."
+    # Rules that can only lower a score are applied to stored answers without asking the judge again.
+    truth = result.get("ground_truth")
+    if not unanswerable_case and metrics["answer_accuracy"].get("score") and cut_off_without_answer(result["generated_answer"], truth):
+        metrics["answer_accuracy"].update(score=0.0, details=cut_off, source="rule")
+    stored_replay = result.get("replay")
+    if stored_replay and stored_replay.get("answer_accuracy") and cut_off_without_answer(stored_replay.get("answer") or "", truth):
+        stored_replay = {**stored_replay, "answer_accuracy": 0.0, "accuracy_details": cut_off}
 
     def passed(name: str) -> bool | None:
         score = metrics[name]["score"]
@@ -406,8 +418,8 @@ def rederive(result: dict, distractor_document_ids: list[str] | None = None) -> 
 
     retrieved = result.get("retrieved_chunk_ids") or []
     chunks = result.get("retrieved_chunks") or []
-    replay = result.get("replay")
-    unanswerable = bool(result.get("expected_abstain"))
+    replay = stored_replay
+    unanswerable = unanswerable_case
     facts = Facts(
         has_ground_truth=bool(result.get("ground_truth")) or unanswerable,
         unanswerable=unanswerable,
@@ -427,6 +439,7 @@ def rederive(result: dict, distractor_document_ids: list[str] | None = None) -> 
     verdict = decide(facts)
     failure_type, stage = classify_failure(facts, verdict.category)
     out = dict(result)
+    out["metrics"] = metrics
     out["root_cause"] = {
         **result["root_cause"],
         "category": verdict.category,
@@ -437,7 +450,7 @@ def rederive(result: dict, distractor_document_ids: list[str] | None = None) -> 
         "failure_type_text": FAILURE_TYPE_TEXT[failure_type],
     }
     if replay is not None:
-        out["replay"] = {**replay, "verdict_effect": verdict.verdict_effect or replay.get("verdict_effect")}
+        out["replay"] = {**replay, "verdict_effect": verdict.verdict_effect or replay.get("verdict_effect"), "blames": replay_blame(verdict.category)}
     if "category" in result:
         out["category"] = verdict.category
     return out
