@@ -8,7 +8,9 @@ row-order tie-breaker (SQLite's implicit rowid becomes an explicit seq column).
 from __future__ import annotations
 
 import atexit
+import hashlib
 import json
+import secrets
 import sqlite3
 import threading
 import time
@@ -60,6 +62,14 @@ TABLES = {
         pack_id TEXT PRIMARY KEY,
         batch_id TEXT NOT NULL,
         locked_at TEXT NOT NULL""",
+    "api_tokens": """
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        name TEXT NOT NULL,
+        token_hash TEXT NOT NULL UNIQUE,
+        prefix TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        last_used_at TEXT""",
     "labels": """
         batch_id TEXT NOT NULL,
         test_id TEXT NOT NULL,
@@ -125,6 +135,10 @@ class Dialect:
         else:
             action = "DO NOTHING"
         return self.sql(f"INSERT INTO {table} ({names}) VALUES ({marks}) ON CONFLICT ({', '.join(keys)}) {action}")
+
+
+def _token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 def _summary(batch: dict) -> str:
@@ -297,6 +311,45 @@ class Database:
     def link_google(self, user_id: str, sub: str) -> None:
         with self._connect() as conn:
             conn.execute("UPDATE users SET google_sub = ? WHERE id = ?", (sub, user_id))
+
+    # ---------------------------------------------------------- API tokens
+    # For CI (the release gate): long-lived, revocable, stored only as a SHA-256 hash.
+
+    API_TOKEN_PREFIX = "rsk_"
+
+    def create_api_token(self, user_id: str, name: str) -> dict:
+        token = self.API_TOKEN_PREFIX + secrets.token_urlsafe(32)
+        row = {"id": "tok_" + uuid.uuid4().hex[:10], "name": name, "prefix": token[:10], "created_at": utc_now(), "last_used_at": None}
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO api_tokens (id, user_id, name, token_hash, prefix, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (row["id"], user_id, name, _token_hash(token), row["prefix"], row["created_at"]),
+            )
+        return {**row, "token": token}  # the only time the token itself is returned
+
+    def list_api_tokens(self, user_id: str) -> list[dict]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT id, name, prefix, created_at, last_used_at FROM api_tokens WHERE user_id = ? ORDER BY created_at", (user_id,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def delete_api_token(self, user_id: str, token_id: str) -> bool:
+        with self._connect() as conn:
+            return conn.execute("DELETE FROM api_tokens WHERE id = ? AND user_id = ?", (token_id, user_id)).rowcount > 0
+
+    def user_by_api_token(self, token: str) -> User | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT t.id, t.last_used_at, u.id AS user_id, u.email FROM api_tokens t JOIN users u ON u.id = t.user_id WHERE t.token_hash = ?",
+                (_token_hash(token),),
+            ).fetchone()
+            if row is None:
+                return None
+            now = utc_now()
+            if (row["last_used_at"] or "")[:15] != now[:15]:  # record use at most every 10 minutes
+                conn.execute("UPDATE api_tokens SET last_used_at = ? WHERE id = ?", (now, row["id"]))
+        return User(row["user_id"], row["email"])
 
     def user_by_id(self, user_id: str) -> User | None:
         """Every request looks up its user; on Postgres the answer is kept for a few minutes (ids and emails never change)."""

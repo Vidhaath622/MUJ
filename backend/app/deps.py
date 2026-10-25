@@ -64,6 +64,11 @@ def get_current_user(
 
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise unauthorized("Not authenticated")
+    if credentials.credentials.startswith(Database.API_TOKEN_PREFIX):
+        user = db.user_by_api_token(credentials.credentials)  # a CI token from Settings > API tokens
+        if user is None:
+            raise unauthorized("Invalid or revoked API token")
+        return user
     user_id = decode_token(credentials.credentials, settings.jwt_secret)
     user = db.user_by_id(user_id) if user_id else None
     if user is None:

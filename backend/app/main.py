@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .db import Database
 from .errors import register_error_handlers
 from .jobs import BatchJobs
-from .routers import auth, bots, compare, documents, evaluate, health, impact, lab, labels, packs, rag, runs, synthetic, trust
+from .routers import auth, bots, compare, documents, evaluate, gate, health, impact, lab, labels, packs, rag, runs, synthetic, tokens, trust
 from .security import DEMO_EMAIL, DEMO_PASSWORD, hash_password
 from .settings import load_settings
 from .showcase import Showcase
@@ -43,7 +43,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     register_error_handlers(app)
-    for module in (health, auth, documents, rag, evaluate, synthetic, packs, runs, labels, trust, compare, impact, bots, lab):
+    for module in (health, auth, documents, rag, evaluate, synthetic, packs, runs, labels, trust, compare, impact, bots, lab, tokens, gate):
         app.include_router(module.router, prefix="/api")
     return app
 

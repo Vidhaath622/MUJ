@@ -27,6 +27,7 @@ from app.db import Database  # noqa: E402
 # (table, key columns, ORDER BY in SQLite)
 TABLES = [
     ("users", ["id"], "created_at, rowid"),
+    ("api_tokens", ["id"], "created_at, rowid"),
     ("runs", ["batch_id"], "created_at, rowid"),
     ("evaluations", ["evaluation_id"], "created_at, rowid"),
     ("analyses", ["id"], "created_at, rowid"),
@@ -49,7 +50,11 @@ def migrate(sqlite_path: Path, url: str, dry_run: bool = False) -> dict[str, dic
         existing = {} if dry_run else dict(target.execute("SELECT email, id FROM users").fetchall())
         remap = {r["id"]: existing[r["email"]] for r in source.execute("SELECT id, email FROM users")
                  if r["email"] in existing and existing[r["email"]] != r["id"]}
+        present = {r[0] for r in source.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
         for table, keys, order in TABLES:
+            if table not in present:  # a SQLite file from before this table existed
+                report[table] = {"source": 0, "copied": 0, "skipped": 0, "target": 0}
+                continue
             rows = source.execute(f"SELECT * FROM {table} ORDER BY {order}").fetchall()
             if table == "users":
                 rows = [r for r in rows if r["id"] not in remap]
